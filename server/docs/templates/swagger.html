@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matcha API docs</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('docs.static', filename='swagger-ui.css') }}">
+</head>
+<body>
+  <main id="swagger-ui" data-spec-url="{{ url_for('docs.openapi') }}"></main>
+  <script defer src="{{ url_for('docs.static', filename='swagger-ui-bundle.js') }}"></script>
+  <script defer src="{{ url_for('docs.static', filename='swagger-init.js') }}"></script>
+</body>
+</html>
