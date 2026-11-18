@@ -1,0 +1,65 @@
+name: Backend checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-tests:
+    name: Lint and PostgreSQL integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: matcha_test
+          POSTGRES_USER: matcha_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd "pg_isready -U matcha_test -d matcha_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+        ports:
+          - 5432/tcp
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Check formatting and lint
+        run: |
+          python -m black --check server tests
+          python -m flake8 server tests
+      - name: Run integration tests
+        env:
+          MATCHA_TEST_DSN: postgresql://matcha_test@127.0.0.1:${{ job.services.postgres.ports[5432] }}/matcha_test
+        run: python -m pytest -q
+
+  compose-smoke:
+    name: Compose verification email smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Verify API startup, Mailpit delivery, and sign-in
+        run: python -m tests.compose_smoke
