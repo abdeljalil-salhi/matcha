@@ -1,0 +1,7 @@
+**
+!requirements.txt
+!server/
+!server/**
+!sql/
+!sql/**
+**/__pycache__
