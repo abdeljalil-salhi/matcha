@@ -24,8 +24,8 @@ With Python 3.12, install `requirements-dev.txt` in a virtual environment, then 
 
 ## Backend CI
 
-GitHub Actions runs Black, Flake8, and the integration suite on pushes and pull
-requests with a fresh PostgreSQL 17 service. A separate job builds the Compose
+GitHub Actions runs Black, Flake8, and the integration suite on pull requests
+and pushes to `main`, using a fresh PostgreSQL 17 service. A separate job builds the Compose
 stack and verifies startup, verification email delivery to Mailpit, and sign-in
 with the resulting session cookie.
 
