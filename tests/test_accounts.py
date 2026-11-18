@@ -96,6 +96,11 @@ def test_account_lifecycle(
     )
     assert client.get("/api/me").status_code == HTTPStatus.UNAUTHORIZED
     assert login(client, "account_test").status_code == HTTPStatus.UNAUTHORIZED
-    assert login(client, "account_test", NEW_PASSWORD).status_code == HTTPStatus.OK
+    response = login(client, "ACCOUNT_TEST", NEW_PASSWORD)
+    assert response.status_code == HTTPStatus.OK
+    assert response.mimetype == "application/json"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.json == {"id": user_id, "username": "account_test"}
+    assert client.get("/api/me").status_code == HTTPStatus.OK
     assert client.post("/api/auth/logout").status_code == HTTPStatus.NO_CONTENT
     assert client.get("/api/me").status_code == HTTPStatus.UNAUTHORIZED

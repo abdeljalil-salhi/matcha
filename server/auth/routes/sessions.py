@@ -2,7 +2,7 @@ import secrets
 from http import HTTPStatus
 
 from argon2 import exceptions
-from flask import Blueprint, Response, current_app, g, make_response, request
+from flask import Blueprint, Response, current_app, g, jsonify, make_response, request
 
 from ...common.db import db, lock_users
 from ...common.http import ApiError, rate_limit
@@ -89,7 +89,7 @@ def login() -> Response:
             "now() + %s * interval '1 second')",
             (token_hash(token), user["id"], SESSION_SECONDS),
         )
-    response = make_response({"id": user["id"], "username": name})
+    response = jsonify(id=user["id"], username=user["username"])
     response.set_cookie(
         COOKIE,
         token,
