@@ -2,7 +2,7 @@ x-backend: &backend
   build:
     context: .
     dockerfile: server/Dockerfile
-  env_file: .env
+  env_file: ${MATCHA_ENV_FILE:-.env}
   depends_on:
     db:
       condition: service_healthy
@@ -10,7 +10,7 @@ x-backend: &backend
 services:
   db:
     image: postgres:17
-    env_file: .env
+    env_file: ${MATCHA_ENV_FILE:-.env}
     volumes:
       - postgres:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +21,7 @@ services:
   mail:
     image: axllent/mailpit:v1.27
     ports:
-      - "127.0.0.1:8025:8025"
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
   setup:
     <<: *backend
     command: ["python", "-m", "server.manage", "migrate"]
