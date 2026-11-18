@@ -29,6 +29,9 @@ requests with a fresh PostgreSQL 17 service. A separate job builds the Compose
 stack and verifies startup, verification email delivery to Mailpit, and sign-in
 with the resulting session cookie.
 
+CodeQL scans the Python backend on pushes to `main` and pull requests targeting
+it. Results appear under the repository's **Security → Code scanning** tab.
+
 Run the same Compose smoke test locally with Docker running:
 
 ```sh
