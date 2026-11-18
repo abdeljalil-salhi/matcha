@@ -22,6 +22,23 @@ Use credentialed fetches, render user-generated content as text, and load the se
 
 With Python 3.12, install `requirements-dev.txt` in a virtual environment, then run `MATCHA_TEST_DSN='<disposable PostgreSQL DSN>' python -m pytest -q`. Tests create and remove a dedicated schema. The DB role needs permission to create schemas in that database.
 
+## Backend CI
+
+GitHub Actions runs Black, Flake8, and the integration suite on pushes and pull
+requests with a fresh PostgreSQL 17 service. A separate job builds the Compose
+stack and verifies startup, verification email delivery to Mailpit, and sign-in
+with the resulting session cookie.
+
+Run the same Compose smoke test locally with Docker running:
+
+```sh
+python -m tests.compose_smoke
+```
+
+The test generates its own environment, uses a temporary Compose project and
+database volume, and asks Docker to assign free ports. It removes the temporary
+containers and volume on exit.
+
 ## Python formatting
 
 With a Python 3.12 virtual environment active, install the development tools and the Git hook once per checkout.
