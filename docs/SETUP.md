@@ -1,0 +1,74 @@
+# Local setup
+
+Run these commands from the repository root. You need Docker with Compose v2.
+
+## Start the backend
+
+1. Copy `.env.example` to `.env`.
+
+   ```sh
+   cp .env.example .env
+   ```
+
+2. Set `POSTGRES_PASSWORD` and `MATCHA_SECRET` in `.env`. Generate each value
+   independently with `openssl rand -hex 32`. Keep `.env` local.
+3. Set `FRONTEND_URL` to your frontend's exact origin. The default is
+   `http://localhost:5173`. Use `localhost` for both services during local browser
+   development so they share a site.
+4. Start the stack and check the API.
+
+   ```sh
+   docker compose up --build -d
+   curl --fail --retry 10 --retry-connrefused http://localhost:8000/api/health
+   ```
+
+Compose runs PostgreSQL, applies migrations, then starts the API and email
+worker. A successful health check returns `{"status":"ok"}`. If port 8000 is in
+use, set `API_PORT` in `.env` and use that port for the health check and Swagger.
+The current migration series expects a fresh database. For a volume from the
+original two-file schema, use a new Compose project name to start with a separate
+volume. Stop the previous stack first if it uses the same ports.
+
+## Local URLs
+
+| Service | Default URL |
+| --- | --- |
+| API base URL | `http://localhost:8000/api` |
+| API health | [http://localhost:8000/api/health](http://localhost:8000/api/health) |
+| Swagger UI | [http://localhost:8000/docs](http://localhost:8000/docs) |
+| OpenAPI JSON | [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) |
+| Mailpit | [http://localhost:8025](http://localhost:8025) |
+
+`MAILPIT_PORT` can override the Mailpit port. In Swagger UI, use **Try it out**
+on `POST /auth/login` with a verified account. The browser sends the session
+cookie on later requests from the same page.
+
+## Create test users
+
+Populate the database with 500 fictional profiles for discovery.
+
+```sh
+docker compose run --rm setup python -m server.manage seed
+```
+
+To enable sign-in for `demo_001` and `demo_002`, choose a `SEED_PASSWORD` in
+`.env` before running the seed command. Use that password with either username.
+
+To test registration and email verification, register an account and open the
+message in Mailpit. While the frontend verification page is still being built,
+copy the value after `#token=` from the email link and submit it to
+`POST /auth/verify` in Swagger UI.
+
+Manual location and consent-based GPS have offline examples in Paris, Lyon,
+Marseille, Rabat, Casablanca, and London. For broader coverage, set
+`GEOCODER_URL` to a Nominatim-compatible instance with `/search` and `/reverse`
+endpoints.
+
+## Stop the stack
+
+```sh
+docker compose down
+```
+
+The PostgreSQL volume persists between runs. Continue with the
+[frontend API contract](API.md) to wire up browser requests and email links.
