@@ -13,7 +13,7 @@ from psycopg import Connection
 from .helpers import ORIGIN, SECRET
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def backend() -> Iterator[tuple[Flask, Connection]]:
     """Set up and tear down an isolated PostgreSQL schema for the API tests.
 
