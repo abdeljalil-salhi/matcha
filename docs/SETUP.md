@@ -83,6 +83,26 @@ other areas need the configured reverse geocoder. City-only or failed GPS lookup
 leave the saved location unchanged. The user can enter a city or neighborhood
 manually instead. Coordinates are rounded for storage after the lookup.
 
+Online geocoding uses a PostgreSQL-backed cache and provider lock shared by all
+backend workers using the same database. Only one external call runs at a time,
+with a one-second cooldown after every attempt, including failures. Requests
+that exceed the database lock wait receive HTTP 503 with `Retry-After`.
+
+Successful place results are cached for 24 hours; not-found results for five
+minutes. Cache hits skip the provider queue. Expired entries are removed by the
+worker's cleanup job. Cache keys hash the provider and request parameters, and
+cached data contains only city, neighborhood, country, and rounded coordinates.
+Raw search text, precise input coordinates, and account IDs are not stored there.
+Changing `GEOCODER_URL` selects a separate cache namespace.
+
+For the public Nominatim service, read its
+[usage policy](https://operations.osmfoundation.org/policies/nominatim/).
+Use an identifying `GEOCODER_USER_AGENT`, retain visible attribution, and avoid
+submitting personal or confidential information. Autocomplete stays local;
+external calls happen only when a user saves a location. A self-hosted provider
+is preferable for real users' GPS data. The location form and map credit
+[OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
+
 ## Stop the stack
 
 ```sh
