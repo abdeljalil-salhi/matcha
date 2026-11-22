@@ -5,8 +5,7 @@ import { useNotifications } from "../../context/NotificationsContext";
 import { fullName } from "../../utils/format";
 import { Avatar } from "../ui/Avatar";
 import { Icon, type IconName } from "../ui/Icon";
-import { NotificationMenu } from "./NotificationMenu";
-import { SignOutButton } from "./SignOutButton";
+import { SessionActions } from "./SessionActions";
 
 const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: "/discover", label: "Discover", icon: "compass" },
@@ -76,8 +75,7 @@ export function AppShell() {
           </nav>
 
           <div className="app-header__actions">
-            <NotificationMenu />
-            <SignOutButton />
+            <SessionActions />
             <div className="user-menu" ref={userMenuRef}>
               <button
                 ref={userTriggerRef}

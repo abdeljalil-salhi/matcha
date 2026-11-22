@@ -17,15 +17,19 @@ import { ProfilePage } from "./pages/profile/ProfilePage";
 import { PublicProfilePage } from "./pages/profile/PublicProfilePage";
 import { PeopleListPage } from "./pages/relationships/PeopleListPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { SignedInHeader } from "./components/layout/SessionActions";
 
 function NotFoundPage() {
   return (
-    <div className="not-found container">
-      <Icon name="compass" size={44} />
-      <h1>That page wandered off.</h1>
-      <p className="lead">Let's get you back to something interesting.</p>
-      <Link to="/" className="btn btn--primary btn--lg">Go home</Link>
-    </div>
+    <>
+      <SignedInHeader />
+      <div className="not-found container">
+        <Icon name="compass" size={44} />
+        <h1>That page wandered off.</h1>
+        <p className="lead">Let's get you back to something interesting.</p>
+        <Link to="/" className="btn btn--primary btn--lg">Go home</Link>
+      </div>
+    </>
   );
 }
 

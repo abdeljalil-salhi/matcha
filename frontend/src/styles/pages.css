@@ -7,6 +7,10 @@
   min-height: 84px;
 }
 .landing__nav-actions { display: flex; gap: 10px; }
+@media (max-width: 600px) {
+  .landing__nav { flex-wrap: wrap; gap: 12px; }
+  .landing__nav-actions { align-items: center; flex-wrap: wrap; }
+}
 .hero {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;

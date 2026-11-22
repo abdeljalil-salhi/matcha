@@ -105,21 +105,28 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
 
     const poll = () => {
-      void api.notifications.presence().catch(() => undefined);
+      if (document.visibilityState === "visible") {
+        void api.notifications.presence().catch(() => undefined);
+      }
       void refresh();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") poll();
     };
     poll();
     const interval = window.setInterval(() => {
-      if (document.visibilityState === "hidden" || !navigator.onLine) return;
+      if (!navigator.onLine) return;
       poll();
     }, POLL_MS);
     window.addEventListener("focus", poll);
     window.addEventListener("online", poll);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", poll);
       window.removeEventListener("online", poll);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       for (const controller of controllers.current) controller.abort();
       controllers.current.clear();
       generation.current += 1;
