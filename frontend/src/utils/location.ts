@@ -1,4 +1,5 @@
-import { api, type ResolvedLocation } from "../api";
+import type { CityLocationSuggestion } from "../api/types";
+import { api, ApiError, type ResolvedLocation } from "../api";
 
 /**
  * Saves browser-provided coordinates through the GPS endpoint.
@@ -9,7 +10,28 @@ export async function saveDetectedLocation(
   latitude: number,
   longitude: number,
 ): Promise<ResolvedLocation> {
-  return api.profile.setLocation({ source: "gps", latitude, longitude, consent: true });
+  try {
+    return await api.profile.setLocation({ source: "gps", latitude, longitude, consent: true });
+  } catch (cause) {
+    if (cause instanceof ApiError && cause.status === 409) {
+      const payload = cause.payload;
+      if (payload && typeof payload === "object" && "error" in payload &&
+          payload.error && typeof payload.error === "object" && "code" in payload.error &&
+          payload.error.code === "city_confirmation_required" && "city_suggestion" in payload) {
+        const suggestion = payload.city_suggestion;
+        if (suggestion && typeof suggestion === "object" &&
+            "city" in suggestion && typeof suggestion.city === "string" &&
+            "country_code" in suggestion && typeof suggestion.country_code === "string" &&
+            "confirmation_token" in suggestion && typeof suggestion.confirmation_token === "string") {
+          throw new CityConfirmationRequired({
+            city: suggestion.city, country_code: suggestion.country_code,
+            confirmation_token: suggestion.confirmation_token,
+          });
+        }
+      }
+    }
+    throw cause;
+  }
 }
 
 export async function lookupNetworkLocation(): Promise<{ latitude: number; longitude: number; label: string }> {
@@ -31,4 +53,12 @@ export async function lookupNetworkLocation(): Promise<{ latitude: number; longi
     longitude: data.longitude,
     label: [data.city, data.country].filter(Boolean).join(", ") || "Approximate network location",
   };
+}
+
+/** A city suggestion requires an explicit manual save; constructing this never saves it. */
+export class CityConfirmationRequired extends Error {
+  constructor(readonly suggestion: CityLocationSuggestion) {
+    super("Confirm the city as your approximate location.");
+    this.name = "CityConfirmationRequired";
+  }
 }

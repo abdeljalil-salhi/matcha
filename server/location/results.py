@@ -83,7 +83,7 @@ def normalized_place(result: JsonValue) -> JsonObject | None:
 
 
 def normalized_response(path: GeocoderEndpoint, raw: JsonValue) -> JsonValue:
-    """Discard provider metadata and classify unusable reverse results as negative.
+    """Discard provider metadata while retaining city-only results for confirmation.
 
     Args:
         path (GeocoderEndpoint): Search or reverse endpoint.
@@ -101,7 +101,4 @@ def normalized_response(path: GeocoderEndpoint, raw: JsonValue) -> JsonValue:
     place = normalized_place(raw)
     if place is None:
         raise ApiError(HTTPStatus.SERVICE_UNAVAILABLE, "Invalid location response.")
-    address = place["address"]
-    if not isinstance(address, dict) or not address.get("neighbourhood"):
-        return None
     return place

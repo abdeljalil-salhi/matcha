@@ -171,3 +171,9 @@ export interface MessagePageParams {
 export interface StatusResponse {
   status: string;
 }
+
+export interface CityLocationSuggestion {
+  city: string;
+  country_code: string;
+  confirmation_token: string;
+}

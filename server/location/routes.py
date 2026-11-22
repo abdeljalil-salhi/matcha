@@ -5,14 +5,32 @@ from flask import Blueprint, g
 from ..auth.guard import signed_in
 from ..common.db import db
 from ..common.http import ApiError, rate_limit
-from .geocoding import gps_location, manual_location
-from .types import SavedLocation
 from ..common.request_data import object_body, require_coordinate, require_string
+from ..common.types import JsonObject
+from .confirmation import CityConfirmationRequired, city_suggestion, confirmed_city
+from .geocoding import gps_location, manual_location
 from .limits import LOCATION_DECIMAL_PLACES
+from .types import SavedLocation
 
 LOCATION_UPDATES_PER_MINUTE = 12
 
 routes = Blueprint("location", __name__)
+
+
+@routes.errorhandler(CityConfirmationRequired)
+def suggest_city(error: CityConfirmationRequired) -> tuple[JsonObject, int]:
+    """Offer an approximate city without persisting a failed GPS save.
+
+    Args:
+        error (CityConfirmationRequired): City-only lookup result.
+
+    Returns:
+        tuple[JsonObject, int]: Structured suggestion and HTTP 409.
+    """
+    return {
+        "error": {"message": error.description, "code": "city_confirmation_required"},
+        "city_suggestion": dict(city_suggestion(error.place, g.user_id)),
+    }, HTTPStatus.CONFLICT
 
 
 @routes.put("/me/location")
@@ -24,6 +42,7 @@ def save_location() -> SavedLocation:
         Request body (JSON):
             source (str): Either 'manual' or 'gps'.
             query (str): Place lookup for manual entry.
+            confirmation_token (str): Account-bound city suggestion for manual entry.
             latitude (int | float): Latitude for GPS entry.
             longitude (int | float): Longitude for GPS entry.
             consent (bool): Explicit permission required for GPS entry.
@@ -32,12 +51,22 @@ def save_location() -> SavedLocation:
         SavedLocation: Resolved city, area, country code, and source.
     """
     data = object_body(
-        "source", "query", "latitude", "longitude", "consent", required=("source",)
+        "source",
+        "query",
+        "latitude",
+        "longitude",
+        "consent",
+        "confirmation_token",
+        required=("source",),
     )
     rate_limit(f"location:{g.user_id}", LOCATION_UPDATES_PER_MINUTE)
     source = data["source"]
     if source == "manual" and set(data) == {"source", "query"}:
         place = manual_location(require_string(data["query"], "query"))
+    elif source == "manual" and set(data) == {"source", "confirmation_token"}:
+        place = confirmed_city(
+            require_string(data["confirmation_token"], "confirmation_token"), g.user_id
+        )
     elif source == "gps" and set(data) == {
         "source",
         "latitude",
@@ -55,7 +84,8 @@ def save_location() -> SavedLocation:
     else:
         raise ApiError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "Provide either a manual query or GPS coordinates with explicit consent.",
+            "Provide a manual query, a city confirmation token, "
+            "or consented GPS coordinates.",
         )
     city, area, country_code, lat, lon = place
     db().execute(

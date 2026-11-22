@@ -53,10 +53,10 @@ def test_gps_resolves_before_rounding(monkeypatch: MonkeyPatch) -> None:
     assert calls[0][1]["lon"] == 2.3431
 
 
-def test_gps_failure_preserves_location(
+def test_city_suggestion_requires_confirmation(
     backend: tuple[Flask, Connection], monkeypatch: MonkeyPatch
 ) -> None:
-    """Reject city-only GPS results without changing the saved manual location.
+    """Offer city-only GPS results without changing the saved manual location.
 
     Args:
         backend (tuple[Flask, Connection]): Test app and isolated database.
@@ -93,10 +93,35 @@ def test_gps_failure_preserves_location(
             "consent": True,
         },
     )
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json["error"]["code"] == "city_confirmation_required"
     saved = client.get("/api/me").json
     for field in ("city", "area", "country_code", "location_source", "location_set_at"):
         assert saved[field] == original[field]
+
+    token = response.json["city_suggestion"]["confirmation_token"]
+    monkeypatch.setattr(
+        geocoding, "provider", lambda *args: pytest.fail("Second lookup")
+    )
+    confirmed = client.put(
+        "/api/me/location",
+        json={
+            "source": "manual",
+            "confirmation_token": token,
+        },
+    )
+    assert confirmed.status_code == HTTPStatus.OK
+    assert confirmed.json == {
+        "city": "Remote City",
+        "area": None,
+        "country_code": "US",
+        "location_source": "manual",
+    }
+    row = connection.execute(
+        "SELECT latitude, longitude FROM users WHERE username = 'gps_audit'"
+    ).fetchone()
+    assert float(row["latitude"]) == 35.12
+    assert float(row["longitude"]) == -110.54
 
 
 def test_offline_gps_never_uses_a_distant_neighborhood(

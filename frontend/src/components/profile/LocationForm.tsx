@@ -1,12 +1,14 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
+import type { CityLocationSuggestion } from "../../api/types";
 import { api, type ResolvedLocation } from "../../api";
 import { useAuth } from "../../context/AuthContext";
-import { lookupNetworkLocation, saveDetectedLocation } from "../../utils/location";
+import { CityConfirmationRequired, lookupNetworkLocation, saveDetectedLocation } from "../../utils/location";
 import { FEATURED_CHOICES, LOCATION_CHOICES, searchLocations } from "../../data/locations";
 import { placeLabel } from "../../utils/format";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { LocationAttribution } from "./LocationAttribution";
+import { CityLocationConfirmation } from "./CityLocationConfirmation";
 
 interface LocationFormProps {
   current: {
@@ -29,6 +31,7 @@ const EXAMPLE_QUERIES = [
 
 export function LocationForm({ current, onSaved }: LocationFormProps) {
   const { patchUser } = useAuth();
+  const [citySuggestion, setCitySuggestion] = useState<CityLocationSuggestion | null>(null);
   const [mode, setMode] = useState<Mode>(current.location_source === "gps" ? "gps" : "manual");
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(-1);
@@ -43,12 +46,14 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
     if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
     event.preventDefault();
     const next: Mode = currentMode === "manual" ? "gps" : "manual";
+    setCitySuggestion(null);
     setMode(next);
     setError(null);
     document.getElementById(`location-tab-${next}`)?.focus();
   };
 
   const commitLocation = (result: ResolvedLocation) => {
+    setCitySuggestion(null);
     setResolved(result);
     setSaved(`${placeLabel(result)} saved.`);
     // Update the auth context immediately so wizards and guards never wait for a refetch.
@@ -62,6 +67,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
 
   const save = async (payload: Parameters<typeof api.profile.setLocation>[0]) => {
     setBusy(true);
+    if ("query" in payload) setCitySuggestion(null);
     setError(null);
     setSaved(null);
     try {
@@ -85,6 +91,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
   };
 
   const saveCoordinates = async (latitude: number, longitude: number) => {
+    setCitySuggestion(null);
     setBusy(true);
     setError(null);
     setSaved(null);
@@ -93,13 +100,15 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
       commitLocation(result);
       await onSaved();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to save your location.");
+      if (cause instanceof CityConfirmationRequired) setCitySuggestion(cause.suggestion);
+      else setError(cause instanceof Error ? cause.message : "Unable to save your location.");
     } finally {
       setBusy(false);
     }
   };
 
   const useGps = () => {
+    setCitySuggestion(null);
     setError(null);
     setSaved(null);
     if (!consent) {
@@ -137,6 +146,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
       setError("Please agree before we use an approximate location.");
       return;
     }
+    setCitySuggestion(null);
     setError(null);
     setSaved(null);
     setNetworkBusy(true);
@@ -155,6 +165,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
 
   const clear = async () => {
     setBusy(true);
+    setCitySuggestion(null);
     setError(null);
     setSaved(null);
     try {
@@ -177,6 +188,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
   const selectSuggestion = (value: string) => {
     setQuery(value);
     setHighlighted(-1);
+    setCitySuggestion(null);
     setError(null);
     setSaved(null);
     document.getElementById("location-query")?.focus();
@@ -241,6 +253,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
           className={mode === "manual" ? "is-active" : ""}
           onClick={() => {
             setMode("manual");
+            setCitySuggestion(null);
             setError(null);
           }}
           onKeyDown={(event) => onModeKeyDown(event, "manual")}
@@ -257,6 +270,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
           className={mode === "gps" ? "is-active" : ""}
           onClick={() => {
             setMode("gps");
+            setCitySuggestion(null);
             setError(null);
           }}
           onKeyDown={(event) => onModeKeyDown(event, "gps")}
@@ -266,6 +280,11 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
       </div>
 
       {error ? <div className="error-banner" role="alert">{error}</div> : null}
+      {citySuggestion ? <CityLocationConfirmation
+        suggestion={citySuggestion} busy={busy}
+        onCancel={() => setCitySuggestion(null)}
+        onConfirm={() => void save({ source: "manual", confirmation_token: citySuggestion.confirmation_token })}
+      /> : null}
       {saved ? <div className="notice notice--success" role="status">{saved}</div> : null}
 
       {mode === "manual" ? (
@@ -301,6 +320,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
                         onClick={() => {
                           setQuery(choice.query);
                           setHighlighted(-1);
+                          setCitySuggestion(null);
                           setError(null);
                           setSaved(null);
                         }}
@@ -412,7 +432,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
             </Button>
           </div>
           <p className="field__hint">
-            If we cannot resolve a neighborhood, enter your city or neighborhood manually.
+            If we find only a city, you can confirm it as your approximate location.
             A failed lookup leaves your saved location unchanged.
           </p>
         </div>

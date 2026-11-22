@@ -5,7 +5,7 @@ export const UNAUTHORIZED_EVENT = "matcha:unauthorized";
 export class ApiError extends Error {
   readonly status: number;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, readonly payload?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -100,7 +100,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     if (response.status === 401 && !silentAuth) {
       window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
     }
-    throw new ApiError(response.status, errorMessage(payload, response.status));
+    throw new ApiError(response.status, errorMessage(payload, response.status), payload);
   }
 
   return payload as T;

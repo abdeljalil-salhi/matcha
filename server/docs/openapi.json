@@ -974,6 +974,25 @@
                       "consent"
                     ],
                     "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "const": "manual"
+                      },
+                      "confirmation_token": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2048
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "confirmation_token"
+                    ],
+                    "additionalProperties": false
                   }
                 ]
               },
@@ -1030,8 +1049,59 @@
           },
           "503": {
             "$ref": "#/components/responses/HTTP503"
+          },
+          "409": {
+            "description": "A city was found without a neighborhood. Nothing was saved. Ask the user to confirm the city as a manual approximate location. The token expires after ten minutes and belongs to the signed-in account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "error",
+                    "city_suggestion"
+                  ],
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "required": [
+                        "message",
+                        "code"
+                      ],
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "const": "city_confirmation_required"
+                        }
+                      }
+                    },
+                    "city_suggestion": {
+                      "type": "object",
+                      "required": [
+                        "city",
+                        "country_code",
+                        "confirmation_token"
+                      ],
+                      "properties": {
+                        "city": {
+                          "type": "string"
+                        },
+                        "country_code": {
+                          "type": "string"
+                        },
+                        "confirmation_token": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "GPS requires explicit consent. A city-only result returns HTTP 409 without saving. Let the user confirm the city by submitting its short-lived token with source manual."
       },
       "delete": {
         "tags": [

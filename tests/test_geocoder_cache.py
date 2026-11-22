@@ -128,3 +128,36 @@ def test_provider_changes_use_a_separate_cache(
     assert cache_key("https://one", "search", {"q": "City"}) != cache_key(
         "https://two", "search", {"q": "City"}
     )
+
+
+def test_city_only_reverse_result_is_cached(
+    backend: tuple[Flask, Connection], monkeypatch: MonkeyPatch
+) -> None:
+    """Retain city-only reverse results so a repeated lookup can offer confirmation.
+
+    Args:
+        backend (tuple[Flask, Connection]): App and isolated database.
+        monkeypatch (MonkeyPatch): External transport replacement.
+
+    Returns:
+        None.
+    """
+    app, conn = backend
+    stub = stub_geocoder(
+        monkeypatch,
+        {
+            "address": {"city": "Remote City", "country_code": "ma"},
+            "lat": "32.2217",
+            "lon": "-7.9397",
+        },
+    )
+    params = {"lat": 32.2217, "lon": -7.9397}
+    result = lookup(app, "reverse", params)
+    assert result["address"]["city"] == "Remote City"
+    assert result["address"]["neighbourhood"] is None
+    assert lookup(app, "reverse", params) == result
+    assert len(stub.calls) == 1
+    ttl = conn.execute(
+        "SELECT expires_at - now() AS ttl FROM geocoder_cache"
+    ).fetchone()["ttl"]
+    assert 86390 < ttl.total_seconds() <= 86400

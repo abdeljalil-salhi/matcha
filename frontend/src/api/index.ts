@@ -91,6 +91,7 @@ export const api = {
     setLocation: (
       location:
         | { source: "manual"; query: string }
+        | { source: "manual"; confirmation_token: string }
         | { source: "gps"; latitude: number; longitude: number; consent: true },
     ) => request<ResolvedLocation>("/me/location", { method: "PUT", body: location }),
 

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import type { CityLocationSuggestion } from "../../api/types";
 import { api } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { lookupNetworkLocation, saveDetectedLocation } from "../../utils/location";
+import { CityConfirmationRequired, lookupNetworkLocation, saveDetectedLocation } from "../../utils/location";
 import { FEATURED_CHOICES, LOCATION_CHOICES, type LocationChoice } from "../../data/locations";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { LocationAttribution } from "../profile/LocationAttribution";
+import { CityLocationConfirmation } from "../profile/CityLocationConfirmation";
 
 const CITY_CHOICES = LOCATION_CHOICES.filter((choice) => choice.kind === "city");
 const FEATURED_CITIES = FEATURED_CHOICES.filter((choice) => choice.kind === "city");
@@ -51,6 +53,7 @@ const geoMessage = (error: GeolocationPositionError) => {
 };
 
 export function PlacesMap() {
+  const [citySuggestion, setCitySuggestion] = useState<CityLocationSuggestion | null>(null);
   const { refresh } = useAuth();
   const { notify } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,6 +72,8 @@ export function PlacesMap() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   selectedRef.current = selected;
+
+  useEffect(() => { setCitySuggestion(null); }, [selected]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -182,6 +187,7 @@ export function PlacesMap() {
   };
 
   const locate = () => {
+    setCitySuggestion(null);
     setLocationError(null);
     if (!navigator.geolocation) {
       setLocationError("Your browser doesn't support device location. Use approximate network location instead.");
@@ -208,6 +214,7 @@ export function PlacesMap() {
   };
 
   const locateByNetwork = async () => {
+    setCitySuggestion(null);
     setLocationError(null);
     setLocating(true);
     try {
@@ -228,6 +235,7 @@ export function PlacesMap() {
 
   const savePlace = async (choice: LocationChoice) => {
     setSavingId(choice.id);
+    setCitySuggestion(null);
     setSaveError(null);
     try {
       await api.profile.setLocation({ source: "manual", query: choice.query });
@@ -243,13 +251,31 @@ export function PlacesMap() {
   const saveOwnLocation = async () => {
     if (!own || !consentToSave) return;
     setSavingId("self");
+    setCitySuggestion(null);
     setSaveError(null);
     try {
       await saveDetectedLocation(own.latitude, own.longitude);
       await refresh();
       notify("Approximate location saved.", "success");
     } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : "Unable to save your location.");
+      if (cause instanceof CityConfirmationRequired) setCitySuggestion(cause.suggestion);
+      else setSaveError(cause instanceof Error ? cause.message : "Unable to save your location.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const confirmCity = async () => {
+    if (!citySuggestion || savingId) return;
+    setSavingId("city");
+    setSaveError(null);
+    try {
+      await api.profile.setLocation({ source: "manual", confirmation_token: citySuggestion.confirmation_token });
+      setCitySuggestion(null);
+      await refresh();
+      notify("City saved as your approximate location.", "success");
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : "Unable to save your city.");
     } finally {
       setSavingId(null);
     }
@@ -287,6 +313,10 @@ export function PlacesMap() {
 
       {locationError ? <div className="error-banner" role="alert">{locationError}</div> : null}
       {tileError ? <div className="notice notice--info" role="status">Some map tiles could not load. Check your connection.</div> : null}
+      {citySuggestion ? <CityLocationConfirmation
+        suggestion={citySuggestion} busy={savingId !== null}
+        onConfirm={() => void confirmCity()} onCancel={() => setCitySuggestion(null)}
+      /> : null}
       {saveError ? <div className="error-banner" role="alert">{saveError}</div> : null}
 
       <div className="places-map__leaflet-wrap">
