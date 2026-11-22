@@ -1153,7 +1153,7 @@
                   "photo": {
                     "type": "string",
                     "format": "binary",
-                    "description": "One JPEG, PNG, or WebP image, up to 5 MiB and 16 megapixels."
+                    "description": "One JPEG, PNG, or WebP image, up to 10 MiB and 16 megapixels."
                   }
                 },
                 "required": [
