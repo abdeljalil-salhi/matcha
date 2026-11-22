@@ -10,6 +10,8 @@ import { Icon } from "../../components/ui/Icon";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui/Misc";
 import { clockTime, dayLabel, fullName, uuid } from "../../utils/format";
 
+import { useReadMessages } from "./useReadMessages";
+
 interface PendingMessage {
   client_id: string;
   body: string;
@@ -42,6 +44,9 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const inFlight = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
+  const [viewingLatest, setViewingLatest] = useState(true);
+
+  useReadMessages(userId, messages, Boolean(conversation) && !loading && viewingLatest);
 
   const merge = useCallback((incoming: Message[]) => {
     if (incoming.length === 0) return;
@@ -184,6 +189,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     (entry) => entry.kind === "message" && entry.actor_id === userId && !entry.read_at,
   );
 
+  const unreadMessages = relatedUnread.reduce((count, item) => count + item.unread_count, 0);
+
   const markRead = async () => {
     await Promise.all(relatedUnread.map((entry) => markOne(entry.id)));
     notify("Messages marked as read.", "success");
@@ -199,6 +206,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     const element = scrollRef.current;
     if (!element) return;
     atBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+    setViewingLatest(atBottom.current);
   };
 
   if (!conversation) {
@@ -230,7 +238,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
         </Link>
         {relatedUnread.length > 0 ? (
           <button type="button" className="link-button" onClick={() => void markRead()}>
-            Mark {relatedUnread.length} read
+            Mark {unreadMessages} read
           </button>
         ) : null}
       </header>
