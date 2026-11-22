@@ -8,6 +8,9 @@ To run the frontend locally, keep `FRONTEND_URL=http://localhost:5173` in `.env`
 start the backend with `docker compose up -d`, then follow
 [frontend/README.md](frontend/README.md).
 
+Run `make help` for development shortcuts, or see the
+[development guide](docs/DEVELOPMENT.md) for installation and testing commands.
+
 ## Features
 
 - Email verification, password recovery, and cookie-based sessions
