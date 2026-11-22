@@ -23,3 +23,21 @@ class SavedLocation(TypedDict):
     area: str | None
     country_code: str
     location_source: LocationSource
+
+
+class CitySuggestion(TypedDict):
+    """City label and account-bound capability for an explicit manual confirmation."""
+
+    city: str
+    country_code: str
+    confirmation_token: str
+
+
+class CityConfirmationData(TypedDict):
+    """Trusted place fields carried inside the signed city suggestion."""
+
+    user_id: int
+    city: str
+    country_code: str
+    latitude: float
+    longitude: float

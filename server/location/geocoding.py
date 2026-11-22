@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from ..common.http import ApiError
 from ..common.validation import coordinate, text
+from .confirmation import CityConfirmationRequired
 from .places import PLACES
 from .provider import provider
 from .results import from_result
@@ -144,9 +145,11 @@ def gps_location(latitude: Coordinate, longitude: Coordinate) -> Place:
         },
     )
     place = from_result(result) if result is not None else None
-    if not place or not place[1] or not place[1].strip():
+    if not place:
         raise ApiError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
             "No neighborhood found. Enter your city or neighborhood manually.",
         )
+    if not place[1] or not place[1].strip():
+        raise CityConfirmationRequired(place)
     return place
