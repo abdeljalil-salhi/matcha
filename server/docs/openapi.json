@@ -2676,7 +2676,8 @@
           "503": {
             "$ref": "#/components/responses/HTTP503"
           }
-        }
+        },
+        "description": "Notifications are grouped by actor and type before pagination, with the latest event as the row ID and timestamp. unread.total counts unread groups; unread.messages counts individual unread messages."
       }
     },
     "/notifications/{notification_id}/read": {
@@ -2721,7 +2722,8 @@
           "503": {
             "$ref": "#/components/responses/HTTP503"
           }
-        }
+        },
+        "description": "Mark visible events of the same actor and type read through the supplied notification ID. Later events remain unread."
       }
     },
     "/notifications/read": {
@@ -3639,6 +3641,11 @@
                 "type": "null"
               }
             ]
+          },
+          "unread_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Unread events represented by this actor/type group; zero for a read group."
           }
         },
         "required": [
@@ -3648,7 +3655,8 @@
           "kind",
           "message_id",
           "created_at",
-          "read_at"
+          "read_at",
+          "unread_count"
         ]
       }
     },

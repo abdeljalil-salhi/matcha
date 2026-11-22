@@ -92,3 +92,9 @@ Load a chat with no cursor to get the newest page. Use `before` for history and 
 The UI should expose sign-out on every page, hide or disable chat for profiles without a current connection, and disable new likes while the signed-in user's profile has no primary photo. These checks are also enforced by the API.
 
 Photo uploads accept one JPEG, PNG, or WebP file up to **10 MiB (10,485,760 bytes)** and 16 megapixels, with at most five photos per profile. The HTTP request has an additional 16 KiB allowance for multipart headers and boundaries; this does not increase the per-file limit. Oversized uploads return HTTP 413.
+
+Notifications are grouped by actor and type in `GET /notifications`, before pagination. Each row uses the latest event's `id`, `message_id`, and timestamp and includes `unread_count`. A row has `read_at: null` while any represented event is unread. Read activity remains one compact row per actor/type. `unread.total` counts unread groups; `unread.messages` counts individual unread messages. Use a message group's `unread_count` for conversation badges.
+
+Merge paginated rows by `(kind, actor_id)`, retaining the highest event ID, so polling and older pages cannot duplicate or regress a group. Show unread message counts and repeated visit counts in notification text. Likes, visits, matches, messages and connection removals each retain their own group per actor.
+
+Clicking a message notification opens its conversation without acknowledging it first. Once its latest message is displayed in the visible chat, `PUT /notifications/{id}/read` acknowledges that actor/type group's visible events through the supplied notification ID. Other notification clicks use the same grouped read endpoint. Events arriving after the supplied boundary remain unread. Mark-all-read retains its global inclusive ID boundary.
