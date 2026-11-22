@@ -111,3 +111,5 @@ docker compose down
 
 The PostgreSQL volume persists between runs. Continue with the
 [frontend API contract](API.md) to wire up browser requests and email links.
+
+If device location finds a city without a neighborhood, confirm the offered city to save it as a manual approximate location, or cancel and enter another place. The city suggestion alone does not change your saved location.
