@@ -6,36 +6,21 @@ from psycopg import Connection
 
 from ..auth.passwords import hasher
 from ..auth.validation import password
-from ..location.places import PLACES
-from .seed_interactions import seed_interactions
-from .seed_photo import seed_photo
 from ..location.limits import LOCATION_DECIMAL_PLACES
+from ..location.places import PLACES
+from .limits import (
+    DEMO_PROFILE_COUNT,
+    SEED_ADVISORY_LOCK,
+    SEED_RANDOM_STATE,
+    SEED_STATEMENT_TIMEOUT,
+    TAGS,
+)
+from .seed_identity import seed_identity
+from .seed_interactions import seed_interactions
+from .seed_photo import legacy_seed_photo, seed_portrait
+from .seed_refresh import refresh_demo
 
 LOG = logging.getLogger(__name__)
-
-
-DEMO_PROFILE_COUNT = 500
-SEED_RANDOM_STATE = 238541
-SEED_ADVISORY_LOCK = 408302
-SEED_STATEMENT_TIMEOUT = "30s"
-
-TAGS = (
-    "art",
-    "books",
-    "climbing",
-    "cooking",
-    "cycling",
-    "film",
-    "gaming",
-    "gardening",
-    "hiking",
-    "jazz",
-    "photography",
-    "running",
-    "travel",
-    "vegan",
-    "yoga",
-)
 
 
 def seed(connection: Connection, phrase: str | None) -> None:
@@ -74,7 +59,13 @@ def seed(connection: Connection, phrase: str | None) -> None:
                 rng.randrange(1, 13),
                 rng.randrange(1, 29),
             )
-            photo = seed_photo(rng, number)
+            old_photo = legacy_seed_photo(rng, number)
+            photo = seed_portrait(number, gender, date.today().year - birthday.year)
+            identity = seed_identity(number, gender, selected_tags)
+            old_bio = (
+                f"Demo profile {number}. "
+                f"Interests include {', '.join(selected_tags)}."
+            )
             name = f"demo_{number:03}"
             # Reserve shared sign-in for two clearly marked evaluator accounts.
             hash_value = hashed if hashed and number in (1, 2) else "!"
@@ -91,14 +82,13 @@ def seed(connection: Connection, phrase: str | None) -> None:
                 (
                     name,
                     f"{name}@seed.example.test",
-                    "Demo",
-                    f"Profile {number:03}",
+                    identity["first_name"],
+                    identity["last_name"],
                     hash_value,
                     birthday,
                     gender,
                     seeks,
-                    f"Demo profile {number}. "
-                    f"Interests include {', '.join(selected_tags)}.",
+                    identity["bio"],
                     city,
                     area,
                     country,
@@ -115,6 +105,9 @@ def seed(connection: Connection, phrase: str | None) -> None:
                         "Demo username or email already belongs "
                         f"to another account: {name}"
                     )
+                refresh_demo(
+                    connection, user["id"], number, identity, old_bio, old_photo, photo
+                )
                 # A seed rerun may enable or disable evaluator sign-in explicitly.
                 if number in (1, 2):
                     connection.execute(
