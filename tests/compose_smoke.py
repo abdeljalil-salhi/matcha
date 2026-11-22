@@ -131,7 +131,18 @@ def main() -> None:
             "API_PORT": "0",
             "MAILPIT_PORT": "0",
         }
-        compose = ["docker", "compose", "--env-file", str(env_file), "-p", project]
+        # Explicitly select the tracked configuration. Local overrides may attach
+        # external development volumes, defeating this test's isolation.
+        compose = [
+            "docker",
+            "compose",
+            "-f",
+            str(ROOT / "compose.yaml"),
+            "--env-file",
+            str(env_file),
+            "-p",
+            project,
+        ]
 
         run = partial(subprocess.run, cwd=ROOT, env=env)
         port = partial(subprocess.check_output, cwd=ROOT, env=env, text=True)
