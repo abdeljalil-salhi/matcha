@@ -12,3 +12,26 @@ LINK_SUBJECTS = {
     "reset": "Reset your Matcha password",
     "email": "Confirm your new Matcha email",
 }
+
+DEMO_PROFILE_COUNT = 500
+SEED_RANDOM_STATE = 238541
+SEED_ADVISORY_LOCK = 408302
+SEED_STATEMENT_TIMEOUT = "30s"
+
+TAGS = (
+    "art",
+    "books",
+    "climbing",
+    "cooking",
+    "cycling",
+    "film",
+    "gaming",
+    "gardening",
+    "hiking",
+    "jazz",
+    "photography",
+    "running",
+    "travel",
+    "vegan",
+    "yoga",
+)
