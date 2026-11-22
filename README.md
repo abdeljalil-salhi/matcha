@@ -1,8 +1,12 @@
 # Matcha
 
-Matcha is a dating app built for the 42 web curriculum. This repository currently
-contains the Flask backend. The frontend can use the documented HTTP API to
-build account, profile, discovery, and messaging flows.
+Matcha is a dating app built for the 42 web curriculum. This repository contains
+a Flask backend and a React/TypeScript frontend. The frontend consumes the
+documented HTTP API for account, profile, discovery, and messaging flows.
+
+To run the frontend locally, keep `FRONTEND_URL=http://localhost:5173` in `.env`,
+start the backend with `docker compose up -d`, then follow
+[frontend/README.md](frontend/README.md).
 
 ## Features
 
@@ -24,9 +28,11 @@ testing account emails.
 | [Local setup](docs/SETUP.md) | Start the backend, seed demo profiles, and use Swagger UI |
 | [Frontend API contract](docs/API.md) | Connect a frontend and implement account, profile, discovery, and chat flows |
 | [Development and CI](docs/DEVELOPMENT.md) | Run tests, format Python, and understand the automated checks |
+| [UI examples](docs/EXAMPLES.md) | See screenshots of location search, saved profile, map, gallery and discovery |
 
 ## Repository layout
 
+- [`frontend/`](frontend/) contains the React application and its setup guide.
 - [`server/`](server/) contains the Flask backend and its OpenAPI specification.
 - [`sql/`](sql/) contains the PostgreSQL migrations.
 - [`tests/`](tests/) contains integration tests and a Compose smoke test.

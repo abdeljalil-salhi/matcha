@@ -54,6 +54,19 @@ docker compose run --rm setup python -m server.manage seed
 To enable sign-in for `demo_001` and `demo_002`, choose a `SEED_PASSWORD` in
 `.env` before running the seed command. Use that password with either username.
 
+Demo profiles have realistic fictional names, interest-based biographies, and
+bundled AI-generated adult portraits. They retain `demo_NNN` usernames so test
+accounts remain recognizable. The 219 distinct portraits are reused across the
+500 accounts; seeding and photo serving need no external image service.
+Portrait source and license are recorded in
+[`server/jobs/assets/portraits/SOURCE.md`](../server/jobs/assets/portraits/SOURCE.md).
+
+Rerun the same seed command to upgrade the original numbered names, biographies,
+and silhouette avatars. Only fields still matching their original placeholders
+are replaced; edited profile fields and uploaded photos are preserved. Existing
+locations, interests, likes, and visits remain intact. As before, reseeding rotates
+the evaluator passwords and revokes their sessions, so sign in again afterwards.
+
 To test registration and email verification, register an account and open the
 message in Mailpit. While the frontend verification page is still being built,
 copy the value after `#token=` from the email link and submit it to

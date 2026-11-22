@@ -129,6 +129,11 @@ def gps_location(latitude: Coordinate, longitude: Coordinate) -> Place:
         coordinate(longitude, "longitude", MAX_LONGITUDE_DEGREES),
         LOCATION_DECIMAL_PLACES,
     )
+    # The offline fixtures are authoritative where they exist. This keeps the
+    # seeded neighborhoods stable even when an online geocoder is configured.
+    offline = local_reverse(lat, lon)
+    if offline:
+        return offline
     result = provider(
         "reverse",
         {
@@ -139,10 +144,10 @@ def gps_location(latitude: Coordinate, longitude: Coordinate) -> Place:
             "addressdetails": 1,
         },
     )
-    place = from_result(result) if result is not None else local_reverse(lat, lon)
-    if not place or not place[1]:
+    place = from_result(result) if result is not None else None
+    if not place:
         raise ApiError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "No neighborhood found. Enter your location manually.",
+            "No location found. Enter your location manually.",
         )
     return place
