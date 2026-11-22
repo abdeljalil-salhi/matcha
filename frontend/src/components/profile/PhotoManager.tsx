@@ -46,6 +46,7 @@ interface Draft extends ImageEdits {
 export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
   const { notify } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const editorErrorRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const openingRef = useRef(false);
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -107,6 +108,10 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
     observer.observe(viewport);
     return () => observer.disconnect();
   }, [draft?.url]);
+
+  useEffect(() => {
+    if (draft && error) editorErrorRef.current?.focus();
+  }, [draft?.url, error]);
 
   const enqueue = (files: File[]) => {
     if (files.length === 0) return;
@@ -222,7 +227,6 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
     if (busyId === "upload") return;
     setQueue([]);
     setDraft(null);
-    setError(null);
   };
 
   const apply = async () => {
@@ -281,7 +285,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      {error ? <div className="error-banner" role="alert">{error}</div> : null}
+      {error && !draft ? <div className="error-banner" role="alert">{error}</div> : null}
 
       <div className="photo-grid">
         {photos.map((photo) => (
@@ -361,6 +365,9 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
           </>
         }
       >
+        {draft && error ? (
+          <div ref={editorErrorRef} className="error-banner" role="alert" tabIndex={-1}>{error}</div>
+        ) : null}
         {draft ? (
           <div className="photo-editor">
             <div className="photo-editor__stage">
