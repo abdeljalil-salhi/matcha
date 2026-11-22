@@ -7,13 +7,12 @@ from .places import PLACES
 from .provider import from_result, provider
 from .limits import (
     EARTH_RADIUS_KM,
-    LOCATION_DECIMAL_PLACES,
     MAX_LATITUDE_DEGREES,
     MAX_LONGITUDE_DEGREES,
 )
 from .types import Coordinate, Place
 
-OFFLINE_NEIGHBORHOOD_RADIUS_KM = 4
+OFFLINE_NEIGHBORHOOD_RADIUS_KM = 1
 MAX_PLACE_QUERY_LENGTH = 160
 GEOCODER_SEARCH_LIMIT = 5
 GEOCODER_NEIGHBORHOOD_ZOOM = 14
@@ -62,7 +61,7 @@ def haversine(lat: float, lon: float, place: Place) -> float:
 
 
 def local_reverse(lat: float, lon: float) -> Place | None:
-    """Find the nearest offline fixture when it is a neighborhood within 4 km.
+    """Find a nearby offline neighborhood within the configured radius.
 
     Args:
         lat (float): Latitude.
@@ -71,10 +70,14 @@ def local_reverse(lat: float, lon: float) -> Place | None:
     Returns:
         Place | None: City, area, country code, latitude, and longitude.
     """
-    nearest = min(PLACES, key=lambda place: haversine(lat, lon, place))
+    nearest = min(
+        (place for place in PLACES if place[1]),
+        key=lambda place: haversine(lat, lon, place),
+        default=None,
+    )
     return (
         nearest
-        if nearest[1] and haversine(lat, lon, nearest) <= OFFLINE_NEIGHBORHOOD_RADIUS_KM
+        if nearest and haversine(lat, lon, nearest) <= OFFLINE_NEIGHBORHOOD_RADIUS_KM
         else None
     )
 
@@ -113,7 +116,7 @@ def manual_location(query: str) -> Place:
 
 
 def gps_location(latitude: Coordinate, longitude: Coordinate) -> Place:
-    """Reverse geocode rounded coordinates after the route verifies consent.
+    """Resolve a neighborhood from consented coordinates before storage rounding.
 
     Args:
         latitude (Coordinate): Latitude in degrees.
@@ -122,13 +125,8 @@ def gps_location(latitude: Coordinate, longitude: Coordinate) -> Place:
     Returns:
         Place: City, neighborhood, country code, latitude, and longitude.
     """
-    lat = round(
-        coordinate(latitude, "latitude", MAX_LATITUDE_DEGREES), LOCATION_DECIMAL_PLACES
-    )
-    lon = round(
-        coordinate(longitude, "longitude", MAX_LONGITUDE_DEGREES),
-        LOCATION_DECIMAL_PLACES,
-    )
+    lat = coordinate(latitude, "latitude", MAX_LATITUDE_DEGREES)
+    lon = coordinate(longitude, "longitude", MAX_LONGITUDE_DEGREES)
     # The offline fixtures are authoritative where they exist. This keeps the
     # seeded neighborhoods stable even when an online geocoder is configured.
     offline = local_reverse(lat, lon)
@@ -145,9 +143,9 @@ def gps_location(latitude: Coordinate, longitude: Coordinate) -> Place:
         },
     )
     place = from_result(result) if result is not None else None
-    if not place:
+    if not place or not place[1] or not place[1].strip():
         raise ApiError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "No location found. Enter your location manually.",
+            "No neighborhood found. Enter your city or neighborhood manually.",
         )
     return place

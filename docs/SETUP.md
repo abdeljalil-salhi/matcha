@@ -77,6 +77,12 @@ Marseille, Rabat, Casablanca, and London. For broader coverage, set
 `GEOCODER_URL` to a Nominatim-compatible instance with `/search` and `/reverse`
 endpoints.
 
+Device location is saved as `gps` only after explicit consent and successful
+neighborhood resolution. Nearby offline neighborhoods are supported within 1 km;
+other areas need the configured reverse geocoder. City-only or failed GPS lookups
+leave the saved location unchanged. The user can enter a city or neighborhood
+manually instead. Coordinates are rounded for storage after the lookup.
+
 ## Stop the stack
 
 ```sh
