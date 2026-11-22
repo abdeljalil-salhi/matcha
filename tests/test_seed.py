@@ -78,7 +78,7 @@ def test_seed_refresh_preserves_edits(backend: tuple[Flask, Connection]) -> None
         )
         == b"replacement"
     )
-    # Restore shared fixture state for this branch's session-scoped test database.
+    # Leave the demo fixture as it was before exercising edits.
     conn.execute(
         "UPDATE users SET first_name = %s, last_name = %s, bio = %s WHERE id = %s",
         (original["first_name"], original["last_name"], original["bio"], user_id),
