@@ -43,6 +43,20 @@ dynamically assigned ports. It checks API startup, verification email delivery
 through Mailpit, and cookie-based sign-in. It removes the temporary containers
 and volume on exit.
 
+## Run frontend regression tests
+
+Use Node.js 24 and the committed npm lockfile:
+
+```sh
+npm --prefix frontend ci
+npm --prefix frontend test
+npm --prefix frontend run build
+```
+
+Vitest and React Testing Library cover empty-chat delivery, safe GPS failures,
+session controls across routes, logout failures, and notification polling.
+The production build also type-checks the frontend and test files.
+
 ## GitHub Actions
 
 - [Backend checks](../.github/workflows/backend.yml) run Black, Flake8, and the
@@ -51,3 +65,5 @@ and volume on exit.
 - [CodeQL](../.github/workflows/codeql.yml) scans the Python backend on pushes to
   `main` and pull requests targeting it. Results appear under
   **Security → Code scanning** on GitHub.
+- [Frontend checks](../.github/workflows/frontend.yml) run component regression
+  tests and the production build on pull requests and pushes to `main`.

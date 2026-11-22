@@ -1,4 +1,6 @@
 node_modules/
+.vite/
+.vitest/
 dist/
 dist-ssr/
 *.local
