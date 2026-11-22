@@ -4,4 +4,6 @@
 !server/**
 !sql/
 !sql/**
+!data/
+!data/places.json
 **/__pycache__
