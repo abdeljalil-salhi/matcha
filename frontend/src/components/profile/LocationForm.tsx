@@ -6,6 +6,7 @@ import { FEATURED_CHOICES, LOCATION_CHOICES, searchLocations } from "../../data/
 import { placeLabel } from "../../utils/format";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { LocationAttribution } from "./LocationAttribution";
 
 interface LocationFormProps {
   current: {
@@ -401,7 +402,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
             <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
             <span>
               I explicitly consent to Matcha using my device location to find nearby profiles.
-              Only an approximate area is stored.
+              Online lookups send coordinates to our geocoding provider. Only an approximate area is stored.
             </span>
           </label>
           <div className="gps-panel__actions">
@@ -416,6 +417,7 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
           </p>
         </div>
       )}
+      <LocationAttribution />
     </div>
   );
 }

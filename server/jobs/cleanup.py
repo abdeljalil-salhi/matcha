@@ -19,6 +19,7 @@ def clean(connection: Connection) -> None:
         (RATE_WINDOW_RETENTION_DAYS,),
     )
     connection.execute("DELETE FROM account_links WHERE expires_at <= now()")
+    connection.execute("DELETE FROM geocoder_cache WHERE expires_at <= now()")
     connection.execute("""WITH locked AS MATERIALIZED (
                SELECT u.id FROM users u
                WHERE EXISTS (SELECT 1 FROM sessions WHERE user_id = u.id AND expires_at

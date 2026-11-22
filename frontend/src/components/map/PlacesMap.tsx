@@ -8,6 +8,7 @@ import { lookupNetworkLocation, saveDetectedLocation } from "../../utils/locatio
 import { FEATURED_CHOICES, LOCATION_CHOICES, type LocationChoice } from "../../data/locations";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { LocationAttribution } from "../profile/LocationAttribution";
 
 const CITY_CHOICES = LOCATION_CHOICES.filter((choice) => choice.kind === "city");
 const FEATURED_CITIES = FEATURED_CHOICES.filter((choice) => choice.kind === "city");
@@ -303,6 +304,7 @@ export function PlacesMap() {
         </div>
       </div>
 
+      <LocationAttribution />
       <div className="places-map__detail">
         {selected?.type === "place" ? (
           <>
@@ -335,7 +337,10 @@ export function PlacesMap() {
             <div className="places-map__save">
               <label className="consent-row">
                 <input type="checkbox" checked={consentToSave} onChange={(event) => setConsentToSave(event.target.checked)} />
-                <span>I consent to saving this approximate location for matching.</span>
+                <span>
+                  I consent to saving this approximate location for matching.
+                  Online lookups send coordinates to our geocoding provider.
+                </span>
               </label>
               <Button
                 size="sm"
