@@ -27,8 +27,9 @@ Set `MATCHA_TEST_DSN` to a disposable PostgreSQL connection string.
 MATCHA_TEST_DSN='<disposable PostgreSQL DSN>' python -m pytest -q
 ```
 
-The database role needs permission to create schemas. The suite creates and
-removes a dedicated schema and applies all migrations during setup.
+The database role needs permission to create schemas. Each test creates and
+removes its own schema and applies all migrations during setup, so accounts,
+sessions, and notifications cannot leak between tests.
 
 ## Run the Compose smoke test
 
