@@ -5,7 +5,11 @@ from psycopg import Connection
 from psycopg.types.json import Jsonb
 
 from ..common.types import JsonValue
-from .limits import GEOCODER_CACHE_TTL_SECONDS, GEOCODER_NEGATIVE_TTL_SECONDS
+from .limits import (
+    GEOCODER_CACHE_TTL_SECONDS,
+    GEOCODER_CACHE_VERSION,
+    GEOCODER_NEGATIVE_TTL_SECONDS,
+)
 from .types import CachedGeocode, GeocoderEndpoint, GeocoderParams
 
 
@@ -20,7 +24,11 @@ def cache_key(base: str, path: GeocoderEndpoint, params: GeocoderParams) -> str:
     Returns:
         str: SHA-256 cache identifier, scoped to the configured provider.
     """
-    request = json.dumps([base, path, dict(params)], sort_keys=True, ensure_ascii=False)
+    request = json.dumps(
+        [GEOCODER_CACHE_VERSION, base, path, dict(params)],
+        sort_keys=True,
+        ensure_ascii=False,
+    )
     return hashlib.sha256(request.encode()).hexdigest()
 
 
