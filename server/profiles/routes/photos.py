@@ -2,16 +2,37 @@ import io
 from http import HTTPStatus
 
 from flask import Blueprint, Response, g, request, send_file
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from ...auth.guard import signed_in
 from ...common.db import db, lock_users
 from ...common.http import ApiError, rate_limit
+from ...common.types import JsonObject
 from ...common.validation import check_id
 from ..image import image_bytes
 from ..limits import MAX_PROFILE_PHOTOS, PHOTO_UPLOADS_PER_MINUTE
 from ..types import PhotoSummary
 
 routes = Blueprint("photos", __name__)
+
+
+@routes.errorhandler(RequestEntityTooLarge)
+def upload_too_large(_error: RequestEntityTooLarge) -> tuple[JsonObject, int]:
+    """Explain parser-level upload rejections using the supported photo size.
+
+    Args:
+        _error (RequestEntityTooLarge): Multipart request limit violation.
+
+    Returns:
+        tuple[JsonObject, int]: Public upload guidance and HTTP 413.
+    """
+    return {
+        "error": {
+            "message": (
+                "Upload exceeds request limits. Photos must be 10 MiB or smaller."
+            )
+        }
+    }, HTTPStatus.REQUEST_ENTITY_TOO_LARGE
 
 
 @routes.post("/me/photos")

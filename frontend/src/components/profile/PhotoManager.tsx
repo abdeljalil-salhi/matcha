@@ -14,13 +14,13 @@ import { useToast } from "../../context/ToastContext";
 import {
   clampEdits,
   loadImage,
+  MAX_PHOTO_BYTES,
   PHOTO_FILTERS,
   renderEditedImage,
   type ImageEdits,
 } from "../../utils/imageEditor";
 
 const MAX_PHOTOS = 5;
-const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 const DEFAULT_EDITS: ImageEdits = {
@@ -46,6 +46,7 @@ interface Draft extends ImageEdits {
 export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
   const { notify } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const editorErrorRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const openingRef = useRef(false);
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -94,6 +95,24 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
     };
   }, [draft?.url]);
 
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || !draft) return;
+    // Pixel offsets must stay valid if the responsive crop window changes size.
+    const observer = new ResizeObserver(() => {
+      dragRef.current = null;
+      setDraft((current) => current && clampEdits(
+        current, current.width, current.height, viewport.clientWidth || 320,
+      ));
+    });
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [draft?.url]);
+
+  useEffect(() => {
+    if (draft && error) editorErrorRef.current?.focus();
+  }, [draft?.url, error]);
+
   const enqueue = (files: File[]) => {
     if (files.length === 0) return;
     setError(null);
@@ -103,8 +122,8 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
         problems.add("Choose JPEG, PNG, or WebP images.");
         return false;
       }
-      if (file.size > MAX_BYTES) {
-        problems.add("Images must be 5 MB or smaller.");
+      if (file.size > MAX_PHOTO_BYTES) {
+        problems.add("Images must be 10 MiB or smaller.");
         return false;
       }
       return true;
@@ -208,7 +227,6 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
     if (busyId === "upload") return;
     setQueue([]);
     setDraft(null);
-    setError(null);
   };
 
   const apply = async () => {
@@ -267,7 +285,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      {error ? <div className="error-banner" role="alert">{error}</div> : null}
+      {error && !draft ? <div className="error-banner" role="alert">{error}</div> : null}
 
       <div className="photo-grid">
         {photos.map((photo) => (
@@ -327,7 +345,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
 
       <p className="text-small text-muted">
         Drag images onto the gallery or choose files. Crop, rotate and filter them before uploading.
-        JPEG, PNG, or WebP up to 5 MB, five photos maximum. One must be your profile picture.
+        JPEG, PNG, or WebP up to 10 MiB, five photos maximum. One must be your profile picture.
       </p>
 
       <Modal
@@ -347,6 +365,9 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
           </>
         }
       >
+        {draft && error ? (
+          <div ref={editorErrorRef} className="error-banner" role="alert" tabIndex={-1}>{error}</div>
+        ) : null}
         {draft ? (
           <div className="photo-editor">
             <div className="photo-editor__stage">
@@ -363,7 +384,10 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
                   alt="Photo crop preview"
                   draggable={false}
                   style={{
-                    transform: `translate(${draft.offsetX}px, ${draft.offsetY}px) rotate(${draft.rotation}deg) scale(${draft.zoom})`,
+                    // Keep the full cover-sized image behind the square crop window.
+                    width: `${(draft.width / Math.min(draft.width, draft.height)) * 100}%`,
+                    height: `${(draft.height / Math.min(draft.width, draft.height)) * 100}%`,
+                    transform: `translate(-50%, -50%) translate(${draft.offsetX}px, ${draft.offsetY}px) rotate(${draft.rotation}deg) scale(${draft.zoom})`,
                     filter: draft.filter,
                   }}
                 />

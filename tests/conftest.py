@@ -7,6 +7,12 @@ import pytest
 from flask import Flask
 from server import create_app
 from server.common.db import pool_options
+from server.common.config import (
+    MAX_FORM_MEMORY_BYTES,
+    MAX_MULTIPART_PARTS,
+    MULTIPART_OVERHEAD_BYTES,
+)
+from server.profiles.limits import MAX_PHOTO_BYTES
 from server.jobs.migrations import migrate
 from psycopg import Connection
 
@@ -42,7 +48,9 @@ def backend() -> Iterator[tuple[Flask, Connection]]:
                     "FRONTEND_URL": ORIGIN,
                     "COOKIE_SECURE": False,
                     "RATELIMIT": False,
-                    "MAX_CONTENT_LENGTH": 5 * 1024 * 1024 + 16384,
+                    "MAX_CONTENT_LENGTH": MAX_PHOTO_BYTES + MULTIPART_OVERHEAD_BYTES,
+                    "MAX_FORM_MEMORY_SIZE": MAX_FORM_MEMORY_BYTES,
+                    "MAX_FORM_PARTS": MAX_MULTIPART_PARTS,
                 }
             )
             yield app, connection

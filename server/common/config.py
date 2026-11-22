@@ -8,7 +8,8 @@ from .types import Settings
 from ..profiles.limits import MAX_PHOTO_BYTES
 
 MULTIPART_OVERHEAD_BYTES = 16 * 1024
-MAX_FORM_MEMORY_BYTES = 64 * 1024
+# Allow a 64 KiB parser chunk plus retained multipart boundary bytes.
+MAX_FORM_MEMORY_BYTES = 128 * 1024
 MAX_MULTIPART_PARTS = 4
 
 

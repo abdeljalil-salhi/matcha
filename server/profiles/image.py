@@ -27,7 +27,7 @@ def image_bytes(source: BinaryIO) -> bytes:
     raw = source.read(MAX_PHOTO_BYTES + 1)
     if len(raw) > MAX_PHOTO_BYTES:
         raise ApiError(
-            HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "Photos must be 5 MiB or smaller."
+            HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "Photos must be 10 MiB or smaller."
         )
     try:
         with warnings.catch_warnings():
