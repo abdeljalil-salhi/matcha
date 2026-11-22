@@ -4,7 +4,8 @@ from http import HTTPStatus
 from ..common.http import ApiError
 from ..common.validation import coordinate, text
 from .places import PLACES
-from .provider import from_result, provider
+from .provider import provider
+from .results import from_result
 from .limits import (
     EARTH_RADIUS_KM,
     MAX_LATITUDE_DEGREES,
