@@ -1,0 +1,303 @@
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import { api, ApiError, type Conversation, type Message } from "../../api";
+import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationsContext";
+import { useToast } from "../../context/ToastContext";
+import { Avatar } from "../../components/ui/Avatar";
+import { Button } from "../../components/ui/Button";
+import { Icon } from "../../components/ui/Icon";
+import { EmptyState, ErrorBanner, Spinner } from "../../components/ui/Misc";
+import { clockTime, dayLabel, fullName, uuid } from "../../utils/format";
+
+interface PendingMessage {
+  client_id: string;
+  body: string;
+  failed?: boolean;
+}
+
+interface ChatThreadProps {
+  conversation: Conversation | undefined;
+  userId: number;
+  onAccessLost: () => void;
+  onConversationUpdate: () => void;
+}
+
+const PAGE_SIZE = 50;
+const POLL_MS = 2000;
+
+export function ChatThread({ conversation, userId, onAccessLost, onConversationUpdate }: ChatThreadProps) {
+  const { user } = useAuth();
+  const { notify } = useToast();
+  const { notifications, markOne } = useNotifications();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [pending, setPending] = useState<PendingMessage[]>([]);
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const oldestId = useRef<number | null>(null);
+  const lastId = useRef<number | null>(null);
+  const inFlight = useRef(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const atBottom = useRef(true);
+
+  const merge = useCallback((incoming: Message[]) => {
+    if (incoming.length === 0) return;
+    const byId = new Map<number, Message>();
+    setMessages((current) => {
+      for (const message of current) byId.set(message.id, message);
+      for (const message of incoming) byId.set(message.id, message);
+      return [...byId.values()].sort((a, b) => a.id - b.id);
+    });
+    const ids = incoming.map((message) => message.id);
+    const clientIds = new Set(incoming.map((message) => message.client_id));
+    setPending((current) => current.filter((item) => !clientIds.has(item.client_id)));
+    lastId.current = Math.max(lastId.current ?? 0, ...ids);
+    oldestId.current = Math.min(oldestId.current ?? Infinity, ...ids);
+  }, []);
+
+  const loadInitial = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setMessages([]);
+    setPending([]);
+    oldestId.current = null;
+    lastId.current = null;
+    try {
+      const page = await api.chat.messages(userId, { limit: PAGE_SIZE });
+      merge(page.messages);
+      setHasMore(page.messages.length === PAGE_SIZE);
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 403) {
+        onAccessLost();
+        return;
+      }
+      setError(cause instanceof Error ? cause.message : "Unable to load this conversation.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, merge, onAccessLost]);
+
+  useEffect(() => {
+    void loadInitial();
+  }, [loadInitial]);
+
+  const poll = useCallback(async () => {
+    if (inFlight.current || lastId.current === null) return;
+    if (document.visibilityState === "hidden" || !navigator.onLine) return;
+    inFlight.current = true;
+    try {
+      let after = lastId.current;
+      for (let round = 0; round < 5; round += 1) {
+        const page = await api.chat.messages(userId, { after, limit: 100 });
+        if (page.messages.length === 0) break;
+        merge(page.messages);
+        const newest = Math.max(...page.messages.map((message) => message.id));
+        if (newest <= after) break;
+        after = newest;
+        onConversationUpdate();
+        if (page.messages.length < 100) break;
+      }
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 403) onAccessLost();
+    } finally {
+      inFlight.current = false;
+    }
+  }, [userId, merge, onAccessLost, onConversationUpdate]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => void poll(), POLL_MS);
+    const onFocus = () => void poll();
+    const onOnline = () => void poll();
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [poll]);
+
+  const loadOlder = async () => {
+    if (oldestId.current === null || !hasMore || inFlight.current) return;
+    inFlight.current = true;
+    try {
+      const page = await api.chat.messages(userId, { before: oldestId.current, limit: PAGE_SIZE });
+      if (page.messages.length > 0) {
+        const byId = new Map<number, Message>();
+        setMessages((current) => {
+          for (const message of page.messages) byId.set(message.id, message);
+          for (const message of current) byId.set(message.id, message);
+          return [...byId.values()].sort((a, b) => a.id - b.id);
+        });
+        oldestId.current = Math.min(...page.messages.map((message) => message.id));
+      }
+      setHasMore(page.messages.length === PAGE_SIZE);
+    } catch (cause) {
+      notify(cause instanceof Error ? cause.message : "Unable to load older messages.", "error");
+    } finally {
+      inFlight.current = false;
+    }
+  };
+
+  const dispatch = async (item: PendingMessage) => {
+    setSending(true);
+    try {
+      const message = await api.chat.send(userId, item.body, item.client_id);
+      merge([message]);
+      onConversationUpdate();
+      void poll();
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 403) {
+        onAccessLost();
+        return;
+      }
+      setPending((current) =>
+        current.map((entry) => (entry.client_id === item.client_id ? { ...entry, failed: true } : entry)),
+      );
+      notify(cause instanceof Error ? cause.message : "Message not sent.", "error");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const send = (event: FormEvent) => {
+    event.preventDefault();
+    const body = draft.trim();
+    if (!body || body.length > 2000) return;
+    const item: PendingMessage = { client_id: uuid(), body };
+    setPending((current) => [...current, item]);
+    setDraft("");
+    atBottom.current = true;
+    void dispatch(item);
+  };
+
+  const relatedUnread = notifications.filter(
+    (entry) => entry.kind === "message" && entry.actor_id === userId && !entry.read_at,
+  );
+
+  const markRead = async () => {
+    await Promise.all(relatedUnread.map((entry) => markOne(entry.id)));
+    notify("Messages marked as read.", "success");
+  };
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element || !atBottom.current) return;
+    element.scrollTop = element.scrollHeight;
+  }, [messages, pending]);
+
+  const onScroll = () => {
+    const element = scrollRef.current;
+    if (!element) return;
+    atBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+  };
+
+  if (!conversation) {
+    return (
+      <div className="chat-thread chat-thread--empty">
+        <EmptyState
+          icon={<Icon name="message" size={26} />}
+          title="Conversation unavailable"
+          description="This chat may have been closed because a like was removed or someone was blocked."
+        />
+      </div>
+    );
+  }
+
+  let previousDay = "";
+
+  return (
+    <section className="chat-thread">
+      <header className="chat-thread__head">
+        <Link to="/chat" className="chat-thread__back">
+          <Icon name="chevronLeft" size={17} /> Conversations
+        </Link>
+        <Link to={`/profile/${userId}`} className="chat-thread__person">
+          <Avatar photoId={conversation.photo_id} name={conversation} size="sm" />
+          <span>
+            <strong>{fullName(conversation)}</strong>
+            <small>@{conversation.username} · view profile</small>
+          </span>
+        </Link>
+        {relatedUnread.length > 0 ? (
+          <button type="button" className="link-button" onClick={() => void markRead()}>
+            Mark {relatedUnread.length} read
+          </button>
+        ) : null}
+      </header>
+
+      {error ? <ErrorBanner message={error} onRetry={() => void loadInitial()} /> : null}
+
+      <div className="chat-thread__scroll" ref={scrollRef} onScroll={onScroll}>
+        {loading ? <div className="results-loader"><Spinner label="Loading messages" /></div> : null}
+
+        {hasMore ? (
+          <div className="chat-thread__older">
+            <button type="button" className="link-button" onClick={() => void loadOlder()}>Load older messages</button>
+          </div>
+        ) : null}
+
+        {!loading && messages.length === 0 && pending.length === 0 ? (
+          <div className="chat-thread__start">
+            <Icon name="spark" size={28} />
+            <p>You're connected. Say something nice to {conversation.first_name}.</p>
+          </div>
+        ) : null}
+
+        {messages.map((message) => {
+          const day = dayLabel(message.created_at);
+          const showDay = day !== previousDay;
+          previousDay = day;
+          return (
+            <div key={message.id}>
+              {showDay ? <div className="chat-day"><span>{day}</span></div> : null}
+              <div className={`bubble${message.sender_id === user?.id ? " bubble--mine" : ""}`}>
+                <p>{message.body}</p>
+                <time dateTime={message.created_at}>{clockTime(message.created_at)}</time>
+              </div>
+            </div>
+          );
+        })}
+
+        {pending.map((item) => (
+          <div key={item.client_id} className={`bubble bubble--mine${item.failed ? " bubble--failed" : ""}`}>
+            <p>{item.body}</p>
+            <time>{item.failed ? "Not sent" : "Sending…"}</time>
+            {item.failed ? (
+              <button type="button" className="link-button" onClick={() => void dispatch(item)}>Retry</button>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
+      <form className="chat-compose" onSubmit={send}>
+        <div className="chat-compose__field">
+          <textarea
+            className="input textarea"
+            rows={2}
+            value={draft}
+            maxLength={2000}
+            placeholder="Write a message…"
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                if (!sending && draft.trim()) event.currentTarget.form?.requestSubmit();
+              }
+            }}
+            aria-label="Message"
+          />
+          {draft.length > 1800 ? (
+            <span className="chat-compose__count">{draft.length}/2000</span>
+          ) : null}
+        </div>
+        <Button type="submit" disabled={!draft.trim() || sending} loading={sending}>
+          <Icon name="send" size={15} /> Send
+        </Button>
+      </form>
+    </section>
+  );
+}

@@ -27,15 +27,8 @@ Set `MATCHA_TEST_DSN` to a disposable PostgreSQL connection string.
 MATCHA_TEST_DSN='<disposable PostgreSQL DSN>' python -m pytest -q
 ```
 
-The database role needs permission to create schemas. Each test creates and
-removes its own schema and applies all migrations during setup.
-
-The security regressions submit competing requests for a single password-reset
-token and the final photo slot. Both requests synchronize immediately before
-acquiring the real database locks. They assert that one request succeeds and
-check the resulting credentials, sessions, photo count, and primary photo.
-A separate test checks that blocking immediately revokes both users' access
-to the conversation and each other's photos.
+The database role needs permission to create schemas. The suite creates and
+removes a dedicated schema and applies all migrations during setup.
 
 ## Run the Compose smoke test
 
