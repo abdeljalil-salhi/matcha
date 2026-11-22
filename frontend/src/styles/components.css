@@ -1532,3 +1532,10 @@ select.input {
 @media (max-width: 380px) {
   .location-choice-grid { grid-template-columns: 1fr; }
 }
+
+.city-location-confirmation { overflow-wrap: anywhere; }
+.city-location-confirmation .btn {
+  max-width: 100%;
+  white-space: normal;
+  margin-top: 10px;
+}
