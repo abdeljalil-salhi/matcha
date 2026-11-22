@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { api, type Notification, type NotificationPage } from "../api";
+import { notificationKey } from "../data/notifications";
 import { useAuth } from "./AuthContext";
 
 const POLL_MS = 2000;
@@ -29,16 +30,16 @@ interface NotificationsContextValue {
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
 function mergeNewest(current: Notification[], incoming: Notification[]): Notification[] {
-  const byId = new Map(current.map((item) => [item.id, item]));
-  for (const item of incoming) byId.set(item.id, item);
-  return [...byId.values()].sort((a, b) => b.id - a.id).slice(0, MAX_ITEMS);
+  const byKey = new Map(current.map((item) => [notificationKey(item), item]));
+  for (const item of incoming) {
+    const key = notificationKey(item);
+    const existing = byKey.get(key);
+    if (!existing || item.id >= existing.id) byKey.set(key, item);
+  }
+  return [...byKey.values()].sort((a, b) => b.id - a.id).slice(0, MAX_ITEMS);
 }
 
-function mergeOlder(current: Notification[], incoming: Notification[]): Notification[] {
-  const byId = new Map(current.map((item) => [item.id, item]));
-  for (const item of incoming) byId.set(item.id, item);
-  return [...byId.values()].sort((a, b) => b.id - a.id).slice(0, MAX_ITEMS);
-}
+const mergeOlder = mergeNewest;
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -51,6 +52,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const generation = useRef(0);
   const inFlight = useRef(false);
   const controllers = useRef<Set<AbortController>>(new Set());
+  const marking = useRef(new Set<string>());
+  const readRevision = useRef(0);
+  const latestNotifications = useRef(notifications);
+  latestNotifications.current = notifications;
   const snapshotThrough = useRef<number | null>(null);
 
   const applyPage = useCallback((page: NotificationPage) => {
@@ -79,9 +84,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const request = beginRequest();
     if (!request) return;
+    const revision = readRevision.current;
     try {
       const page = await api.notifications.list({ limit: 25 }, request.controller.signal);
-      if (generation.current === request.id) applyPage(page);
+      if (generation.current === request.id && readRevision.current === revision) applyPage(page);
     } catch {
       // A 401 dispatches the global unauthorized event; other failures self-heal on the next poll.
     } finally {
@@ -138,12 +144,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (!oldest || !hasMore) return;
     const request = beginRequest();
     if (!request) return;
+    const revision = readRevision.current;
     try {
       const page = await api.notifications.list(
         { before: oldest, limit: 25 },
         request.controller.signal,
       );
-      if (generation.current !== request.id) return;
+      if (generation.current !== request.id || readRevision.current !== revision) return;
       setNotifications((current) => mergeOlder(current, page.notifications));
       setUnread(page.unread);
       if (page.notifications.length < 25) setHasMore(false);
@@ -156,24 +163,43 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   const markOne = useCallback(
     async (id: number) => {
-      const item = notifications.find((entry) => entry.id === id);
-      if (!item || item.read_at) return;
+      const item = latestNotifications.current.find((entry) => entry.id === id);
+      const account = generation.current;
+      const requestKey = `${account}:${id}`;
+      if (!item || item.read_at || marking.current.has(requestKey)) return;
+      marking.current.add(requestKey);
       try {
         await api.notifications.markRead(id);
-        setNotifications((current) =>
-          current.map((entry) =>
-            entry.id === id ? { ...entry, read_at: new Date().toISOString() } : entry,
-          ),
-        );
-        setUnread((current) => ({
-          total: Math.max(0, current.total - 1),
-          messages: Math.max(0, current.messages - (item.kind === "message" ? 1 : 0)),
-        }));
+        if (generation.current !== account) return;
+        readRevision.current += 1;
+        const key = notificationKey(item);
+        const current = latestNotifications.current.find((entry) => notificationKey(entry) === key);
+        if (current && current.id > item.id) {
+          // A newer group may include reads from another device. Reconcile it
+          // with the server rather than guessing which events were consumed.
+          await refresh();
+          return;
+        }
+        if (current && !current.read_at) {
+          const consumed = Math.min(item.unread_count, current.unread_count);
+          const remaining = current.unread_count - consumed;
+          const updated = { ...current, unread_count: remaining,
+            read_at: remaining === 0 ? new Date().toISOString() : null };
+          latestNotifications.current = latestNotifications.current.map((entry) =>
+            notificationKey(entry) === key ? updated : entry);
+          setNotifications(latestNotifications.current);
+          setUnread((counts) => ({
+            total: Math.max(0, counts.total - (remaining === 0 ? 1 : 0)),
+            messages: Math.max(0, counts.messages - (item.kind === "message" ? consumed : 0)),
+          }));
+        }
       } catch {
-        await refresh();
+        if (generation.current === account) await refresh();
+      } finally {
+        marking.current.delete(requestKey);
       }
     },
-    [notifications, refresh],
+    [refresh],
   );
 
   const snapshotVisible = useCallback(() => {
@@ -186,10 +212,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       if (!through) return;
       try {
         await api.notifications.markThrough(through);
+        readRevision.current += 1;
         setNotifications((current) =>
           current.map((entry) =>
             entry.id <= through && !entry.read_at
-              ? { ...entry, read_at: new Date().toISOString() }
+              ? { ...entry, read_at: new Date().toISOString(), unread_count: 0 }
               : entry,
           ),
         );

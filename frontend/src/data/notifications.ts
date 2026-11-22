@@ -15,3 +15,20 @@ export function notificationTarget(item: Notification): string {
   if (item.kind === "message" || item.kind === "match") return `/chat/${item.actor_id}`;
   return `/profile/${item.actor_id}`;
 }
+
+
+/** Stable identity for an actor/type row when a newer event replaces it. */
+export function notificationKey(item: Notification): string {
+  return `${item.kind}:${item.actor_id}`;
+}
+
+/** Describe the unread message total while keeping read conversation history compact. */
+export function notificationCopy(item: Notification, surface: "menu" | "page"): string {
+  if (item.kind === "message" && !item.read_at) {
+    return item.unread_count === 1 ? "sent you a new message" : `sent you ${item.unread_count} new messages`;
+  }
+  if (item.kind === "visit" && !item.read_at && item.unread_count > 1) {
+    return `${surface === "menu" ? "viewed" : "visited"} your profile ${item.unread_count} times`;
+  }
+  return NOTIFICATION_COPY[item.kind][surface];
+}
