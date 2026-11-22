@@ -1390,6 +1390,11 @@ select.input {
 .places-map__legend-dot--self { background: #d97757; }
 
 @media (max-width: 600px) {
+  .app-header .brand__word { display: none; }
+  .app-header__inner { gap: 10px; }
+  .app-header__actions { gap: 6px; }
+  .user-menu__trigger { padding: 4px; }
+  .user-menu__chevron { display: none; }
   .places-map__toolbar { flex-direction: column; }
   .places-map__actions { justify-content: flex-start; }
   .places-map__leaflet-wrap { height: 430px; }

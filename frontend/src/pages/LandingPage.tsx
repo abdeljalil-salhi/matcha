@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/Icon";
+import { SignOutButton } from "../components/layout/SignOutButton";
 
 export function LandingPage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className="landing">
@@ -15,9 +16,7 @@ export function LandingPage() {
         <div className="landing__nav-actions">
           {user ? (
             <>
-              <button type="button" className="btn btn--ghost btn--md" onClick={() => void signOut()}>
-                Sign out
-              </button>
+              <SignOutButton className="btn btn--ghost btn--md" showLabel />
               <Link to="/discover" className="btn btn--primary btn--md">Open Matcha</Link>
             </>
           ) : (

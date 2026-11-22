@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { api } from "../api";
 import { Button } from "../components/ui/Button";
 import { Field } from "../components/ui/Field";
 import { useAuth } from "../context/AuthContext";
 import { validateEmail } from "../utils/validation";
+import { SignOutButton } from "../components/layout/SignOutButton";
 
 export function SettingsPage() {
-  const { user, refresh, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { user, refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -61,10 +61,6 @@ export function SettingsPage() {
     }
   };
 
-  const logout = async () => {
-    await signOut();
-    navigate("/login", { replace: true });
-  };
 
   return (
     <div className="settings-page container">
@@ -140,7 +136,7 @@ export function SettingsPage() {
         <section className="card settings-card settings-card--danger">
           <h2>Sign out</h2>
           <p className="text-muted text-small">You can sign back in from any page.</p>
-          <Button variant="danger" onClick={() => void logout()}>Sign out</Button>
+          <SignOutButton className="btn btn--danger btn--md" showLabel />
         </section>
       </div>
     </div>
