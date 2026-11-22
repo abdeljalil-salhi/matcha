@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/Misc";
 import { useNotifications } from "../context/NotificationsContext";
-import { NOTIFICATION_COPY, notificationTarget } from "../data/notifications";
+import { NOTIFICATION_COPY, notificationCopy, notificationKey, notificationTarget } from "../data/notifications";
 import { relativeTime } from "../utils/format";
 import { Icon } from "../components/ui/Icon";
 
@@ -32,12 +32,12 @@ export function NotificationsPage() {
       ) : (
         <ul className="notification-feed">
           {notifications.map((item) => (
-            <li key={item.id}>
+            <li key={notificationKey(item)}>
               <button
                 type="button"
                 className={`notification-feed__item${item.read_at ? "" : " is-unread"}`}
                 onClick={() => {
-                  void markOne(item.id);
+                  if (item.kind !== "message") void markOne(item.id);
                   navigate(notificationTarget(item));
                 }}
               >
@@ -45,7 +45,7 @@ export function NotificationsPage() {
                   <Icon name={NOTIFICATION_COPY[item.kind].icon} size={17} />
                 </span>
                 <span className="notification-feed__body">
-                  <strong>{item.actor_username}</strong> {NOTIFICATION_COPY[item.kind].page}
+                  <strong>{item.actor_username}</strong> {notificationCopy(item, "page")}
                   <small className="text-muted">{relativeTime(item.created_at)}</small>
                 </span>
                 {item.read_at ? null : <span className="notification-item__dot" aria-hidden="true" />}

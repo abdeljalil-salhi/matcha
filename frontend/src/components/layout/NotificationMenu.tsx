@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationsContext";
-import { NOTIFICATION_COPY, notificationTarget } from "../../data/notifications";
+import { NOTIFICATION_COPY, notificationCopy, notificationKey, notificationTarget } from "../../data/notifications";
 import { relativeTime } from "../../utils/format";
 import type { Notification } from "../../api";
 import { Icon } from "../ui/Icon";
@@ -44,7 +44,7 @@ export function NotificationMenu() {
   };
 
   const goTo = async (item: Notification) => {
-    await markOne(item.id);
+    if (item.kind !== "message") await markOne(item.id);
     setOpen(false);
     navigate(notificationTarget(item));
   };
@@ -92,7 +92,7 @@ export function NotificationMenu() {
             ) : (
               notifications.map((item) => (
                 <button
-                  key={item.id}
+                  key={notificationKey(item)}
                   type="button"
                   className={`notification-item${item.read_at ? "" : " notification-item--unread"}`}
                   onClick={() => void goTo(item)}
@@ -102,7 +102,7 @@ export function NotificationMenu() {
                   </span>
                   <span className="notification-item__body">
                     <span>
-                      <strong>{item.actor_username}</strong> {NOTIFICATION_COPY[item.kind].menu}
+                      <strong>{item.actor_username}</strong> {notificationCopy(item, "menu")}
                     </span>
                     <span className="text-small text-muted">{relativeTime(item.created_at)}</span>
                   </span>
