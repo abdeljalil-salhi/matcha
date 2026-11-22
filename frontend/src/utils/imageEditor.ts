@@ -6,6 +6,8 @@ export interface ImageEdits {
   filter: string;
 }
 
+export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
 export const PHOTO_FILTERS = [
   { id: "original", label: "Original", css: "none" },
   { id: "sunlit", label: "Sunlit", css: "saturate(1.18) contrast(1.06) brightness(1.04)" },
@@ -88,7 +90,7 @@ export async function renderEditedImage(
     let blob: Blob | null = null;
     for (const quality of [0.9, 0.78, 0.65]) {
       blob = await encode(canvas, quality);
-      if (!blob || blob.size <= 5 * 1024 * 1024) break;
+      if (!blob || blob.size <= MAX_PHOTO_BYTES) break;
     }
     if (!blob) throw new Error("Unable to save that image.");
 

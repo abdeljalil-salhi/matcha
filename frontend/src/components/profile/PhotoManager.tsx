@@ -14,13 +14,13 @@ import { useToast } from "../../context/ToastContext";
 import {
   clampEdits,
   loadImage,
+  MAX_PHOTO_BYTES,
   PHOTO_FILTERS,
   renderEditedImage,
   type ImageEdits,
 } from "../../utils/imageEditor";
 
 const MAX_PHOTOS = 5;
-const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 const DEFAULT_EDITS: ImageEdits = {
@@ -122,8 +122,8 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
         problems.add("Choose JPEG, PNG, or WebP images.");
         return false;
       }
-      if (file.size > MAX_BYTES) {
-        problems.add("Images must be 5 MB or smaller.");
+      if (file.size > MAX_PHOTO_BYTES) {
+        problems.add("Images must be 10 MiB or smaller.");
         return false;
       }
       return true;
@@ -345,7 +345,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
 
       <p className="text-small text-muted">
         Drag images onto the gallery or choose files. Crop, rotate and filter them before uploading.
-        JPEG, PNG, or WebP up to 5 MB, five photos maximum. One must be your profile picture.
+        JPEG, PNG, or WebP up to 10 MiB, five photos maximum. One must be your profile picture.
       </p>
 
       <Modal
