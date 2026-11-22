@@ -57,8 +57,10 @@ to serve it locally.
   content type.
 - `GET /api/me` runs on startup. A 401 shows the sign-in flow; `complete`
   drives the onboarding gate.
-- Notifications are polled every two seconds at the app shell scope, which also
-  refreshes presence. The active chat thread polls every two seconds from the
+- Notifications are polled every two seconds for the signed-in session, with
+  unread counts and direct sign-out controls on app and standalone pages.
+  Presence refreshes only while visible. The active chat thread polls from zero
+  for an empty conversation, then every two seconds from the
   latest message ID, loads history with `before`, and reconciles by server ID
   and client-generated UUID.
 - Text from the API is rendered as text, never as HTML. Photos use

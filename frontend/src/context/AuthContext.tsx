@@ -88,11 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     try {
       await api.auth.logout();
-    } catch {
-      // Signing out locally is still correct if the session already expired.
-    } finally {
-      setUser(null);
+    } catch (cause) {
+      // Keep the UI signed in if revoking the server session actually failed.
+      if (!(cause instanceof ApiError && cause.status === 401)) throw cause;
     }
+    setUser(null);
   }, [setUser]);
 
   const value = useMemo<AuthContextValue>(

@@ -15,7 +15,6 @@ const NEIGHBORHOOD_CHOICES = LOCATION_CHOICES.filter((choice) => choice.kind ===
 const DEFAULT_BOUNDS = L.latLngBounds(LOCATION_CHOICES.map((choice) => [choice.latitude, choice.longitude]));
 const NEIGHBORHOOD_ZOOM = 7;
 
-const round2 = (value: number) => Math.round(value * 100) / 100;
 const escapeHtml = (value: string) =>
   value.replace(/[&<>"']/g, (char) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char] ?? char,
@@ -191,8 +190,8 @@ export function PlacesMap() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const positionValue: OwnPosition = {
-          latitude: round2(position.coords.latitude),
-          longitude: round2(position.coords.longitude),
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
           label: "Device location",
         };
         setLocating(false);
@@ -213,8 +212,8 @@ export function PlacesMap() {
     try {
       const found = await lookupNetworkLocation();
       const positionValue: OwnPosition = {
-        latitude: round2(found.latitude),
-        longitude: round2(found.longitude),
+        latitude: found.latitude,
+        longitude: found.longitude,
         label: found.label,
       };
       setOwn(positionValue);

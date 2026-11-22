@@ -113,8 +113,8 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         void saveCoordinates(
-          Math.round(position.coords.latitude * 100) / 100,
-          Math.round(position.coords.longitude * 100) / 100,
+          position.coords.latitude,
+          position.coords.longitude,
         );
       },
       (failure) => {
@@ -142,8 +142,8 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
     try {
       const found = await lookupNetworkLocation();
       await saveCoordinates(
-        Math.round(found.latitude * 100) / 100,
-        Math.round(found.longitude * 100) / 100,
+        found.latitude,
+        found.longitude,
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to get an approximate location.");
@@ -411,8 +411,8 @@ export function LocationForm({ current, onSaved }: LocationFormProps) {
             </Button>
           </div>
           <p className="field__hint">
-            If device location is unavailable, we can use a rough network location and then save
-            the closest supported area. Nothing more precise is stored.
+            If we cannot resolve a neighborhood, enter your city or neighborhood manually.
+            A failed lookup leaves your saved location unchanged.
           </p>
         </div>
       )}

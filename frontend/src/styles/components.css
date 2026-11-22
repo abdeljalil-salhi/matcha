@@ -755,6 +755,25 @@ select.input {
   align-items: center;
   gap: 10px;
 }
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.session-actions__messages { position: relative; }
+.standalone-session-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.standalone-session-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--header-h);
+}
 .user-menu { position: relative; }
 .user-menu__trigger {
   display: flex;
@@ -1390,6 +1409,12 @@ select.input {
 .places-map__legend-dot--self { background: #d97757; }
 
 @media (max-width: 600px) {
+  .app-header .brand__word { display: none; }
+  .app-header__inner { gap: 10px; }
+  .app-header__actions { gap: 6px; }
+  .session-actions { gap: 4px; }
+  .user-menu__trigger { padding: 4px; }
+  .user-menu__chevron { display: none; }
   .places-map__toolbar { flex-direction: column; }
   .places-map__actions { justify-content: flex-start; }
   .places-map__leaflet-wrap { height: 430px; }

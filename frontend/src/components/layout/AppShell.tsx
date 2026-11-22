@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationsContext";
-import { useToast } from "../../context/ToastContext";
 import { fullName } from "../../utils/format";
 import { Avatar } from "../ui/Avatar";
 import { Icon, type IconName } from "../ui/Icon";
-import { NotificationMenu } from "./NotificationMenu";
+import { SessionActions } from "./SessionActions";
 
 const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: "/discover", label: "Discover", icon: "compass" },
@@ -17,10 +16,8 @@ const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
 ];
 
 export function AppShell() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { unread } = useNotifications();
-  const { notify } = useToast();
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -49,12 +46,6 @@ export function AppShell() {
     };
   }, [userOpen]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    notify("You've been signed out.", "info");
-    navigate("/login", { replace: true });
-  };
-
   if (!user) return null;
 
   return (
@@ -62,7 +53,7 @@ export function AppShell() {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="app-header">
         <div className="container app-header__inner">
-          <Link to="/discover" className="brand" onClick={() => setMobileOpen(false)}>
+          <Link to="/discover" className="brand" aria-label="Matcha home" onClick={() => setMobileOpen(false)}>
             <span className="brand__mark" aria-hidden="true">m</span>
             <span className="brand__word">matcha</span>
           </Link>
@@ -84,7 +75,7 @@ export function AppShell() {
           </nav>
 
           <div className="app-header__actions">
-            <NotificationMenu />
+            <SessionActions />
             <div className="user-menu" ref={userMenuRef}>
               <button
                 ref={userTriggerRef}
@@ -119,9 +110,6 @@ export function AppShell() {
                       Finish setup
                     </Link>
                   ) : null}
-                  <button type="button" onClick={() => void handleSignOut()}>
-                    <Icon name="logout" size={16} /> Sign out
-                  </button>
                 </div>
               ) : null}
             </div>
@@ -162,13 +150,6 @@ export function AppShell() {
             <NavLink to="/settings" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
               <Icon name="sliders" size={19} /> Settings
             </NavLink>
-            <button
-              type="button"
-              className="mobile-nav__link mobile-nav__signout"
-              onClick={() => void handleSignOut()}
-            >
-              <Icon name="logout" size={19} /> Sign out
-            </button>
           </nav>
         ) : null}
       </header>

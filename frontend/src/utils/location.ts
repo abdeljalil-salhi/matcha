@@ -1,38 +1,15 @@
-import { api, ApiError, type ResolvedLocation } from "../api";
-import { nearestLocationWithDistance } from "../data/locations";
+import { api, type ResolvedLocation } from "../api";
 
 /**
  * Saves browser-provided coordinates through the GPS endpoint.
- * Some reverse geocoders return a city without a neighborhood, which the API
- * rejects with 422. In that case we save the closest supported offline place
- * through the manual endpoint so the user still gets a usable location.
+ * A failed lookup leaves the saved location unchanged. The location form lets
+ * the user choose a manual location instead of guessing one on their behalf.
  */
 export async function saveDetectedLocation(
   latitude: number,
   longitude: number,
 ): Promise<ResolvedLocation> {
-  const nearest = nearestLocationWithDistance(latitude, longitude);
-  // The offline fixture already resolves this area, so skip a reverse-geocoder
-  // round trip that can reject city-only results.
-  if (nearest.distanceKm <= 4) {
-    return api.profile.setLocation({ source: "manual", query: nearest.choice.query });
-  }
-
-  try {
-    return await api.profile.setLocation({
-      source: "gps",
-      latitude,
-      longitude,
-      consent: true,
-    });
-  } catch (cause) {
-    const status = cause instanceof ApiError ? cause.status : 0;
-    const message = cause instanceof Error ? cause.message : "";
-    if (status === 422 || /neighborhood|location not found/i.test(message)) {
-      return api.profile.setLocation({ source: "manual", query: nearest.choice.query });
-    }
-    throw cause;
-  }
+  return api.profile.setLocation({ source: "gps", latitude, longitude, consent: true });
 }
 
 export async function lookupNetworkLocation(): Promise<{ latitude: number; longitude: number; label: string }> {

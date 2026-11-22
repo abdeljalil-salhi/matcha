@@ -67,6 +67,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     lastId.current = null;
     try {
       const page = await api.chat.messages(userId, { limit: PAGE_SIZE });
+      lastId.current = 0;
       merge(page.messages);
       setHasMore(page.messages.length === PAGE_SIZE);
     } catch (cause) {
@@ -86,7 +87,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
 
   const poll = useCallback(async () => {
     if (inFlight.current || lastId.current === null) return;
-    if (document.visibilityState === "hidden" || !navigator.onLine) return;
+    if (!navigator.onLine) return;
     inFlight.current = true;
     try {
       let after = lastId.current;
@@ -111,12 +112,17 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     const interval = window.setInterval(() => void poll(), POLL_MS);
     const onFocus = () => void poll();
     const onOnline = () => void poll();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void poll();
+    };
     window.addEventListener("focus", onFocus);
     window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [poll]);
 
