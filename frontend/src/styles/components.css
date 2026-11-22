@@ -717,12 +717,18 @@ select.input {
 }
 .main-nav__link {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 12px;
   border-radius: var(--radius-pill);
   color: var(--ink-soft);
   font-size: 0.87rem;
   font-weight: 600;
   text-decoration: none;
+}
+.main-nav__icon {
+  flex: none;
 }
 .main-nav__link:hover {
   background: rgba(63, 107, 75, 0.07);
