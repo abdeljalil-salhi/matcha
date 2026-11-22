@@ -8,6 +8,7 @@ from ..common.http import ApiError, serialize
 from ..common.request_data import object_body
 from ..common.validation import MAX_ID, check_id, query_int
 from .types import NotificationPage
+from .inbox import inbox_page, unread_counts
 from ..common.limits import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 
 routes = Blueprint("notifications", __name__)
@@ -30,35 +31,15 @@ def notifications() -> NotificationPage:
     before = query_int("before", 1, MAX_ID)
     with db().transaction():
         db().execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
-        unread = (
-            db()
-            .execute(
-                """SELECT count(*) AS total, count(*) FILTER (WHERE kind = 'message') AS
-                    messages
-               FROM visible_notifications WHERE recipient_id = %s AND read_at IS
-                   NULL""",
-                (g.user_id,),
-            )
-            .fetchone()
-        )
-        entries = (
-            db()
-            .execute(
-                """SELECT id, actor_id, actor_username, kind, message_id, created_at,
-                    read_at
-               FROM visible_notifications WHERE recipient_id = %s AND id <= %s ORDER BY
-                   id DESC LIMIT %s""",
-                (g.user_id, before - 1 if before else MAX_ID, limit),
-            )
-            .fetchall()
-        )
+        unread = unread_counts(g.user_id)
+        entries = inbox_page(g.user_id, before - 1 if before else MAX_ID, limit)
     return serialize({"unread": unread, "notifications": entries})
 
 
 @routes.put("/notifications/<int:notification_id>/read")
 @signed_in
 def mark_notification(notification_id: int) -> tuple[str, int]:
-    """Mark one visible notification read for the signed-in recipient.
+    """Mark an actor/type group read through the supplied visible notification ID.
 
     Args:
         Path parameters:
@@ -67,19 +48,32 @@ def mark_notification(notification_id: int) -> tuple[str, int]:
     Returns:
         tuple[str, int]: Empty body and HTTP 204.
     """
-    result = (
-        db()
-        .execute(
-            """UPDATE notifications SET read_at = coalesce(read_at, now())
-           WHERE id = %s AND recipient_id = %s AND id IN
-               (SELECT id FROM visible_notifications WHERE recipient_id = %s) RETURNING
-                   id""",
-            (check_id(notification_id), g.user_id, g.user_id),
+    notification_id = check_id(notification_id)
+    with db().transaction():
+        anchor = (
+            db()
+            .execute(
+                """SELECT id, actor_id, kind FROM visible_notifications
+               WHERE id = %s AND recipient_id = %s""",
+                (notification_id, g.user_id),
+            )
+            .fetchone()
         )
-        .fetchone()
-    )
-    if result is None:
-        raise ApiError(HTTPStatus.NOT_FOUND, "Notification not found.")
+        if anchor is None:
+            raise ApiError(HTTPStatus.NOT_FOUND, "Notification not found.")
+        db().execute(
+            """UPDATE notifications SET read_at = coalesce(read_at, now())
+               WHERE recipient_id = %(recipient)s AND id <= %(through)s
+                 AND kind = %(kind)s AND actor_id = %(actor)s
+                 AND id IN (SELECT id FROM visible_notifications
+                            WHERE recipient_id = %(recipient)s)""",
+            {
+                "recipient": g.user_id,
+                "through": anchor["id"],
+                "actor": anchor["actor_id"],
+                "kind": anchor["kind"],
+            },
+        )
     return "", HTTPStatus.NO_CONTENT
 
 

@@ -140,6 +140,7 @@ export interface Message {
 }
 
 export interface Notification {
+  unread_count: number;
   id: number;
   actor_id: number;
   actor_username: string;
