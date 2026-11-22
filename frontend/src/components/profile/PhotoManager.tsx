@@ -94,6 +94,20 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
     };
   }, [draft?.url]);
 
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || !draft) return;
+    // Pixel offsets must stay valid if the responsive crop window changes size.
+    const observer = new ResizeObserver(() => {
+      dragRef.current = null;
+      setDraft((current) => current && clampEdits(
+        current, current.width, current.height, viewport.clientWidth || 320,
+      ));
+    });
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [draft?.url]);
+
   const enqueue = (files: File[]) => {
     if (files.length === 0) return;
     setError(null);
@@ -363,7 +377,10 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
                   alt="Photo crop preview"
                   draggable={false}
                   style={{
-                    transform: `translate(${draft.offsetX}px, ${draft.offsetY}px) rotate(${draft.rotation}deg) scale(${draft.zoom})`,
+                    // Keep the full cover-sized image behind the square crop window.
+                    width: `${(draft.width / Math.min(draft.width, draft.height)) * 100}%`,
+                    height: `${(draft.height / Math.min(draft.width, draft.height)) * 100}%`,
+                    transform: `translate(-50%, -50%) translate(${draft.offsetX}px, ${draft.offsetY}px) rotate(${draft.rotation}deg) scale(${draft.zoom})`,
                     filter: draft.filter,
                   }}
                 />

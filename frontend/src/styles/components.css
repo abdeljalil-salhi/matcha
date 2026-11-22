@@ -1449,7 +1449,7 @@ select.input {
 }
 .photo-editor__crop:active { cursor: grabbing; }
 .photo-editor__crop img {
-  width: 100%; height: 100%; object-fit: cover;
+  position: absolute; left: 50%; top: 50%; max-width: none;
   transform-origin: center; pointer-events: none;
 }
 .photo-editor__grid {
