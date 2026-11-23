@@ -1,0 +1,27 @@
+# Optional relay; run separately with: docker compose -f compose.turn.yaml up -d
+services:
+  turn:
+    image: coturn/coturn:4.18.0-r0
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777
+    environment:
+      TURN_SHARED_SECRET: ${CALL_TURN_SECRET:?Set CALL_TURN_SECRET for the relay}
+      TURN_PUBLIC_IP: ${TURN_PUBLIC_IP:?Set the relay host public IPv4 address}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        umask 077
+        cat /etc/coturn/matcha.conf > /tmp/matcha-turn.conf
+        printf '%s\n' "static-auth-secret=$$TURN_SHARED_SECRET" "external-ip=$$TURN_PUBLIC_IP" >> /tmp/matcha-turn.conf
+        exec turnserver -c /tmp/matcha-turn.conf
+    volumes:
+      - ./infra/turn/turnserver.conf:/etc/coturn/matcha.conf:ro
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "49160-49180:49160-49180/udp"
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
