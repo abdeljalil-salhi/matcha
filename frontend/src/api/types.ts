@@ -1,7 +1,7 @@
 export type Gender = "woman" | "man" | "nonbinary" | "other";
 export type LocationSource = "manual" | "gps";
 export type NotificationKind = "like" | "visit" | "message" | "match" | "unlike";
-export type SortKey = "recommended" | "age" | "location" | "fame" | "common_tags";
+export type SortKey = "recommended" | "age" | "location" | "fame" | "common_tags" | "newest";
 export type SortDirection = "asc" | "desc";
 
 export interface PhotoRef {
