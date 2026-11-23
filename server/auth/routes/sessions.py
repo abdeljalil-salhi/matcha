@@ -1,4 +1,3 @@
-import secrets
 from http import HTTPStatus
 
 from argon2 import exceptions
@@ -8,9 +7,10 @@ from ...common.db import db, lock_users
 from ...common.http import ApiError, rate_limit
 from ...common.request_data import object_body, require_string
 from ...common.validation import text
-from ..guard import COOKIE, SESSION_SECONDS, SESSION_TOKEN_BYTES, signed_in, token_hash
+from ..guard import COOKIE, signed_in
 from ..links import throttle
 from ..passwords import DUMMY_HASH, hasher
+from ..session import issue_session, set_session_cookie
 from ..validation import username
 from ..limits import (
     AUTH_RATE_WINDOW_SECONDS,
@@ -78,27 +78,8 @@ def login() -> Response:
             )
         if fresh["verified_at"] is None:
             raise ApiError(HTTPStatus.FORBIDDEN, "Verify your email before signing in.")
-        previous = request.cookies.get(COOKIE)
-        if previous:
-            db().execute(
-                "DELETE FROM sessions WHERE token_hash = %s", (token_hash(previous),)
-            )
-        token = secrets.token_urlsafe(SESSION_TOKEN_BYTES)
-        db().execute(
-            "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (%s, %s, "
-            "now() + %s * interval '1 second')",
-            (token_hash(token), user["id"], SESSION_SECONDS),
-        )
-    response = jsonify(id=user["id"], username=user["username"])
-    response.set_cookie(
-        COOKIE,
-        token,
-        max_age=SESSION_SECONDS,
-        httponly=True,
-        secure=current_app.config["COOKIE_SECURE"],
-        samesite="Lax",
-    )
-    return response
+        token = issue_session(user["id"], request.cookies.get(COOKIE))
+    return set_session_cookie(jsonify(id=user["id"], username=user["username"]), token)
 
 
 @routes.post("/auth/logout")

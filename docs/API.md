@@ -35,6 +35,26 @@ the `photo` field and let the browser set the multipart header.
 | POST `/auth/reset-password` | `token, password` | 204, all prior sessions revoked |
 | POST `/me/email-change` | `email, password` | 202, confirmation sent to new email |
 | POST `/auth/confirm-email` | `token` | 204 |
+| GET `/auth/google/status` | None | 200, `{"enabled": boolean}` |
+| GET `/auth/google/start` | Optional `next` local path | 302 to Google or to `/login?google=unavailable` |
+| GET `/auth/google/callback` | Google `code`, `state`, or `error` | 302 with session cookie, or to login with a `google` reason |
+
+Google sign-in is optional. The browser navigates to `/auth/google/start` as a
+full-page redirect; do not call it with `fetch`. The API signs a short-lived,
+HttpOnly state/PKCE cookie scoped to `/api/auth/google`, then Google redirects
+back to `/auth/google/callback`. The callback verifies state and PKCE, exchanges
+the code server-side, and requires Google's `email_verified` claim. It signs into
+an account already linked by Google subject ID or by the same verified email,
+or creates a verified account with no usable password. Successful sign-in sets
+the normal `matcha_session` cookie and redirects to `next` (default `/discover`),
+so load `/me` as usual. New accounts are incomplete and need onboarding.
+
+Failures return to `/login?google=<reason>` with `denied`, `invalid`,
+`unavailable`, `pending` (an existing local account still needs email
+verification), `conflict` (another Google identity owns the account), or
+`rate_limited`. Show a short message and keep the normal sign-in form available.
+Never expose the Google access token, PKCE verifier, or signing secret to the
+frontend.
 
 For links in email, the frontend receives routes `/account/verify`, `/account/reset`, and `/account/email`. Read `token` from the fragment using `new URLSearchParams(location.hash.slice(1))`, remove it from the address bar, then submit to the corresponding endpoint. The reset page prompts for the new password. A 401 indicates invalid credentials or an expired session. A 403 from login can mean the email is unverified. A 409 on registration indicates a duplicate identifier. A 429 means a rate limit was hit.
 

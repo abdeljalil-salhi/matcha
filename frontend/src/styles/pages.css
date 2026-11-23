@@ -218,6 +218,16 @@
 .auth-card__footer a,
 .auth-card__body p a { display: inline-block; padding: 4px 0; }
 .auth-form { display: flex; flex-direction: column; gap: 18px; }
+.google-signin { margin-top: 24px; }
+.auth-divider {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  color: rgba(166, 199, 178, 0.72); font-size: 0.8rem; text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.auth-divider::before,
+.auth-divider::after { content: ""; flex: 1; height: 1px; background: rgba(201, 255, 74, 0.16); }
+.google-signin__button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.google-signin__button svg { width: 18px; height: 18px; flex: none; }
 
 .auth-card .field__label { color: var(--auth-muted); }
 .auth-card .field__required { color: var(--auth-lime); }
