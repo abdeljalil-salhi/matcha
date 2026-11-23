@@ -1,6 +1,6 @@
 /* Shared botanical visual language, matched to the discovery reference. */
 :root {
-  --paper: #f8f6f2;
+  --paper: #f8f4f0;
   --surface: #fffdfa;
   --surface-soft: #faf8f4;
   --line: #e7e3dc;
@@ -132,7 +132,12 @@ body {
 .auth-divider::before, .auth-divider::after { background: var(--line); }
 .auth-card .notice--success, .auth-card .notice--info { background: var(--matcha-tint); border-color: var(--line); color: var(--matcha-dark); }
 .auth-card .error-banner { background: var(--danger-light); border-color: #edc8bf; color: var(--danger); }
-.landing__cta { background: linear-gradient(145deg, #315a3a, #426c49); }
+.landing__cta {
+  background:
+    linear-gradient(90deg, #3a563a 0%, #405c3e 40%, rgba(64, 92, 62, 0) 62%),
+    url('/images/home-cta-leaves.png') right center / auto 100% no-repeat,
+    linear-gradient(145deg, #3c583c, #466242);
+}
 
 @media (max-width: 1150px) {
   .main-nav__link { padding-inline: 8px; gap: 5px; font-size: .8rem; }
