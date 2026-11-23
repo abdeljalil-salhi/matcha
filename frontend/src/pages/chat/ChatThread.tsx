@@ -1,3 +1,4 @@
+import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api, ApiError, type Conversation, type Message } from "../../api";
@@ -236,6 +237,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
             <small>{conversation.online ? <span className="chat-thread__online">Online now</span> : <>@{conversation.username}</>} · view profile</small>
           </span>
         </Link>
+        <CallButtons userId={userId} />
         {relatedUnread.length > 0 ? (
           <button type="button" className="link-button" onClick={() => void markRead()}>
             Mark {unreadMessages} read
