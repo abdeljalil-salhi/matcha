@@ -1,0 +1,9 @@
+node_modules
+.vite
+.vitest
+dist
+dist-ssr
+*.tsbuildinfo
+.env
+.env.*
+.git

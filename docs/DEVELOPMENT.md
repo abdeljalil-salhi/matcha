@@ -1,99 +1,74 @@
 # Development and CI
 
-Run commands from the repository root with Python 3.12. Make targets use `.venv`
-directly; activate it when running the manual Python commands below.
+The standard development workflow requires only Docker with Compose v2 and Make
+on the host. Run commands from the repository root. Python, Node, npm, formatting,
+and test dependencies run inside containers.
 
-## Makefile shortcuts
-
-Run `make` or `make help` to list all commands. Common workflows are:
+## Start and develop
 
 ```sh
-make env             # Copy missing .env templates; keep existing settings
-make install         # Install Python/Node dependencies and Git hooks
-make dev             # Start Docker, then run the frontend in the foreground
-make seed            # Apply migrations and populate demo profiles
-make check           # Lint, run both test suites, and build the frontend
-make down            # Stop Docker services while keeping database volumes
+make                 # Generate missing env files, build, migrate, and start everything
+make up              # Same as make
+make dev             # Same as make, with frontend hot reload
+make seed            # Optional: populate 500 demo profiles
+make logs SERVICES='frontend api worker'
+make down            # Stop services, keeping the development database
 ```
 
-Fill the required secrets in `.env` before starting the stack. Use Python 3.12,
-Node.js 24, and Docker Compose v2. `make frontend` runs the frontend on its own;
-`make up` builds and starts only the backend stack. Stop the foreground Vite
-server with Ctrl+C; Docker services continue until `make down`.
+The app is at `http://localhost:5173`, API at `http://localhost:8000/api`, and
+Mailpit at `http://localhost:8025`. Startup waits for the API and frontend proxy
+to become healthy. Services run in the background; use `make logs` to follow them.
 
-`make backend-test` starts a disposable PostgreSQL container on a dynamically
-assigned loopback port and removes it on success or failure. If you set
-`MATCHA_TEST_DSN`, that connection is used instead. To select tests:
+`make env` creates missing `.env` files and fills blank or missing development
+secrets using a Python container. Existing values are preserved. Never commit
+these files. First startup downloads images and installs dependencies inside
+Docker. `make install` builds the images separately if desired.
+
+Frontend source, public assets, HTML, and Vite configuration are mounted for hot
+reload. Dependencies stay in the image. After changing package manifests,
+lockfiles, or backend code, run `make up` to rebuild and recreate changed services.
+`make restart` recreates services after environment changes without rebuilding.
+
+Set `FRONTEND_PORT`, `API_PORT`, or `MAILPIT_PORT` in `.env` to change host ports.
+When changing the frontend port, update `FRONTEND_URL` to its exact browser origin.
+The frontend uses `/api`, which Vite proxies to `api:8000` inside Docker; browser
+requests do not require a Docker hostname or a separate API port setting.
+Stop any existing host Vite server before starting Docker on the same port.
+
+Compose commands honor local overrides and project settings. Keep the same
+configuration for an existing database volume. `COMPOSE` and `DOCKER` can override
+the command names. `make ps`, `make health`, `make shell`, and `make db-shell`
+inspect services. Run `make help` to list all commands.
+
+## Checks inside Docker
+
+```sh
+make format          # Black
+make lint            # Black check and Flake8
+make backend-test    # Pytest with an isolated PostgreSQL container
+make frontend-test   # Vitest
+make frontend-build  # TypeScript checks and production build
+make smoke           # Isolated full-stack startup, email, login, and frontend proxy
+make check           # Lint, both test suites, and frontend build
+```
+
+Optional developer tools are built only when requested. Backend tests use a
+unique Compose project and an ephemeral PostgreSQL database, explicitly excluding
+local Compose overrides. Cleanup removes only that test project's containers and
+volumes. Each integration test also uses its own schema. Select tests with:
 
 ```sh
 make backend-test PYTEST_ARGS='-q tests/test_geocoder_processes.py'
 ```
 
-`make format`, `make lint`, `make frontend-test`, `make frontend-build`, and
-`make smoke` run the individual checks. `make logs SERVICES='api worker'`,
-`make ps`, and `make health` help inspect the running backend. `make shell` and
-`make db-shell` open interactive container shells.
+Set `MATCHA_TEST_DSN` to use an existing disposable database reachable from the
+tools container instead. It must allow schema creation.
 
-Compose commands honor `COMPOSE_FILE`, `COMPOSE_PROJECT_NAME`, and `.env` port
-settings. Keep using the same Compose overrides for an existing database volume.
-You can also override `COMPOSE`, `DOCKER`, `NPM`, `PYTHON`, or `PYTHON_BOOTSTRAP`.
-`make restart` recreates services so changed environment settings take effect;
-use `make up` after changing backend code. No target removes development volumes.
-
-## Install dependencies
-
-```sh
-python -m pip install -r requirements-dev.txt
-pre-commit install --install-hooks
-```
-
-Black formats staged Python files before Flake8 checks them. If Black changes
-a file, review and re-stage it, then retry the commit.
-
-```sh
-black server tests
-black --check server tests
-flake8 server tests
-```
-
-## Run integration tests
-
-Set `MATCHA_TEST_DSN` to a disposable PostgreSQL connection string.
-
-```sh
-MATCHA_TEST_DSN='<disposable PostgreSQL DSN>' python -m pytest -q
-```
-
-The database role needs permission to create schemas. Each test creates and
-removes its own schema and applies all migrations during setup, so accounts,
-sessions, and notifications cannot leak between tests.
-
-## Run the Compose smoke test
-
-With Docker running:
-
-```sh
-python -m tests.compose_smoke
-```
-
-The smoke test uses a temporary Compose project, a fresh PostgreSQL volume, and
-dynamically assigned ports. It checks API startup, verification email delivery
-through Mailpit, and cookie-based sign-in. It removes the temporary containers
-and volume on exit.
-
-## Run frontend regression tests
-
-Use Node.js 24 and the committed npm lockfile:
-
-```sh
-npm --prefix frontend ci
-npm --prefix frontend test
-npm --prefix frontend run build
-```
-
-Vitest and React Testing Library cover empty-chat delivery, safe GPS failures,
-session controls across routes, logout failures, and notification polling.
-The production build also type-checks the frontend and test files.
+`make smoke` runs a Docker CLI tools container with the host Docker socket mounted.
+It creates a separate stack with dynamic host ports and a fresh database volume,
+checks account verification and sign-in through Mailpit, then checks the frontend
+and its API proxy. It removes the temporary stack on exit. It never loads local
+Compose overrides or attaches the development database volume.
 
 ## GitHub Actions
 

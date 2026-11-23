@@ -2,37 +2,35 @@
 
 Run these commands from the repository root. You need Docker with Compose v2.
 
-## Start the backend
+## Start the full app
 
-1. Copy `.env.example` to `.env`.
+```sh
+make
+```
 
-   ```sh
-   cp .env.example .env
-   ```
+`make up` and `make dev` are equivalent. No Python or Node installation is needed
+on the host: Docker installs dependencies and runs the frontend, API, PostgreSQL,
+and mail services. The first run downloads images and dependencies.
 
-2. Set `POSTGRES_PASSWORD` and `MATCHA_SECRET` in `.env`. Generate each value
-   independently with `openssl rand -hex 32`. Keep `.env` local.
-3. Set `FRONTEND_URL` to your frontend's exact origin. The default is
-   `http://localhost:5173`. Use `localhost` for both services during local browser
-   development so they share a site.
-4. Start the stack and check the API.
+Startup creates missing `.env` files and generates independent development secrets
+for `POSTGRES_PASSWORD`, `MATCHA_SECRET`, and `SEED_PASSWORD`. Existing settings
+are preserved. Compose applies migrations before starting the API and waits for
+API/frontend readiness. Demo profiles are optional: run `make seed` separately.
 
-   ```sh
-   docker compose up --build -d
-   curl --fail --retry 10 --retry-connrefused http://localhost:8000/api/health
-   ```
+Use `make logs`, `make ps`, or `make health` to inspect the stack. `make down`
+stops services while preserving the database. Run `make up` after code or dependency
+changes, and `make restart` after editing environment settings.
 
-Compose runs PostgreSQL, applies migrations, then starts the API and email
-worker. A successful health check returns `{"status":"ok"}`. If port 8000 is in
-use, set `API_PORT` in `.env` and use that port for the health check and Swagger.
-The current migration series expects a fresh database. For a volume from the
-original two-file schema, use a new Compose project name to start with a separate
-volume. Stop the previous stack first if it uses the same ports.
+`FRONTEND_URL` must match the exact frontend browser origin (by default
+`http://localhost:5173`). If changing `FRONTEND_PORT`, update that origin too.
+`API_PORT` changes the published API/docs port; the frontend's internal proxy
+continues to use the backend container on port 8000.
 
 ## Local URLs
 
 | Service | Default URL |
 | --- | --- |
+| Frontend | [http://localhost:5173](http://localhost:5173) |
 | API base URL | `http://localhost:8000/api` |
 | API health | [http://localhost:8000/api/health](http://localhost:8000/api/health) |
 | Swagger UI | [http://localhost:8000/docs](http://localhost:8000/docs) |
@@ -78,11 +76,11 @@ password login, so one-click sign-out and session revocation continue to work.
 Populate the database with 500 fictional profiles for discovery.
 
 ```sh
-docker compose run --rm setup python -m server.manage seed
+make seed
 ```
 
-To enable sign-in for `demo_001` and `demo_002`, choose a `SEED_PASSWORD` in
-`.env` before running the seed command. Use that password with either username.
+To sign in as `demo_001` or `demo_002`, use the generated `SEED_PASSWORD` from
+`.env`, or set your own value before running `make seed`.
 
 Demo profiles have realistic fictional names, interest-based biographies, and
 bundled AI-generated adult portraits. They retain `demo_NNN` usernames so test
@@ -98,9 +96,7 @@ locations, interests, likes, and visits remain intact. As before, reseeding rota
 the evaluator passwords and revokes their sessions, so sign in again afterwards.
 
 To test registration and email verification, register an account and open the
-message in Mailpit. While the frontend verification page is still being built,
-copy the value after `#token=` from the email link and submit it to
-`POST /auth/verify` in Swagger UI.
+message in Mailpit. Follow the verification link in the email to verify the account in the frontend.
 
 Manual location and consent-based GPS have offline examples in Paris, Lyon,
 Marseille, Rabat, Casablanca, and London. For broader coverage, set

@@ -4,12 +4,24 @@ Matcha is a dating app built for the 42 web curriculum. This repository contains
 a Flask backend and a React/TypeScript frontend. The frontend consumes the
 documented HTTP API for account, profile, discovery, and messaging flows.
 
-To run the frontend locally, keep `FRONTEND_URL=http://localhost:5173` in `.env`,
-start the backend with `docker compose up -d`, then follow
-[frontend/README.md](frontend/README.md).
+Start the full project from a fresh clone with Docker Compose v2 and Make:
 
-Run `make help` for development shortcuts, or see the
-[development guide](docs/DEVELOPMENT.md) for installation and testing commands.
+```sh
+make
+```
+
+`make up` and `make dev` do the same thing. Docker installs Python and Node
+dependencies, creates missing local environment files with random development
+secrets, applies database migrations, and starts all services. No Python, Node,
+npm, or virtual environment is required on the host. The first run downloads
+images and dependencies; subsequent runs reuse Docker's build cache.
+
+Open [Matcha](http://localhost:5173), [API docs](http://localhost:8000/docs), or
+[Mailpit](http://localhost:8025). Use `make seed` for optional demo profiles and
+`make down` to stop the stack while keeping your database.
+
+Run `make help` for commands or see the
+[development guide](docs/DEVELOPMENT.md).
 
 ## Features
 
@@ -30,7 +42,7 @@ testing account emails.
 
 | Guide | Start here to |
 | --- | --- |
-| [Local setup](docs/SETUP.md) | Start the backend, seed demo profiles, and use Swagger UI |
+| [Local setup](docs/SETUP.md) | Start the full app, seed demo profiles, and use Swagger UI |
 | [Frontend API contract](docs/API.md) | Connect a frontend and implement account, profile, discovery, and chat flows |
 | [Audio/video calling](docs/CALLS.md) | Configure calls, TURN relay, and real-network verification |
 | [Development and CI](docs/DEVELOPMENT.md) | Run tests, format Python, and understand the automated checks |

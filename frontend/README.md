@@ -5,34 +5,19 @@ expects the Flask backend from this repository.
 
 ## Run locally
 
-1. In the repository root, make sure `.env` sets `FRONTEND_URL=http://localhost:5173`
-   (the frontend origin must match exactly for cookies, CORS, and email links).
-2. Start the backend:
+From the repository root, run `make`, `make up`, or `make dev`. Docker installs
+all dependencies and starts Vite alongside the API, database, and email worker.
+Open <http://localhost:5173>. No Node or npm installation is needed on the host.
 
-   ```sh
-   docker compose up --build -d
-   ```
+Source changes hot reload through read-only bind mounts; dependencies live in the
+image. Run `make up` again after changing `package.json` or `package-lock.json`.
+Use `make frontend-test` for regression tests and `make frontend-build` for a
+type-checked production build, both inside Docker.
 
-3. Optionally seed 500 profiles:
-
-   ```sh
-   docker compose run --rm setup python -m server.manage seed
-   ```
-
-4. Start the frontend:
-
-   ```sh
-   cd frontend
-   cp .env.example .env
-   npm install
-   npm run dev
-   ```
-
-Open <http://localhost:5173>. If the API runs on a different port, set
-`VITE_API_URL` in `frontend/.env` to the full API base URL, including `/api`.
-
-Use `npm run build` for a type-checked production build and `npm run preview`
-to serve it locally.
+Docker sets `VITE_API_URL=/api`; Vite proxies requests to the backend container
+at `api:8000`. `frontend/.env` is generated for optional host development and is
+excluded from the image. Keep `FRONTEND_URL` in the root `.env` set to the exact
+frontend browser origin for sessions, CORS, and email links.
 
 ## Routes
 

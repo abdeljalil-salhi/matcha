@@ -130,6 +130,7 @@ def main() -> None:
             "MATCHA_ENV_FILE": str(env_file),
             "API_PORT": "0",
             "MAILPIT_PORT": "0",
+            "FRONTEND_PORT": "0",
         }
         # Explicitly select the tracked configuration. Local overrides may attach
         # external development volumes, defeating this test's isolation.
@@ -146,18 +147,75 @@ def main() -> None:
 
         run = partial(subprocess.run, cwd=ROOT, env=env)
         port = partial(subprocess.check_output, cwd=ROOT, env=env, text=True)
+        attached_network = None
         try:
             run(
                 [*compose, "up", "--build", "--wait", "--wait-timeout", "90"],
                 check=True,
             )
-            api = port([*compose, "port", "api", "8000"]).strip()
-            mailpit = port([*compose, "port", "mail", "8025"]).strip()
+            if env.get("MATCHA_SMOKE_IN_DOCKER") == "1":
+                api_container = port([*compose, "ps", "-q", "api"]).strip()
+                attached_network = port(
+                    [
+                        "docker",
+                        "inspect",
+                        "--format",
+                        "{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}",
+                        api_container,
+                    ]
+                ).strip()
+                run(
+                    ["docker", "network", "connect", attached_network, env["HOSTNAME"]],
+                    check=True,
+                )
+                addresses = {}
+                for service, internal_port in (
+                    ("api", 8000),
+                    ("mail", 8025),
+                    ("frontend", 5173),
+                ):
+                    container = port([*compose, "ps", "-q", service]).strip()
+                    address = port(
+                        [
+                            "docker",
+                            "inspect",
+                            "--format",
+                            "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
+                            container,
+                        ]
+                    ).strip()
+                    addresses[service] = f"{address}:{internal_port}"
+                api, mailpit, frontend = (
+                    addresses["api"],
+                    addresses["mail"],
+                    addresses["frontend"],
+                )
+            else:
+                api = port([*compose, "port", "api", "8000"]).strip()
+                mailpit = port([*compose, "port", "mail", "8025"]).strip()
+                frontend = port([*compose, "port", "frontend", "5173"]).strip()
             verify_account_flow(f"http://{api}/api", f"http://{mailpit}")
+            with build_opener().open(f"http://{frontend}", timeout=5) as response:
+                assert response.status == HTTPStatus.OK
+            with build_opener().open(
+                f"http://{frontend}/api/health", timeout=5
+            ) as response:
+                assert json.load(response)["status"] == "ok"
+            print("Frontend and same-origin API proxy checks passed.")
         except Exception:
             run([*compose, "logs", "--no-color"])
             raise
         finally:
+            if attached_network:
+                run(
+                    [
+                        "docker",
+                        "network",
+                        "disconnect",
+                        attached_network,
+                        env["HOSTNAME"],
+                    ]
+                )
             cleanup = run([*compose, "down", "--volumes", "--remove-orphans"])
             if sys.exception() is None:
                 cleanup.check_returncode()

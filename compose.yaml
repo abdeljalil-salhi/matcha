@@ -2,6 +2,7 @@ x-backend: &backend
   build:
     context: .
     dockerfile: server/Dockerfile
+    target: runtime
   env_file: ${MATCHA_ENV_FILE:-.env}
   depends_on:
     db:
@@ -32,6 +33,35 @@ services:
         condition: service_completed_successfully
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/api/health', timeout=2).read()"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_URL: /api
+      API_PROXY_TARGET: http://api:8000
+      VITE_USE_POLLING: "true"
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/api/health').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
   worker:
     <<: *backend
     command: ["python", "-m", "server.manage", "mail"]
@@ -41,6 +71,46 @@ services:
       mail:
         condition: service_started
     restart: unless-stopped
+
+  test-db:
+    image: postgres:17
+    profiles: [tools]
+    environment:
+      POSTGRES_DB: matcha_test
+      POSTGRES_HOST_AUTH_METHOD: trust
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d matcha_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  tools:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: development
+    profiles: [tools]
+    user: "${MATCHA_UID:-1000}:${MATCHA_GID:-1000}"
+    working_dir: /app
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
+      - .:/app
+  smoke-tools:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: docker_tools
+    profiles: [tools]
+    user: "0:0"
+    working_dir: ${MATCHA_WORKSPACE:-/workspace}
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      MATCHA_SMOKE_IN_DOCKER: "1"
+    volumes:
+      - ${MATCHA_WORKSPACE:-.}:${MATCHA_WORKSPACE:-/workspace}
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres:
