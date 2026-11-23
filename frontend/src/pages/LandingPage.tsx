@@ -95,27 +95,33 @@ export function LandingPage() {
           <div className="feature-grid">
             <article className="feature-card">
               <span className="feature-card__icon"><Icon name="target" size={20} strokeWidth={2} /></span>
-              <h3>Discover with intention</h3>
-              <p>
-                People are ranked by compatibility, shared interests, and proximity — so you
-                spend less time swiping and more time meeting the right people.
-              </p>
+              <div className="feature-card__copy">
+                <h3>Discover with intention</h3>
+                <p>
+                  People are ranked by compatibility, shared interests, and proximity — so you
+                  spend less time swiping and more time meeting the right people.
+                </p>
+              </div>
             </article>
             <article className="feature-card">
               <span className="feature-card__icon"><Icon name="shield" size={20} strokeWidth={2} /></span>
-              <h3>Your privacy, respected</h3>
-              <p>
-                Control your visibility, location, and details. Matcha is built for real people
-                and meaningful connections.
-              </p>
+              <div className="feature-card__copy">
+                <h3>Your privacy, respected</h3>
+                <p>
+                  Control your visibility, location, and details. Matcha is built for real people
+                  and meaningful connections.
+                </p>
+              </div>
             </article>
             <article className="feature-card">
               <span className="feature-card__icon"><Icon name="message" size={20} strokeWidth={2} /></span>
-              <h3>Better conversations</h3>
-              <p>
-                Matches are based on genuine common ground, giving you an easy starting point
-                for thoughtful, natural conversations.
-              </p>
+              <div className="feature-card__copy">
+                <h3>Better conversations</h3>
+                <p>
+                  Matches are based on genuine common ground, giving you an easy starting point
+                  for thoughtful, natural conversations.
+                </p>
+              </div>
             </article>
           </div>
         </section>
