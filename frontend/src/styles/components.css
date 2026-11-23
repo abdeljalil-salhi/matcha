@@ -1541,9 +1541,32 @@ select.input {
 }
 
 /* Opt-in member map */
-.user-map { display: grid; gap: 24px; }
-.user-map__sharing, .user-map__browse { padding: 24px; display: grid; gap: 14px; }
-.user-map__sharing .btn { justify-self: start; }
+.user-map { display: grid; gap: 12px; }
+.user-map__browse { padding: 0; display: grid; gap: 10px; overflow: hidden; }
+.user-map__browse > p, .user-map__browse > details, .user-map__browse > .error-banner { margin: 0 14px; }
+.user-map__browse > :last-child { margin-bottom: 12px; }
+.user-map__sharing { padding: 0 2px; }
+.user-map__sharing-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.user-map__sharing-toggle { display: inline-flex; align-items: center; gap: 9px; font-size: var(--text-sm); cursor: pointer; }
+.user-map__sharing-toggle input { appearance: none; position: relative; flex: none; margin: 0; width: 32px; height: 20px; border-radius: 20px; background: var(--line); border: 1px solid var(--muted); cursor: pointer; }
+.user-map__sharing-toggle input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: white; transition: transform .15s ease; }
+.user-map__sharing-toggle input:checked { background: var(--matcha); border-color: var(--matcha); }
+.user-map__sharing-toggle input:checked::after { transform: translateX(12px); }
+.user-map__sharing-toggle input:focus-visible { outline: 2px solid var(--matcha); outline-offset: 3px; }
+.user-map__sharing-toggle input:disabled { opacity: .6; cursor: wait; }
+.user-map__privacy, .user-map__help { font-size: var(--text-xs); color: var(--muted); }
+.user-map__privacy summary, .user-map__help summary { cursor: pointer; }
+.user-map__privacy[open] { flex-basis: 100%; }
+.user-map__privacy p, .user-map__help p { margin: 6px 0 0; max-width: 760px; }
+.user-map-control-group { display: flex; overflow: hidden; border: 1px solid #0002; border-radius: 8px; background: var(--surface); box-shadow: 0 2px 8px #0002; }
+.user-map-control-group button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 0; background: var(--surface); color: var(--ink); font: 600 12px var(--font-sans); cursor: pointer; }
+.user-map-control-group button + button { border-left: 1px solid var(--line); }
+.user-map-control-group button:hover { background: var(--matcha-light); }
+.user-map-control-group button:focus-visible { outline: 2px solid var(--matcha); outline-offset: -3px; }
+.user-map-control-group button:disabled { opacity: .6; cursor: wait; }
+.user-map-control-group--vertical { flex-direction: column; }
+.user-map-control-group--vertical button { width: 40px; height: 40px; padding: 0; }
+.user-map-control-group--vertical button + button { border-left: 0; border-top: 1px solid var(--line); }
 .user-map__canvas { height: min(60vh, 540px); min-height: 320px; border-radius: var(--radius); z-index: 0; }
 .user-map__people { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 18px; }
 .user-map__selection, .user-map__remaining { display: grid; gap: 16px; }
@@ -1572,16 +1595,6 @@ select.input {
 .user-map__places { margin-top: 28px; }
 .user-map__places summary { cursor: pointer; margin-bottom: 14px; }
 
-
-.user-map-control-group { display: flex; overflow: hidden; border: 1px solid #0002; border-radius: 8px; background: var(--surface); box-shadow: 0 2px 8px #0002; }
-.user-map-control-group button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 0; background: var(--surface); color: var(--ink); font: 600 12px var(--font-sans); cursor: pointer; }
-.user-map-control-group button + button { border-left: 1px solid var(--line); }
-.user-map-control-group button:hover { background: var(--matcha-light); }
-.user-map-control-group button:focus-visible { outline: 2px solid var(--matcha); outline-offset: -3px; }
-.user-map-control-group button:disabled { opacity: .6; cursor: wait; }
-.user-map-control-group--vertical { flex-direction: column; }
-.user-map-control-group--vertical button { width: 40px; height: 40px; padding: 0; }
-.user-map-control-group--vertical button + button { border-left: 0; border-top: 1px solid var(--line); }
 
 .user-map-pin, .user-map-cluster { background: transparent; border: 0; }
 .user-map-pin > span { display: block; width: 44px; height: 44px; border: 3px solid white; border-radius: 50%; overflow: hidden; background: var(--matcha-light); box-shadow: 0 2px 8px #0003; }

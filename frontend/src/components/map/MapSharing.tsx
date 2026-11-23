@@ -1,32 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { api } from "../../api";
 import type { MapSettings } from "../../api/types/userMap";
-import { Button } from "../ui/Button";
 
 interface Props { settings: MapSettings; onSaved: (settings: MapSettings) => void }
 
-/** Save a separate, reversible opt-in without enabling GPS or changing matching location. */
+/** Save an explicit map-sharing choice directly, rolling back failed changes. */
 export function MapSharing({ settings, onSaved }: Props) {
   const [visible, setVisible] = useState(settings.map_visible);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const descriptionId = useId();
   useEffect(() => setVisible(settings.map_visible), [settings.map_visible]);
-  const save = async () => {
-    setBusy(true); setError(null); setSaved(false);
-    try { onSaved(await api.userMap.share(visible)); setSaved(true); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to update map sharing."); }
-    finally { setBusy(false); }
+  const save = async (next: boolean) => {
+    setVisible(next); setBusy(true); setError(null);
+    try { onSaved(await api.userMap.share(next)); }
+    catch (cause) {
+      setVisible(settings.map_visible);
+      setError(cause instanceof Error ? cause.message : "Unable to update map sharing.");
+    } finally { setBusy(false); }
   };
-  return <section className="card user-map__sharing" aria-label="Your map visibility">
-    <h2>Your map visibility</h2>
-    <label className="consent-row">
-      <input type="checkbox" checked={visible} disabled={busy} onChange={(event) => { setVisible(event.target.checked); setSaved(false); }} />
-      <span>Show my approximate saved area to compatible members on the map. I consent to this separate map sharing.</span>
-    </label>
-    <p className="text-small text-muted">Off by default. Markers use rounded area coordinates, roughly 1 km, and never your exact device GPS. Your marker follows changes to your saved profile location. Turn this off at any time; other maps refresh periodically.</p>
-    <Button onClick={() => void save()} loading={busy} disabled={visible === settings.map_visible}>Save map visibility</Button>
+  return <section className="user-map__sharing" aria-label="Your map visibility">
+    <div className="user-map__sharing-row">
+      <label className="user-map__sharing-toggle">
+        <input type="checkbox" checked={visible} disabled={busy} aria-describedby={descriptionId} onChange={(event) => void save(event.target.checked)} />
+        <span>Show my approximate area on the map</span>
+      </label>
+      <details className="user-map__privacy"><summary>Privacy details</summary>
+        <p id={descriptionId}>Turning this on consents to sharing your saved area with compatible members. Off by default. Positions are rounded to roughly 1 km; exact device GPS stays private. Your marker follows your saved profile location. Turn off anytime; other maps refresh periodically.</p>
+      </details>
+      {busy ? <span className="text-small text-muted" role="status">Saving…</span> : null}
+    </div>
     {error ? <div className="error-banner" role="alert">{error}</div> : null}
-    {saved ? <p role="status">{settings.map_visible ? "Your approximate area is now shared." : "You are hidden from the map."}</p> : null}
   </section>;
 }

@@ -14,15 +14,13 @@ const person: MapProfile = { id: 2, username: "bob", first_name: "Bob", last_nam
   age: 30, city: "Paris", area: null, country_code: "FR", photo_id: 3, latitude: 48.86, longitude: 2.35, fame: 10, is_demo: false };
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-test("map sharing is separate, explicit and saved only after the user confirms", async () => {
+test("map sharing is separate and saves only when the user toggles it", async () => {
   const share = vi.spyOn(api.userMap, "share").mockResolvedValue({ map_visible: true, center: null });
   const onSaved = vi.fn();
   render(<MapSharing settings={{ map_visible: false, center: null }} onSaved={onSaved} />);
   expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
   expect(share).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("checkbox"));
-  expect(share).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Save map visibility" }));
   await act(async () => {});
   expect(share).toHaveBeenCalledExactlyOnceWith(true);
   expect(onSaved).toHaveBeenCalledWith({ map_visible: true, center: null });
@@ -33,11 +31,11 @@ test("map sharing can be revoked and failed requests preserve the saved state", 
   const onSaved = vi.fn();
   render(<MapSharing settings={{ map_visible: true, center: null }} onSaved={onSaved} />);
   fireEvent.click(screen.getByRole("checkbox"));
-  fireEvent.click(screen.getByRole("button", { name: "Save map visibility" }));
   await act(async () => {});
   expect(share).toHaveBeenCalledExactlyOnceWith(false);
   expect(onSaved).not.toHaveBeenCalled();
   expect(screen.getByRole("alert").textContent).toBe("Offline");
+  expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(true);
 });
 
 test("map API opts in with explicit consent and revokes without changing matching location", async () => {
