@@ -2556,7 +2556,7 @@
           "Chat"
         ],
         "summary": "Read messages in chronological order",
-        "description": "Use either before or after for a page. Include neither to read the latest messages.",
+        "description": "Use either before or after for a page. Include neither to read the latest messages. Fetching incoming messages advances the recipient delivery watermark. Every response includes delivery and read watermarks for outgoing messages, including when no new messages are returned.",
         "security": [
           {
             "sessionCookie": []
@@ -2618,10 +2618,14 @@
                       "items": {
                         "$ref": "#/components/schemas/Message"
                       }
+                    },
+                    "receipts": {
+                      "$ref": "#/components/schemas/MessageReceipts"
                     }
                   },
                   "required": [
-                    "messages"
+                    "messages",
+                    "receipts"
                   ]
                 }
               }
@@ -2763,6 +2767,84 @@
             "$ref": "#/components/responses/HTTP503"
           }
         }
+      }
+    },
+    "/chat/{user_id}/read": {
+      "put": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Mark incoming messages read through an ID",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "through": {
+                    "type": "integer",
+                    "format": "int64",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807,
+                    "description": "Latest displayed incoming message ID. Incoming messages in this conversation at or below this ID are acknowledged."
+                  }
+                },
+                "required": [
+                  "through"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success with an empty response body."
+          },
+          "400": {
+            "$ref": "#/components/responses/HTTP400"
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "415": {
+            "$ref": "#/components/responses/HTTP415"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          },
+          "404": {
+            "$ref": "#/components/responses/HTTP404"
+          }
+        },
+        "description": "Requires a current mutual connection. Acknowledges incoming messages from user_id through the supplied message ID. Delivery and read watermarks only advance. IDs belonging to other conversations are excluded.",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ]
       }
     },
     "/notifications": {
@@ -4477,6 +4559,26 @@
           "online": {
             "type": "boolean",
             "description": "Whether an unexpired session was active within the last 15 seconds."
+          },
+          "latest_message_body": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000,
+            "description": "Latest message text or GIF caption. Null for conversations without messages."
+          },
+          "latest_message_kind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "text",
+              "gif",
+              null
+            ],
+            "description": "Latest message kind. Null for conversations without messages."
           }
         },
         "required": [
@@ -4487,7 +4589,9 @@
           "photo_id",
           "latest_message_id",
           "latest_message_at",
-          "online"
+          "online",
+          "latest_message_body",
+          "latest_message_kind"
         ]
       },
       "Message": {
@@ -5145,6 +5249,28 @@
           "preview_url",
           "width",
           "height"
+        ]
+      },
+      "MessageReceipts": {
+        "type": "object",
+        "description": "Recipient delivery and read watermarks for messages sent by the signed-in user in this conversation. Zero means no acknowledgement. A saved message is sent, an ID at or below delivered_through is delivered, and an ID at or below read_through is read.",
+        "properties": {
+          "delivered_through": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "description": "Highest message ID acknowledged as delivered when the recipient fetches incoming messages."
+          },
+          "read_through": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "description": "Highest message ID acknowledged as read by the recipient. Never exceeds delivered_through."
+          }
+        },
+        "required": [
+          "delivered_through",
+          "read_through"
         ]
       }
     },
