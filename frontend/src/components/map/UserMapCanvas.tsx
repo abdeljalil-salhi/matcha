@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import type { MapBounds, MapCenter, MapProfile } from "../../api/types/userMap";
 import { useMemberMarkers } from "./useMemberMarkers";
 import { MapMemberPopup } from "./MapMemberPopup";
-import { Button } from "../ui/Button";
+import { MapControls } from "./MapControls";
 
 interface Props {
   center: MapCenter | null;
@@ -55,7 +55,6 @@ export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId
     alive.current = true;
     if (!container.current) return;
     const map = L.map(container.current, { worldCopyJump: true, maxZoom: 18, zoomControl: false });
-    L.control.zoom({ position: "bottomright" }).addTo(map);
     const saved = initialCenter.current;
     map.setView(saved ? [saved.latitude, saved.longitude] : WORLD_CENTER, saved ? 10 : WORLD_ZOOM);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -104,15 +103,13 @@ export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId
   };
 
   return <>
-    <div className="user-map__toolbar">
-      <Button variant="ghost" onClick={() => mapRef.current?.setView(WORLD_CENTER, WORLD_ZOOM)}>Explore worldwide</Button>
-      {center ? <Button variant="ghost" onClick={() => mapRef.current?.setView([center.latitude, center.longitude], 10)}>My saved area</Button> : null}
-      <Button variant="secondary" onClick={locate} loading={locating}>Center on my device</Button>
-      <p className="text-small text-muted">Centers locally without saving GPS to your profile. OpenStreetMap receives requests for the map areas you view.</p>
-    </div>
     {error ? <div className="error-banner" role="alert">{error}</div> : null}
     {tileError ? <p role="status">Some map tiles could not load. Check your connection.</p> : null}
     <div ref={container} className="user-map__canvas" aria-label="Map of opted-in members" />
+    {popupMap ? <MapControls map={popupMap} hasSavedArea={!!center} locating={locating}
+      onWorldwide={() => { popupMap.closePopup(); popupMap.setView(WORLD_CENTER, WORLD_ZOOM); }}
+      onSavedArea={() => { if (center) { popupMap.closePopup(); popupMap.setView([center.latitude, center.longitude], 10); } }}
+      onLocate={locate} /> : null}
     {popupMap && popupAnchor && selected ? <MapMemberPopup map={popupMap} person={selected} anchor={popupAnchor} onClose={closeSelection} /> : null}
   </>;
 }

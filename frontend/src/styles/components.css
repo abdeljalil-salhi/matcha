@@ -1544,7 +1544,6 @@ select.input {
 .user-map { display: grid; gap: 24px; }
 .user-map__sharing, .user-map__browse { padding: 24px; display: grid; gap: 14px; }
 .user-map__sharing .btn { justify-self: start; }
-.user-map__toolbar { display: flex; gap: 16px; align-items: center; }
 .user-map__canvas { height: min(60vh, 540px); min-height: 320px; border-radius: var(--radius); z-index: 0; }
 .user-map__people { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 18px; }
 .user-map__selection, .user-map__remaining { display: grid; gap: 16px; }
@@ -1572,7 +1571,17 @@ select.input {
 }
 .user-map__places { margin-top: 28px; }
 .user-map__places summary { cursor: pointer; margin-bottom: 14px; }
-@media (max-width: 600px) { .user-map__toolbar { flex-direction: column; align-items: stretch; } }
+
+
+.user-map-control-group { display: flex; overflow: hidden; border: 1px solid #0002; border-radius: 8px; background: var(--surface); box-shadow: 0 2px 8px #0002; }
+.user-map-control-group button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 0; background: var(--surface); color: var(--ink); font: 600 12px var(--font-sans); cursor: pointer; }
+.user-map-control-group button + button { border-left: 1px solid var(--line); }
+.user-map-control-group button:hover { background: var(--matcha-light); }
+.user-map-control-group button:focus-visible { outline: 2px solid var(--matcha); outline-offset: -3px; }
+.user-map-control-group button:disabled { opacity: .6; cursor: wait; }
+.user-map-control-group--vertical { flex-direction: column; }
+.user-map-control-group--vertical button { width: 40px; height: 40px; padding: 0; }
+.user-map-control-group--vertical button + button { border-left: 0; border-top: 1px solid var(--line); }
 
 .user-map-pin, .user-map-cluster { background: transparent; border: 0; }
 .user-map-pin > span { display: block; width: 44px; height: 44px; border: 3px solid white; border-radius: 50%; overflow: hidden; background: var(--matcha-light); box-shadow: 0 2px 8px #0003; }
