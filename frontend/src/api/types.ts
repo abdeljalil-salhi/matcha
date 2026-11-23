@@ -122,6 +122,8 @@ export interface BlockedUser {
 }
 
 export interface Conversation {
+  latest_message_body?: string | null;
+  latest_message_kind?: MessageKind | null;
   online: boolean;
   id: number;
   username: string;
