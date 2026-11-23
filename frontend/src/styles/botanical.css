@@ -134,7 +134,7 @@ body {
 .auth-card .error-banner { background: var(--danger-light); border-color: #edc8bf; color: var(--danger); }
 .landing__cta {
   background:
-    linear-gradient(90deg, #315a3a 0%, #3c6541 52%, rgba(60, 101, 65, 0) 74%),
+    linear-gradient(90deg, #315a3a 0%, #3c6541 40%, rgba(60, 101, 65, 0) 62%),
     url('/images/home-cta-leaves.png') right center / auto 100% no-repeat,
     linear-gradient(145deg, #315a3a, #426c49);
 }

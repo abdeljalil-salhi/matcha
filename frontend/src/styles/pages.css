@@ -13,31 +13,31 @@
   .landing::before { display: none; }
   .hero { padding-top: 28px; }
   .hero__art { height: 400px; }
-  .hero__card { width: 216px; }
-  .hero__card--two { width: 208px; top: 118px; right: 2%; }
+  .hero__card { width: 200px; }
+  .hero__card--two { width: 190px; top: 118px; right: 10%; }
   .hero__card figcaption strong { font-size: 0.92rem; }
-  .hero__rings { width: 330px; height: 330px; }
-  .hero__chip--place { top: 12px; }
-  .hero__interests { top: 200px; right: 0; gap: 9px; }
+  .hero__rings { width: 300px; height: 300px; }
+  .hero__chip--place { top: 12px; right: 8%; }
+  .hero__interests { top: 190px; right: 0; gap: 9px; }
   .hero__interests li { padding: 7px 11px; font-size: 0.72rem; }
   .hero__trust li { padding: 0 12px; }
   .landing__cta { flex-direction: column; align-items: flex-start; gap: 20px; padding: 28px; }
 }
 .landing { position: relative; }
 .landing::before {
-  content: ""; position: absolute; left: 0; top: 300px; width: 260px; height: 210px;
+  content: ""; position: absolute; left: 0; top: 280px; width: 280px; height: 230px;
   background: url('/images/home-leaves-left.png') left center / contain no-repeat;
-  mix-blend-mode: multiply; opacity: 0.9; pointer-events: none;
+  pointer-events: none;
 }
 .hero {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 60px;
+  gap: 48px;
   padding-top: 48px;
   padding-bottom: 90px;
 }
-.hero__copy h1 { margin: 18px 0 22px; font-size: clamp(2.5rem, 4.4vw, 3.8rem); line-height: 1.1; }
+.hero__copy h1 { margin: 18px 0 22px; font-size: clamp(2.4rem, 3.6vw, 3.4rem); line-height: 1.12; }
 .hero__copy h1 em { color: var(--matcha); font-style: italic; }
 .hero__copy .lead { max-width: 46ch; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
@@ -52,16 +52,16 @@
 }
 .hero__trust li:first-child { padding-left: 0; border-left: 0; }
 .hero__trust svg { color: var(--matcha-dark); }
-.hero__art { position: relative; height: 480px; }
+.hero__art { position: relative; height: 420px; }
 .hero__rings {
-  position: absolute; top: 10px; left: 50%; width: 430px; height: 430px;
+  position: absolute; top: 20px; left: 38%; width: 340px; height: 340px;
   transform: translateX(-50%); border-radius: 50%;
   background: radial-gradient(circle, #cfdcc4 0 18%, #d8e4cd 18% 36%, #e0ead7 36% 54%, #e8f0e1 54% 72%, #eef4e8 72% 100%);
   opacity: 0.85;
 }
-.hero__pin { position: absolute; top: 96px; left: 55%; z-index: 1; color: var(--matcha-dark); }
+.hero__pin { position: absolute; top: 92px; left: 47%; z-index: 1; color: var(--matcha-dark); }
 .hero__card {
-  position: absolute; z-index: 2; width: 260px; margin: 0; padding: 10px 10px 12px;
+  position: absolute; z-index: 2; width: 225px; margin: 0; padding: 10px 10px 12px;
   border: 1px solid #efe8dd; border-radius: 14px; background: var(--surface);
   box-shadow: 0 18px 40px rgba(62, 51, 31, 0.16);
 }
@@ -71,21 +71,21 @@
 }
 .hero__card figcaption strong { font-family: var(--font-serif); font-size: 1.05rem; }
 .hero__card .fame-badge { padding: 4px 9px; font-size: var(--text-xs); }
-.hero__card--one { top: 34px; left: 0; transform: rotate(-4deg); }
-.hero__card--two { top: 128px; right: 0; width: 250px; transform: rotate(5deg); }
+.hero__card--one { top: 34px; left: 4%; transform: rotate(-4deg); }
+.hero__card--two { top: 128px; right: 14%; width: 205px; transform: rotate(5deg); }
 .hero__chip {
   position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 7px;
   padding: 9px 13px; border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-md);
   font-size: 0.78rem; font-weight: 700; color: var(--ink); white-space: nowrap;
 }
 .hero__chip svg { color: var(--matcha-dark); }
-.hero__chip--match { top: 8px; left: 0; transform: rotate(-4deg); color: var(--matcha-dark); }
-.hero__chip--place { top: 30px; right: 0; transform: rotate(2deg); }
+.hero__chip--match { top: 8px; left: 2%; transform: rotate(-4deg); color: var(--matcha-dark); }
+.hero__chip--place { top: 30px; right: 12%; transform: rotate(2deg); }
 .hero__chip--place > span { display: flex; flex-direction: column; gap: 1px; }
 .hero__chip--place strong { font-size: 0.8rem; }
 .hero__chip--place small { color: var(--muted); font-size: 0.68rem; font-weight: 600; }
 .hero__interests {
-  position: absolute; top: 216px; right: -4px; z-index: 3; display: flex; flex-direction: column;
+  position: absolute; top: 176px; right: 0; z-index: 3; display: flex; flex-direction: column;
   align-items: flex-start; gap: 12px; margin: 0; padding: 0; list-style: none;
 }
 .hero__interests li {
@@ -97,7 +97,7 @@
 .hero__interests li:nth-child(3) { margin-left: 10px; transform: rotate(4deg); }
 .hero__interests svg { color: var(--matcha-dark); }
 .landing__features { padding: 30px 0 70px; }
-.landing__section-head { max-width: 640px; margin-bottom: 32px; }
+.landing__section-head { max-width: 780px; margin-bottom: 32px; }
 .landing__section-head h2 { margin-top: 12px; font-size: clamp(1.7rem, 2.6vw, 2.3rem); }
 .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
 .feature-card {
