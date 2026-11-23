@@ -113,7 +113,18 @@ def test_profiles_chat_and_notifications(
         ) == [False, True]
     assert a.get(f"/api/profiles/{bob}").json["likes_you"]
     assert b.get("/api/me/likes").json["likes"][0]["id"] == alice
-    assert a.get("/api/chat").json["conversations"][0]["id"] == bob
+    chat_peer = a.get("/api/chat").json["conversations"][0]
+    assert chat_peer["id"] == bob
+    assert chat_peer["online"] is True
+    conn.execute(
+        "UPDATE sessions SET last_seen = now() - interval '1 minute' "
+        "WHERE user_id = %s",
+        (bob,),
+    )
+    conn.commit()
+    assert a.get("/api/chat").json["conversations"][0]["online"] is False
+    assert b.get("/api/me").status_code == HTTPStatus.OK
+    assert a.get("/api/chat").json["conversations"][0]["online"] is True
     payload = {"body": "<b>Plain-text message</b>", "client_id": str(uuid4())}
     message = a.post(f"/api/chat/{bob}/messages", json=payload)
     assert message.status_code == HTTPStatus.CREATED, message.json

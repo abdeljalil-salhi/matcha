@@ -3771,6 +3771,10 @@
                 "type": "null"
               }
             ]
+          },
+          "online": {
+            "type": "boolean",
+            "description": "Whether an unexpired session was active within the last 15 seconds."
           }
         },
         "required": [
@@ -3780,7 +3784,8 @@
           "last_name",
           "photo_id",
           "latest_message_id",
-          "latest_message_at"
+          "latest_message_at",
+          "online"
         ]
       },
       "Message": {
