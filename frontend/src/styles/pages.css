@@ -144,9 +144,47 @@
 }
 .landing__footer {
   display: flex; justify-content: space-between; gap: 16px; padding: 2.4vw 0 2.6vw;
-  border-top: 1px solid var(--line); margin-top: auto; color: var(--muted);
+  border-top: 1px solid var(--line); margin-top: auto; color: #434343;
   font-size: clamp(0.72rem, 0.83vw, 1rem);
 }
+
+/* Landing palette sampled from the reference mockup. */
+.landing .eyebrow { color: #3f6944; }
+.hero__copy h1, .hero__copy h1 em { color: #161616; }
+.hero__copy h1 em { color: #416944; }
+.hero__copy .lead { color: #3f3e3b; }
+.hero__actions .btn--primary {
+  background: linear-gradient(165deg, #4a6c4a, #3f5c3f); border-color: transparent; color: #fff;
+}
+.hero__actions .btn--primary:hover:not(:disabled) { background: linear-gradient(165deg, #426242, #375237); }
+.hero__actions .btn--secondary { background: #fcfbf9; border-color: #e4dfd6; color: #1b1b1b; }
+.hero__trust li { color: #54514f; }
+.hero__trust svg { color: #556b52; }
+.hero__pin { color: #4c6c4c; }
+.hero__card { background: #fff; }
+.hero__card .fame-badge { background: #f0e4d0; color: #7c4f1e; }
+.hero__chip { background: #fdfbf7; color: #1b1b1b; }
+.hero__chip svg { color: #4c6c4c; }
+.hero__chip--match { color: #2f4d2e; }
+.hero__chip--place small { color: #6b6a67; }
+.hero__interests li { background: #fdfbf7; color: #1b1b1b; }
+.hero__interests svg { color: #4c6c4c; }
+.hero__rings {
+  background: radial-gradient(circle, #c8d6ba 0 18%, #d3ddc6 18% 36%, #dfe6d3 36% 54%, #e6ebdb 54% 72%, #e9ecdf 72% 100%);
+}
+.landing__section-head h2 { color: #161616; }
+.feature-card { background: #fbf8f3; }
+.feature-card__icon { background: #e9ecdd; color: #33512f; }
+.feature-card h3 { color: #161616; }
+.feature-card p { color: #4a4c48; }
+.landing__cta h2 { color: #fff; }
+.landing__cta .lead { color: #d8e2d2; }
+.landing__cta-btn { background: #f3f5f0; color: #2c4a28; }
+.hero__pin svg { width: clamp(22px, 2.2vw, 44px); height: clamp(22px, 2.2vw, 44px); }
+.feature-card__icon svg { width: 1.45vw; height: 1.45vw; }
+.hero__card .fame-badge svg { width: clamp(11px, 0.85vw, 17px); height: clamp(11px, 0.85vw, 17px); }
+.hero__chip svg { width: clamp(12px, 1vw, 19px); height: clamp(12px, 1vw, 19px); }
+.hero__interests svg { width: clamp(12px, 1vw, 19px); height: clamp(12px, 1vw, 19px); }
 
 /* ---------- Auth ---------- */
 .auth-layout {

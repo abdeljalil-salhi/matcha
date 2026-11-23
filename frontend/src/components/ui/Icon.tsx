@@ -55,7 +55,8 @@ export type IconName =
   | "arrowRight"
   | "target"
   | "mountain"
-  | "pinSolid";
+  | "pinSolid"
+  | "shieldPlain";
 
 const PATHS: Record<IconName, ReactNode> = {
   layers: <><path d="m12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5" /></>,
@@ -235,6 +236,7 @@ const PATHS: Record<IconName, ReactNode> = {
       d="M12 2a8 8 0 0 0-8 8c0 5.4 8 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
     />
   ),
+  shieldPlain: <path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3Z" />,
 };
 
 interface IconProps {

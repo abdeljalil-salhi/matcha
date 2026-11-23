@@ -41,13 +41,13 @@ export function LandingPage() {
             <div className="hero__actions">
               <Link to={exploreTo} className="btn btn--primary btn--lg">Explore profiles</Link>
               <a href="#why-matcha" className="btn btn--secondary btn--lg hero__how">
-                <Icon name="play" size={15} /> See how Matcha works
+                <Icon name="play" size={15} strokeWidth={2} /> See how Matcha works
               </a>
             </div>
             <ul className="hero__trust">
-              <li><Icon name="pin" size={15} /> People nearby</li>
-              <li><Icon name="heart" size={15} /> Shared interests</li>
-              <li><Icon name="shield" size={15} /> Privacy by design</li>
+              <li><Icon name="pin" size={15} strokeWidth={2} /> People nearby</li>
+              <li><Icon name="heart" size={15} strokeWidth={2} /> Shared interests</li>
+              <li><Icon name="shieldPlain" size={15} strokeWidth={2} /> Privacy by design</li>
             </ul>
           </div>
 
@@ -57,12 +57,12 @@ export function LandingPage() {
 
             <figure className="hero__card hero__card--one">
               <span className="hero__chip hero__chip--match">
-                <Icon name="heart" size={13} /> 92% match
+                <Icon name="heart" size={13} strokeWidth={2.2} /> 92% match
               </span>
               <img src="/images/home-fatima.webp" alt="" width={256} height={256} />
               <figcaption>
                 <strong>Fatima, 25</strong>
-                <span className="fame-badge"><Icon name="star" size={12} /> 88</span>
+                <span className="fame-badge"><Icon name="star" size={12} strokeWidth={2.2} /> 88</span>
               </figcaption>
             </figure>
 
@@ -70,19 +70,19 @@ export function LandingPage() {
               <img src="/images/home-clara.webp" alt="" width={256} height={256} />
               <figcaption>
                 <strong>Clara, 21</strong>
-                <span className="fame-badge"><Icon name="star" size={12} /> 48</span>
+                <span className="fame-badge"><Icon name="star" size={12} strokeWidth={2.2} /> 48</span>
               </figcaption>
             </figure>
 
             <span className="hero__chip hero__chip--place">
-              <Icon name="pin" size={16} />
+              <Icon name="pin" size={16} strokeWidth={2.2} />
               <span><strong>Anfa, Casablanca</strong><small>Within 2 km</small></span>
             </span>
 
             <ul className="hero__interests">
-              <li><Icon name="book" size={14} /> Books</li>
-              <li><Icon name="mountain" size={14} /> Hiking</li>
-              <li><Icon name="gamepad" size={14} /> Gaming</li>
+              <li><Icon name="book" size={14} strokeWidth={2.2} /> Books</li>
+              <li><Icon name="mountain" size={14} strokeWidth={2.2} /> Hiking</li>
+              <li><Icon name="gamepad" size={14} strokeWidth={2.2} /> Gaming</li>
             </ul>
           </div>
         </section>
@@ -94,7 +94,7 @@ export function LandingPage() {
           </div>
           <div className="feature-grid">
             <article className="feature-card">
-              <span className="feature-card__icon"><Icon name="target" size={20} /></span>
+              <span className="feature-card__icon"><Icon name="target" size={20} strokeWidth={2} /></span>
               <h3>Discover with intention</h3>
               <p>
                 People are ranked by compatibility, shared interests, and proximity — so you
@@ -102,7 +102,7 @@ export function LandingPage() {
               </p>
             </article>
             <article className="feature-card">
-              <span className="feature-card__icon"><Icon name="shield" size={20} /></span>
+              <span className="feature-card__icon"><Icon name="shield" size={20} strokeWidth={2} /></span>
               <h3>Your privacy, respected</h3>
               <p>
                 Control your visibility, location, and details. Matcha is built for real people
@@ -110,7 +110,7 @@ export function LandingPage() {
               </p>
             </article>
             <article className="feature-card">
-              <span className="feature-card__icon"><Icon name="message" size={20} /></span>
+              <span className="feature-card__icon"><Icon name="message" size={20} strokeWidth={2} /></span>
               <h3>Better conversations</h3>
               <p>
                 Matches are based on genuine common ground, giving you an easy starting point
@@ -126,7 +126,7 @@ export function LandingPage() {
             <p className="lead">Create a profile and discover compatible people in your area.</p>
           </div>
           <Link to={exploreTo} className="btn btn--lg landing__cta-btn">
-            Explore profiles <Icon name="arrowRight" size={16} />
+            Explore profiles <Icon name="arrowRight" size={16} strokeWidth={2.2} />
           </Link>
         </section>
       </main>
