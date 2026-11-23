@@ -234,10 +234,14 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
       atBottom.current = true;
       setViewingLatest(true);
     }
-    if (!atBottom.current) return;
-    requestAnimationFrame(() => {
+    const scroll = () => {
+      if (!atBottom.current) return;
       element.scrollTop = element.scrollHeight;
-    });
+    };
+    scroll();
+    requestAnimationFrame(scroll);
+    window.setTimeout(scroll, 60);
+    window.setTimeout(scroll, 180);
   }, []);
 
   useEffect(() => {
