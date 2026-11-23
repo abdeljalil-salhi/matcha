@@ -61,7 +61,7 @@ Google sign-in is optional and off until all three settings are present.
    ```
 
 4. Recreate the containers so they pick up the new values:
-   `docker compose up -d --force-recreate`. Migration `014_google_auth.sql`
+   `docker compose up -d --force-recreate`. Migration `015_google_auth.sql`
    creates the account-link table automatically.
 
 The “Continue with Google” button appears on the login and registration pages
@@ -146,3 +146,5 @@ If device location finds a city without a neighborhood, confirm the offered city
 
 
 The `/map` page displays opted-in compatible members. Migration `013_user_map.sql` leaves real accounts hidden and enables the existing fictional demo fixtures for evaluation. No database reset or reseed is needed. New demo fixtures are map-visible; seed reruns preserve an existing fixture's explicit map choice. Real users can enable or disable approximate area sharing from “Your map visibility”. The separate device GPS button centers only their own browser view.
+
+Audio/video calls use native WebRTC and migration `014_calls.sql`. See [CALLS.md](CALLS.md) for optional TURN configuration and the manual real-network verification checklist. No camera or microphone is accessed by the automated tests.

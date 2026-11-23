@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 
 export type IconName =
+  | "microphone"
+  | "microphoneOff"
+  | "videoOff"
+  | "phone"
+  | "video"
   | "compass"
   | "search"
   | "heart"
@@ -36,6 +41,11 @@ export type IconName =
   | "rotateRight";
 
 const PATHS: Record<IconName, ReactNode> = {
+  microphone: <><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" /></>,
+  microphoneOff: <><path d="M9 5V5a3 3 0 0 1 6 0v4M9 9v3a3 3 0 0 0 5 2M5 10v2a7 7 0 0 0 12 5M19 10v2a7 7 0 0 1-.3 2M12 19v3M8 22h8M3 3l18 18" /></>,
+  videoOff: <><path d="M10 5h4a2 2 0 0 1 2 2v3l6-4v12l-6-4M16 16v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2M2 2l20 20" /></>,
+  phone: <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.8 2.1Z" />,
+  video: <><rect x="2" y="5" width="14" height="14" rx="2" /><path d="m16 10 6-4v12l-6-4" /></>,
   compass: (
     <>
       <circle cx="12" cy="12" r="9" />

@@ -27,6 +27,10 @@ def create_app(overrides: Mapping[str, object] | None = None) -> Flask:
     from .auth.routes.recovery import routes as recovery
     from .auth.routes.registration import routes as registration
     from .auth.routes.sessions import routes as sessions
+    from .calls.actions import routes as call_actions
+    from .calls.signaling import routes as call_signals
+    from .calls.routes import routes as calls
+    from .calls.ice import routes as call_ice
     from .chat.conversations import routes as conversations
     from .chat.routes import routes as chat
     from .docs.routes import routes as docs
@@ -63,6 +67,10 @@ def create_app(overrides: Mapping[str, object] | None = None) -> Flask:
         recovery,
         registration,
         sessions,
+        calls,
+        call_ice,
+        call_actions,
+        call_signals,
         conversations,
         chat,
         notifications,

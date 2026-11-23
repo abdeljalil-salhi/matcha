@@ -18,6 +18,7 @@ Run `make help` for development shortcuts, or see the
 - Editable profiles with photos, interest tags, and consent-based location
 - Profile suggestions and search by distance, interests, age, and fame
 - Mutual likes, blocking, reporting, chat, and unread notifications
+- One-to-one audio/video calls for connected members, with optional TURN relay
 
 ## Stack
 
@@ -31,6 +32,7 @@ testing account emails.
 | --- | --- |
 | [Local setup](docs/SETUP.md) | Start the backend, seed demo profiles, and use Swagger UI |
 | [Frontend API contract](docs/API.md) | Connect a frontend and implement account, profile, discovery, and chat flows |
+| [Audio/video calling](docs/CALLS.md) | Configure calls, TURN relay, and real-network verification |
 | [Development and CI](docs/DEVELOPMENT.md) | Run tests, format Python, and understand the automated checks |
 | [UI examples](docs/EXAMPLES.md) | See screenshots of location search, saved profile, map, gallery and discovery |
 

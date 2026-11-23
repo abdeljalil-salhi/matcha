@@ -20,3 +20,7 @@ class Settings(TypedDict):
     MAX_FORM_MEMORY_SIZE: int
     MAX_FORM_PARTS: int
     RATELIMIT: bool
+    CALL_STUN_URLS: list[str]
+    CALL_TURN_URLS: list[str]
+    CALL_TURN_SECRET: str
+    CALL_RELAY_ONLY: bool

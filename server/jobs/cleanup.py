@@ -2,6 +2,7 @@
 
 from psycopg import Connection
 
+from ..calls.lifecycle import clean_calls
 from .limits import RATE_WINDOW_RETENTION_DAYS
 
 
@@ -14,6 +15,7 @@ def clean(connection: Connection) -> None:
     Returns:
         None.
     """
+    clean_calls(connection)
     connection.execute(
         "DELETE FROM rate_windows WHERE window_start < now() - %s * interval '1 day'",
         (RATE_WINDOW_RETENTION_DAYS,),

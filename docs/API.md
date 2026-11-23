@@ -129,3 +129,17 @@ Clicking a message notification opens its conversation without acknowledging it 
 Public coordinates are rounded to two decimal places (roughly a kilometre in latitude, varying by location). Viewport filtering uses those same public points, so narrow queries cannot recover hidden coordinate precision. No addresses, precise GPS history, email or private profile fields are exposed. Opted-in markers follow changes to the saved matching location; deleting that location also disables map sharing. Other clients refresh every 15 seconds, so revocation is reflected on their next refresh.
 
 The device-location button centers only the current browser map using consented JavaScript GPS. It does not save the device position or enable sharing. Viewport request bounds are rounded outwards to the public grid; OpenStreetMap supplies the visible map tiles. Nearby profiles form numbered clusters: selecting a cluster smoothly zooms in without opening a card. At maximum zoom, profiles sharing a public point fan out into individual tappable markers; these display offsets do not imply more precise coordinates. Only selecting an individual marker opens its profile card on the map. Motion is reduced when the device requests it. Fictional demo profiles are visible on the map for evaluation; this does not opt real users in.
+
+### Audio/video calling
+
+See [CALLS.md](CALLS.md) for setup, privacy behavior, limits, and verification.
+
+- `POST /calls` accepts `{user_id, mode: "audio"|"video", device_id: UUID}` and returns `{call}` with 201. Both participants must be connected and free.
+- `GET /calls/current?device_id=UUID` returns `{call: null|Call}` for global invitation discovery.
+- `GET /calls/:id?device_id=UUID&after=0` returns `{call, signals, has_more}`. Signals are delivered only to their controlling recipient in ascending ID order, 100 per page. Advance `after` only after processing each signal; fetch again immediately while `has_more` is true.
+- `POST /calls/:id/action` accepts `{device_id, action: "accept"|"decline"|"cancel"|"end"|"fail"}`. Only the recipient may accept/decline; acceptance claims that browser instance. Terminal actions are idempotent. An explicit end is allowed from either participant, including another tab.
+- `POST /calls/:id/heartbeat` accepts `{device_id}` and renews the owner's lease. Polling alone does not renew it.
+- `POST /calls/:id/signals` accepts `{device_id, client_id: UUID, kind: "offer"|"answer"|"ice", payload}`. Descriptions contain `{sdp}`; candidates contain standard `RTCIceCandidateInit` fields. Retries reuse `client_id` and the identical payload.
+- `GET /calls/ice` returns `RTCConfiguration` with optional STUN, temporary TURN credentials, and `iceTransportPolicy`.
+
+Call snapshots contain `id`, `mode`, `state`, `role`, `owned`, `created_at`, and the peer's `id`, `username`, names and `photo_id`. Session/device secrets are not returned. Third parties receive 404 for another pair's call. All endpoints require cookie authentication and the standard browser-origin policy for writes.
