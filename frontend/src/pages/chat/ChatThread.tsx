@@ -198,7 +198,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     const item: PendingMessage = { client_id: uuid(), body, kind: "text" };
     setPending((current) => [...current, item]);
     setDraft("");
-    atBottom.current = true;
+    scrollToBottom(true);
     void dispatch(item);
   };
 
@@ -212,7 +212,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     };
     setPending((current) => [...current, item]);
     setGifOpen(false);
-    atBottom.current = true;
+    scrollToBottom(true);
     void dispatch(item);
   };
 
@@ -227,11 +227,22 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     notify("Messages marked as read.", "success");
   };
 
-  useEffect(() => {
+  const scrollToBottom = useCallback((force = false) => {
     const element = scrollRef.current;
-    if (!element || !atBottom.current) return;
-    element.scrollTop = element.scrollHeight;
-  }, [messages, pending]);
+    if (!element) return;
+    if (force) {
+      atBottom.current = true;
+      setViewingLatest(true);
+    }
+    if (!atBottom.current) return;
+    requestAnimationFrame(() => {
+      element.scrollTop = element.scrollHeight;
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, pending, scrollToBottom]);
 
   const onScroll = () => {
     const element = scrollRef.current;
@@ -306,7 +317,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
               <div className={`bubble${message.sender_id === user?.id ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}`}>
                 {message.kind === "gif" && message.media_url ? (
                   <figure className="bubble__media">
-                    <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" />
+                    <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
                     {message.body ? <figcaption>{message.body}</figcaption> : null}
                   </figure>
                 ) : (
@@ -322,7 +333,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           <div key={item.client_id} className={`bubble bubble--mine${item.failed ? " bubble--failed" : ""}${item.kind === "gif" ? " bubble--media" : ""}`}>
             {item.kind === "gif" && item.media_url ? (
               <figure className="bubble__media">
-                <img src={item.media_url} alt={item.media_alt || "GIF"} loading="lazy" />
+                <img src={item.media_url} alt={item.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
                 {item.body ? <figcaption>{item.body}</figcaption> : null}
               </figure>
             ) : (
