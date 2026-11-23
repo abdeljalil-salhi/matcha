@@ -13,6 +13,7 @@ import { Modal } from "../ui/Modal";
 import { useToast } from "../../context/ToastContext";
 import {
   clampEdits,
+  drawEditedImage,
   loadImage,
   MAX_PHOTO_BYTES,
   PHOTO_FILTERS,
@@ -29,6 +30,7 @@ const DEFAULT_EDITS: ImageEdits = {
   offsetX: 0,
   offsetY: 0,
   filter: PHOTO_FILTERS[0].css,
+  enhancement: 0,
 };
 
 interface PhotoManagerProps {
@@ -48,6 +50,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const editorErrorRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const enhancedRef = useRef<HTMLCanvasElement>(null);
   const openingRef = useRef(false);
   const dragRef = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const [busyId, setBusyId] = useState<number | "upload" | null>(null);
@@ -56,8 +59,35 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
   const [dragging, setDragging] = useState(false);
   const [queue, setQueue] = useState<File[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [showBefore, setShowBefore] = useState(false);
+  const [previewVersion, setPreviewVersion] = useState("");
 
   const viewportSize = () => viewportRef.current?.clientWidth || 320;
+  const enhancementVersion = draft ? JSON.stringify([
+    draft.url, draft.zoom, draft.rotation, draft.offsetX, draft.offsetY,
+    draft.filter, draft.enhancement, viewportSize(),
+  ]) : "";
+
+  useEffect(() => {
+    if (!draft?.enhancement) {
+      setShowBefore(false);
+      return;
+    }
+    let active = true;
+    // Coalesce slider/pan changes; never apply an old preview to a newer draft.
+    const timer = window.setTimeout(() => {
+      void loadImage(draft.url).then((image) => {
+        if (!active || !enhancedRef.current) return;
+        drawEditedImage(enhancedRef.current, image, draft, viewportSize());
+        setPreviewVersion(enhancementVersion);
+      }).catch(() => {
+        if (!active) return;
+        setError("Enhancement preview is unavailable. Try again or upload without enhancement.");
+        setDraft((current) => current && { ...current, enhancement: 0 });
+      });
+    }, 120);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [enhancementVersion]);
 
   useEffect(() => {
     if (openingRef.current || draft || queue.length === 0) return;
@@ -344,7 +374,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
       </div>
 
       <p className="text-small text-muted">
-        Drag images onto the gallery or choose files. Crop, rotate and filter them before uploading.
+        Drag images onto the gallery or choose files. Crop, rotate, filter and enhance them before uploading.
         JPEG, PNG, or WebP up to 10 MiB, five photos maximum. One must be your profile picture.
       </p>
 
@@ -354,10 +384,15 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
         title="Edit your photo"
         description={queue.length > 0 ? `${queue.length + 1} photos queued` : undefined}
         size="lg"
+        className="photo-editor-modal"
+        backdropClassName="photo-editor-backdrop"
         footer={
           <>
-            <Button variant="ghost" onClick={cancelAll} disabled={busyId === "upload"}>
-              Cancel all
+            <Button className="photo-editor__reset" variant="ghost" onClick={() => updateDraft(DEFAULT_EDITS)} disabled={busyId === "upload"}>
+              Reset edits
+            </Button>
+            <Button variant="secondary" onClick={cancelAll} disabled={busyId === "upload"}>
+              Cancel
             </Button>
             <Button loading={busyId === "upload"} onClick={() => void apply()}>
               Apply & upload
@@ -371,61 +406,100 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
         {draft ? (
           <div className="photo-editor">
             <div className="photo-editor__stage">
-              <div
-                ref={viewportRef}
-                className="photo-editor__crop"
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerUp}
-              >
-                <img
-                  src={draft.url}
-                  alt="Photo crop preview"
-                  draggable={false}
-                  style={{
-                    // Keep the full cover-sized image behind the square crop window.
-                    width: `${(draft.width / Math.min(draft.width, draft.height)) * 100}%`,
-                    height: `${(draft.height / Math.min(draft.width, draft.height)) * 100}%`,
-                    transform: `translate(-50%, -50%) translate(${draft.offsetX}px, ${draft.offsetY}px) rotate(${draft.rotation}deg) scale(${draft.zoom})`,
-                    filter: draft.filter,
-                  }}
-                />
-                <span className="photo-editor__grid" aria-hidden="true" />
+              <div className="photo-editor__preview">
+                <div
+                  ref={viewportRef}
+                  className="photo-editor__crop"
+                  tabIndex={0}
+                  aria-label="Reposition photo by dragging"
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={onPointerUp}
+                  onPointerCancel={onPointerUp}
+                >
+                  <img
+                    src={draft.url}
+                    alt="Photo crop preview"
+                    draggable={false}
+                    style={{
+                      // Keep the full cover-sized image behind the square crop window.
+                      width: `${(draft.width / Math.min(draft.width, draft.height)) * 100}%`,
+                      height: `${(draft.height / Math.min(draft.width, draft.height)) * 100}%`,
+                      transform: `translate(-50%, -50%) translate(${draft.offsetX}px, ${draft.offsetY}px) rotate(${draft.rotation}deg) scale(${draft.zoom})`,
+                      filter: draft.filter,
+                    }}
+                  />
+                  {draft.enhancement ? (
+                    <canvas
+                      ref={enhancedRef}
+                      className="photo-editor__enhanced"
+                      aria-label="Enhanced photo preview"
+                      role="img"
+                      hidden={showBefore || previewVersion !== enhancementVersion}
+                    />
+                  ) : null}
+                  <span className="photo-editor__grid" aria-hidden="true" />
+                  <span className="photo-editor__corners" aria-hidden="true"><i /><i /><i /><i /></span>
+                </div>
+                {draft.enhancement ? (
+                  <div className="photo-editor__comparison">
+                    <span className="text-small text-muted" role="status">
+                      {previewVersion !== enhancementVersion ? "Updating preview…" : showBefore ? "Before enhancement" : "Enhanced preview"}
+                    </span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      aria-pressed={showBefore}
+                      onClick={() => setShowBefore((current) => !current)}
+                      disabled={busyId === "upload" || previewVersion !== enhancementVersion}
+                    >
+                      {showBefore ? "Show enhanced" : "Show before"}
+                    </Button>
+                  </div>
+                ) : null}
               </div>
-              <p className="text-small text-muted">Drag to reposition. Use zoom to frame your crop.</p>
+              <p className="photo-editor__hint text-small text-muted"><Icon name="crop" size={16} /> Drag to reposition. Use the zoom slider to frame your crop.</p>
+              <div className="photo-editor__zoom-bar">
+                <span>Zoom</span>
+                <button type="button" aria-label="Zoom out" onClick={() => updateDraft({ zoom: Math.max(1, draft.zoom - 0.1) })} disabled={busyId === "upload" || draft.zoom <= 1}>
+                  <Icon name="minus" size={16} />
+                </button>
+                <input
+                  aria-label="Zoom"
+                  type="range"
+                  min="1"
+                  max="2"
+                  step="0.05"
+                  value={draft.zoom}
+                  onChange={(event) => updateDraft({ zoom: Number(event.target.value) })}
+                  disabled={busyId === "upload"}
+                />
+                <button type="button" aria-label="Zoom in" onClick={() => updateDraft({ zoom: Math.min(2, draft.zoom + 0.1) })} disabled={busyId === "upload" || draft.zoom >= 2}>
+                  <Icon name="plus" size={16} />
+                </button>
+                <output aria-label="Zoom level">{draft.zoom.toFixed(1)}×</output>
+              </div>
+
             </div>
 
             <div className="photo-editor__controls">
-              <div className="photo-editor__row">
-                <span className="photo-editor__label"><Icon name="crop" size={16} /> Crop</span>
-                <div className="photo-editor__segmented">
-                  <button type="button" onClick={() => rotate(-90)} aria-label="Rotate left" disabled={busyId === "upload"}>
-                    <Icon name="rotateLeft" size={16} />
-                  </button>
-                  <button type="button" onClick={() => rotate(90)} aria-label="Rotate right" disabled={busyId === "upload"}>
-                    <Icon name="rotateRight" size={16} />
-                  </button>
-                </div>
+              <div className="photo-editor__tools">
+                <button type="button" className="is-active" aria-label="Reposition crop" onClick={() => viewportRef.current?.focus()} disabled={busyId === "upload"}>
+                  <Icon name="crop" size={22} /><span>Crop</span>
+                </button>
+                <button type="button" onClick={() => rotate(-90)} aria-label="Rotate left" disabled={busyId === "upload"}>
+                  <Icon name="rotateLeft" size={22} /><span>Rotate left</span>
+                </button>
+                <button type="button" onClick={() => rotate(90)} aria-label="Rotate right" disabled={busyId === "upload"}>
+                  <Icon name="rotateRight" size={22} /><span>Rotate right</span>
+                </button>
+                <button type="button" aria-label="Reset crop" onClick={() => updateDraft({ rotation: 0, zoom: 1, offsetX: 0, offsetY: 0 })} disabled={busyId === "upload"}>
+                  <Icon name="refresh" size={22} /><span>Reset</span>
+                </button>
               </div>
 
-              <label className="photo-editor__zoom" htmlFor="photo-zoom">
-                <span>Zoom</span>
-                <strong>{draft.zoom.toFixed(1)}×</strong>
-              </label>
-              <input
-                id="photo-zoom"
-                type="range"
-                min="1"
-                max="2"
-                step="0.05"
-                value={draft.zoom}
-                onChange={(event) => updateDraft({ zoom: Number(event.target.value) })}
-                disabled={busyId === "upload"}
-              />
-
               <span className="photo-editor__label photo-editor__label--filters">
-                <Icon name="sliders" size={16} /> Filter
+                <Icon name="sliders" size={16} /> Filters
               </span>
               <div className="photo-editor__filters">
                 {PHOTO_FILTERS.map((filter) => (
@@ -437,14 +511,49 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
                     aria-pressed={filter.css === draft.filter}
                     disabled={busyId === "upload"}
                   >
-                    {filter.label}
+                    <span className="photo-editor__filter-image">
+                      <img src={draft.url} alt="" draggable={false} style={{ filter: filter.css, transform: `rotate(${draft.rotation}deg)` }} />
+                      {filter.css === draft.filter ? <span className="photo-editor__filter-check"><Icon name="check" size={12} /></span> : null}
+                    </span>
+                    <span className="photo-editor__filter-name">{filter.label}</span>
                   </button>
                 ))}
               </div>
 
-              <Button variant="ghost" size="sm" onClick={() => updateDraft(DEFAULT_EDITS)} disabled={busyId === "upload"}>
-                Reset edits
-              </Button>
+              <div className="photo-editor__enhancement">
+                <label className="photo-editor__label" htmlFor="photo-enhance">
+                  <Icon name="sparkles" size={18} />
+                  <span>Enhance photo</span>
+                  <input
+                    id="photo-enhance"
+                    type="checkbox"
+                    checked={Boolean(draft.enhancement)}
+                    onChange={(event) => updateDraft({ enhancement: event.target.checked ? 0.5 : 0 })}
+                    disabled={busyId === "upload"}
+                  />
+                </label>
+                <p className="text-small text-muted">Gently sharpen, soften noise and balance lighting.</p>
+                {draft.enhancement ? (
+                  <div className="photo-editor__strength">
+                    <label className="photo-editor__zoom" htmlFor="photo-enhancement-strength">
+                      <span>Enhancement strength</span>
+                      <strong>{Math.round(draft.enhancement * 100)}%</strong>
+                    </label>
+                    <input
+                      id="photo-enhancement-strength"
+                      aria-label="Enhancement strength"
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.1"
+                      value={draft.enhancement}
+                      onChange={(event) => updateDraft({ enhancement: Number(event.target.value) })}
+                      disabled={busyId === "upload"}
+                    />
+                  </div>
+                ) : null}
+              </div>
+
             </div>
           </div>
         ) : null}

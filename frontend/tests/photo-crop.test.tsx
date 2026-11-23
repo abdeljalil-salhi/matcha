@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { api } from "../src/api";
@@ -97,7 +97,7 @@ test.each(["encoding", "upload"])("%s errors are readable inside the editor and 
   expect(upload).toHaveBeenLastCalledWith(encoded);
 });
 
-test.each(["Cancel all", "Close dialog"])("%s preserves the upload error on the gallery", async (button) => {
+test.each(["Cancel", "Close dialog"])("%s preserves the upload error on the gallery", async (button) => {
   await openCrop(600, 1200);
   vi.spyOn(editor, "renderEditedImage").mockRejectedValue(new Error("Unable to save that image."));
   await userEvent.click(screen.getByRole("button", { name: "Apply & upload" }));
@@ -120,4 +120,64 @@ test("a source photo exceeding 10 MiB is rejected before opening the editor", as
   await userEvent.upload(container.querySelector('input[type="file"]') as HTMLInputElement, file);
   expect(screen.getByRole("alert").textContent).toBe("Images must be 10 MiB or smaller.");
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+
+test("enhancement is opt-in, compares the same crop, and uploads the selected strength", async () => {
+  const drawPreview = vi.spyOn(editor, "drawEditedImage").mockImplementation(() => {});
+  const { image } = await openCrop(600, 1200);
+  const toggle = screen.getByRole("checkbox", { name: "Enhance photo" });
+  expect((toggle as HTMLInputElement).checked).toBe(false);
+  expect(screen.queryByRole("slider", { name: "Enhancement strength" })).toBeNull();
+  await userEvent.click(toggle);
+  expect(screen.queryByText("Adjust strength")).toBeNull();
+  expect(screen.queryByText(/Compare before uploading/)).toBeNull();
+  fireEvent.change(screen.getByRole("slider", { name: "Enhancement strength" }), { target: { value: "0.8" } });
+  await waitFor(() => expect((screen.getByRole("button", { name: "Show before" }) as HTMLButtonElement).disabled).toBe(false));
+  expect(drawPreview).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ enhancement: 0.8 }), 320);
+  const crop = image.style.transform;
+  await userEvent.click(screen.getByRole("button", { name: "Show before" }));
+  expect(screen.getByText("Before enhancement")).toBeTruthy();
+  expect(image.style.transform).toBe(crop);
+  const encode = vi.spyOn(editor, "renderEditedImage").mockResolvedValue(new File(["enhanced"], "photo.jpg", { type: "image/jpeg" }));
+  vi.spyOn(api.profile, "uploadPhoto").mockResolvedValue({ id: 42, is_primary: true });
+  await userEvent.click(screen.getByRole("button", { name: "Apply & upload" }));
+  expect(encode).toHaveBeenCalledWith(expect.any(File), expect.objectContaining({ enhancement: 0.8 }), 320);
+});
+
+test("reset disables enhancement and a failed preview leaves the editor usable", async () => {
+  vi.spyOn(editor, "drawEditedImage").mockImplementation(() => {});
+  await openCrop(600, 1200);
+  await userEvent.click(screen.getByRole("checkbox", { name: "Enhance photo" }));
+  await userEvent.click(screen.getByRole("button", { name: "Reset edits" }));
+  expect((screen.getByRole("checkbox", { name: "Enhance photo" }) as HTMLInputElement).checked).toBe(false);
+  expect(screen.queryByRole("button", { name: "Show before" })).toBeNull();
+  vi.spyOn(editor, "drawEditedImage").mockImplementation(() => { throw new Error("Canvas unavailable"); });
+  await userEvent.click(screen.getByRole("checkbox", { name: "Enhance photo" }));
+  expect((await screen.findByRole("alert")).textContent).toContain("Enhancement preview is unavailable");
+  expect((screen.getByRole("checkbox", { name: "Enhance photo" }) as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole("button", { name: "Apply & upload" }) as HTMLButtonElement).disabled).toBe(false);
+});
+
+test("visual filters preserve the crop and overlay zoom controls respect their limits", async () => {
+  const { image } = await openCrop(1200, 600);
+  const originalFilter = screen.getByRole("button", { name: "Original" });
+  expect(originalFilter.querySelector("img")?.getAttribute("src")).toBe("blob:crop-test");
+  expect(originalFilter.getAttribute("aria-pressed")).toBe("true");
+  expect((screen.getByRole("button", { name: "Zoom out" }) as HTMLButtonElement).disabled).toBe(true);
+  await userEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+  expect(image.style.transform).toContain("scale(1.1)");
+  await userEvent.click(screen.getByRole("button", { name: "Mono" }));
+  expect(image.style.filter).toBe("grayscale(1) contrast(1.08)");
+  expect(image.style.transform).toContain("scale(1.1)");
+  expect(screen.getByRole("button", { name: "Mono" }).getAttribute("aria-pressed")).toBe("true");
+  const zoom = screen.getByRole("slider", { name: "Zoom" });
+  zoom.focus();
+  fireEvent.change(zoom, { target: { value: "2" } });
+  expect(document.activeElement).toBe(zoom);
+  expect((screen.getByRole("button", { name: "Zoom in" }) as HTMLButtonElement).disabled).toBe(true);
+  await userEvent.click(screen.getByRole("button", { name: "Reset edits" }));
+  expect(image.style.filter).toBe("none");
+  expect(image.style.transform).toContain("scale(1)");
+  expect(originalFilter.getAttribute("aria-pressed")).toBe("true");
 });
