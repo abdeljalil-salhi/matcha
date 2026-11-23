@@ -31,6 +31,10 @@ export const api = {
   },
 
   auth: {
+    googleStatus: () => request<{ enabled: boolean }>("/auth/google/status", {
+      silentAuth: true,
+    }),
+
     register: (input: {
       username: string;
       email: string;

@@ -12,6 +12,9 @@ class Settings(TypedDict):
     DATABASE_URL: str
     MATCHA_SECRET: str
     FRONTEND_URL: str
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GOOGLE_REDIRECT_URI: str
     COOKIE_SECURE: bool
     MAX_CONTENT_LENGTH: int
     MAX_FORM_MEMORY_SIZE: int

@@ -43,6 +43,36 @@ volume. Stop the previous stack first if it uses the same ports.
 on `POST /auth/login` with a verified account. The browser sends the session
 cookie on later requests from the same page.
 
+## Enable Google sign-in (bonus)
+
+Google sign-in is optional and off until all three settings are present.
+
+1. In Google Cloud Console, configure the OAuth consent screen and create an
+   **OAuth client ID** of type **Web application**.
+2. Add `http://localhost:8000/api/auth/google/callback` as an authorized
+   redirect URI for local development. Use the exact API origin and path; add a
+   separate URI for each deployed environment.
+3. Set the credentials in `.env`:
+
+   ```sh
+   GOOGLE_CLIENT_ID=your-client-id
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+   ```
+
+4. Recreate the containers so they pick up the new values:
+   `docker compose up -d --force-recreate`. Migration `014_google_auth.sql`
+   creates the account-link table automatically.
+
+The “Continue with Google” button appears on the login and registration pages
+only when the API reports the strategy as configured. Sign-in requires a Google
+account with a verified email address. It links to an existing Matcha account
+with that address only after the local email has been verified; an unverified
+local account must use its verification link first. A Google identity cannot be
+linked to an account already linked to a different Google identity. The flow
+uses authorization code + PKCE and ends in the same HttpOnly session cookie as
+password login, so one-click sign-out and session revocation continue to work.
+
 ## Create test users
 
 Populate the database with 500 fictional profiles for discovery.

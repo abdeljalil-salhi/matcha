@@ -427,6 +427,156 @@
         }
       }
     },
+    "/auth/google/status": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Check Google sign-in availability",
+        "description": "The login and registration forms use this to show the Google button only when the optional strategy is configured.",
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "enabled"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      }
+    },
+    "/auth/google/start": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Start Google sign-in",
+        "description": "Browser-only redirect. Creates a signed, short-lived state/PKCE cookie and redirects to Google's consent screen.",
+        "parameters": [
+          {
+            "name": "next",
+            "in": "query",
+            "required": false,
+            "description": "Local path to open after sign-in. Unsafe or absolute values are ignored.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to Google, or to the frontend login page with a `google` reason.",
+            "headers": {
+              "Location": {
+                "description": "Google authorization URL or frontend login URL.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "description": "Signed state/PKCE cookie scoped to /api/auth/google.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      }
+    },
+    "/auth/google/callback": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Complete Google sign-in",
+        "description": "Browser-only redirect from Google. Verifies state and PKCE, exchanges the code, then creates or links a verified account using the normal Matcha session cookie. Errors return to the login page with `google=denied`, `invalid`, `unavailable`, `pending`, `conflict`, or `rate_limited`.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "description": "Authorization code from Google.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "description": "Anti-CSRF state value issued by /auth/google/start.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "description": "Set by Google when the user declines or the request fails.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the requested page with a session cookie, or back to login with a reason.",
+            "headers": {
+              "Location": {
+                "description": "Frontend destination.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Set-Cookie": {
+                "description": "Creates the HttpOnly Matcha session cookie and clears the flow cookie.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      }
+    },
     "/auth/forgot-password": {
       "post": {
         "tags": [

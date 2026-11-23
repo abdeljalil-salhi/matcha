@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api, ApiError } from "../../api";
+import { GoogleSignInButton } from "../../components/auth/GoogleSignInButton";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { googleErrorMessage, safeNext } from "../../utils/googleAuth";
 import { validateEmail } from "../../utils/validation";
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -15,7 +17,12 @@ export function LoginPage() {
   const { notify } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/discover";
+  const [params] = useSearchParams();
+  const from =
+    (location.state as { from?: string } | null)?.from ??
+    safeNext(params.get("next")) ??
+    "/discover";
+  const googleError = googleErrorMessage(params.get("google"));
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -114,6 +121,8 @@ export function LoginPage() {
         </div>
       ) : null}
 
+      {googleError ? <div className="error-banner" role="alert">{googleError}</div> : null}
+
       {error && !unverified ? <div className="error-banner" role="alert">{error}</div> : null}
 
       <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
@@ -156,6 +165,8 @@ export function LoginPage() {
           Sign in
         </Button>
       </form>
+
+      <GoogleSignInButton next={from} />
     </AuthLayout>
   );
 }

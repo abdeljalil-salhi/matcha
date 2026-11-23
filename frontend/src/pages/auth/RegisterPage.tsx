@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../api";
+import { GoogleSignInButton } from "../../components/auth/GoogleSignInButton";
 import { rememberCheckEmail } from "../../utils/checkEmail";
+import { googleErrorMessage } from "../../utils/googleAuth";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
@@ -27,6 +29,8 @@ type FieldName = keyof FormState;
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const googleError = googleErrorMessage(params.get("google"));
   const [values, setValues] = useState<FormState>({
     username: "",
     email: "",
@@ -102,6 +106,8 @@ export function RegisterPage() {
         </p>
       }
     >
+      {googleError ? <div className="error-banner" role="alert">{googleError}</div> : null}
+
       {formError ? <div className="error-banner" role="alert">{formError}</div> : null}
 
       <form className="auth-form" onSubmit={(event) => void submit(event)} noValidate>
@@ -187,6 +193,8 @@ export function RegisterPage() {
           Create account
         </Button>
       </form>
+
+      <GoogleSignInButton />
     </AuthLayout>
   );
 }
