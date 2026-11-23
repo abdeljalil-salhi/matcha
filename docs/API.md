@@ -99,7 +99,8 @@ The public profile response includes first and last name, username, age, gender 
 | GET `/me/likes` | Optional `limit, offset` | 200, `likes` |
 | GET `/chat` | Optional `limit, offset` | 200, `conversations` |
 | GET `/chat/{id}/messages` | Optional `before` or `after`, `limit` | 200, `messages` oldest to newest |
-| POST `/chat/{id}/messages` | `body, client_id` | 201 for new message, 200 for same UUID and body |
+| POST `/chat/{id}/messages` | `client_id`, text `{body}` or GIF `{kind:"gif", media_url, media_alt?, body?}` | 201 for new message, 200 for same UUID and same payload |
+| GET `/chat/gifs?q=...` | Search term `q`, optional `limit` | 200, normalized GIPHY picker results |
 | GET `/notifications` | Optional `before, limit` | 200, latest notifications and `unread.total`, `unread.messages` |
 | PUT `/notifications/{id}/read` | None | 204 |
 | PUT `/notifications/read` | `through` set to latest visible notification ID to mark | 204 |

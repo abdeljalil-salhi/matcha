@@ -131,13 +131,27 @@ export interface Conversation {
   latest_message_at: string | null;
 }
 
+export type MessageKind = "text" | "gif";
+
 export interface Message {
   id: number;
   sender_id: number;
   recipient_id: number;
+  kind: MessageKind;
   body: string;
+  media_url: string | null;
+  media_alt: string | null;
   client_id: string;
   created_at: string;
+}
+
+export interface ChatGif {
+  id: string;
+  title: string;
+  url: string;
+  preview_url: string;
+  width: number | null;
+  height: number | null;
 }
 
 export interface Notification {
