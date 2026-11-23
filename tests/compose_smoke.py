@@ -197,6 +197,13 @@ def main() -> None:
             verify_account_flow(f"http://{api}/api", f"http://{mailpit}")
             with build_opener().open(f"http://{frontend}", timeout=5) as response:
                 assert response.status == HTTPStatus.OK
+            # Transform a module that imports shared data outside frontend/.
+            # Serving index.html alone does not catch missing image build inputs.
+            with build_opener().open(
+                f"http://{frontend}/src/data/locations.ts", timeout=5
+            ) as response:
+                assert response.status == HTTPStatus.OK
+                assert b"places.json" in response.read()
             with build_opener().open(
                 f"http://{frontend}/api/health", timeout=5
             ) as response:
