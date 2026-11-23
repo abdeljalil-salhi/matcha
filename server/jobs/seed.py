@@ -75,9 +75,10 @@ def seed(connection: Connection, phrase: str | None) -> None:
                            verified_at,
                        birth_date, gender, seeks, bio, city, area, country_code,
                            latitude, longitude,
-                       location_source, location_set_at, is_demo
+                       location_source, location_set_at, is_demo, map_visible,
+                           map_shared_at
                    ) VALUES (%s, %s, %s, %s, %s, now(), %s, %s, %s, %s, %s, %s, %s, %s,
-                       %s, 'manual', now(), true)
+                       %s, 'manual', now(), true, true, now())
                    ON CONFLICT DO NOTHING RETURNING id""",
                 (
                     name,
