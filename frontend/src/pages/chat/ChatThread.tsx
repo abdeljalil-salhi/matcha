@@ -230,10 +230,10 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           <Icon name="chevronLeft" size={17} /><span>Conversations</span>
         </Link>
         <Link to={`/profile/${userId}`} className="chat-thread__person">
-          <Avatar photoId={conversation.photo_id} name={conversation} size="sm" />
+          <Avatar photoId={conversation.photo_id} name={conversation} size="sm" online={conversation.online} />
           <span>
             <strong>{fullName(conversation)}</strong>
-            <small>@{conversation.username} · view profile</small>
+            <small>{conversation.online ? <span className="chat-thread__online">Online now</span> : <>@{conversation.username}</>} · view profile</small>
           </span>
         </Link>
         {relatedUnread.length > 0 ? (

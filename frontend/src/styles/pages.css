@@ -559,3 +559,5 @@
 .standalone-page > .not-found { flex: 1; padding-block: 40px; }
 .standalone-footer { padding: 18px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--text-xs); text-align: center; }
 .standalone-footer a { color: var(--matcha); font-weight: 700; }
+
+.chat-thread__online { color: var(--matcha); font-weight: 600; }

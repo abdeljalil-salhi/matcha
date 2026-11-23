@@ -63,6 +63,7 @@ export function ChatPage() {
   const conversation = conversations.find((entry) => entry.id === userId);
   const fallback: Conversation = {
     id: userId,
+    online: false,
     username: "member",
     first_name: "New",
     last_name: "connection",
@@ -100,9 +101,9 @@ export function ChatPage() {
               aria-current={entry.id === userId ? "page" : undefined}
               className={`conversation-row${entry.id === userId ? " is-active" : ""}`}
             >
-              <Avatar photoId={entry.photo_id} name={entry} size="sm" />
+              <Avatar photoId={entry.photo_id} name={entry} size="sm" online={entry.online} />
               <span className="conversation-row__body">
-                <strong>{fullName(entry)}</strong>
+                <strong>{fullName(entry)}{entry.online ? <span className="sr-only"> — Online now</span> : null}</strong>
                 <span className="conversation-row__preview">
                   {entry.latest_message_at ? "View latest message" : "New connection — say hello"}
                 </span>

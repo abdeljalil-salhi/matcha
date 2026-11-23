@@ -121,6 +121,7 @@ export interface BlockedUser {
 }
 
 export interface Conversation {
+  online: boolean;
   id: number;
   username: string;
   first_name: string;

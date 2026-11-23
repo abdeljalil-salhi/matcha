@@ -9,6 +9,7 @@ export const user: Me = {
 };
 
 export const conversation: Conversation = {
+  online: false,
   id: 2, username: "bob", first_name: "Bob", last_name: "Example",
   photo_id: null, latest_message_id: null, latest_message_at: null,
 };
