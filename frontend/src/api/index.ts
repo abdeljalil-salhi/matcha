@@ -8,6 +8,7 @@ import type {
   DiscoveryProfile,
   Me,
   Message,
+  MessageReceipts,
   MessagePageParams,
   NotificationPage,
   PageParams,
@@ -167,7 +168,7 @@ export const api = {
     conversations: (params?: PageParams) =>
       request<{ conversations: Conversation[] }>("/chat", { query: params }),
     messages: (userId: number, params?: MessagePageParams) =>
-      request<{ messages: Message[] }>(`/chat/${userId}/messages`, { query: params }),
+      request<{ messages: Message[]; receipts?: MessageReceipts }>(`/chat/${userId}/messages`, { query: params }),
     send: (
       userId: number,
       payload:
@@ -178,6 +179,8 @@ export const api = {
         method: "POST",
         body: payload,
       }),
+    readMessages: (userId: number, through: number) =>
+      request<void>(`/chat/${userId}/read`, { method: "PUT", body: { through } }),
     gifs: (q: string, limit = 24, signal?: AbortSignal) =>
       request<{ gifs: ChatGif[] }>("/chat/gifs", { query: { q, limit }, signal }),
   },

@@ -1,7 +1,7 @@
 import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { api, ApiError, type ChatGif, type Conversation, type Message } from "../../api";
+import { api, ApiError, type ChatGif, type Conversation, type Message, type MessageReceipts } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationsContext";
 import { useToast } from "../../context/ToastContext";
@@ -38,6 +38,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const { user } = useAuth();
   const { notify } = useToast();
   const { notifications, markOne } = useNotifications();
+  const [receipts, setReceipts] = useState<MessageReceipts>({ delivered_through: 0, read_through: 0 });
   const [messages, setMessages] = useState<Message[]>([]);
   const [pending, setPending] = useState<PendingMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -81,6 +82,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
       const page = await api.chat.messages(userId, { limit: PAGE_SIZE });
       lastId.current = 0;
       merge(page.messages);
+      if (page.receipts) setReceipts(page.receipts);
       setHasMore(page.messages.length === PAGE_SIZE);
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 403) {
@@ -105,7 +107,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
       let after = lastId.current;
       for (let round = 0; round < 5; round += 1) {
         const page = await api.chat.messages(userId, { after, limit: 100 });
-          if (page.messages.length === 0) break;
+        if (page.receipts) setReceipts(page.receipts);
+        if (page.messages.length === 0) break;
         merge(page.messages);
         const newest = Math.max(...page.messages.map((message) => message.id));
         if (newest <= after) break;
@@ -316,6 +319,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           const showDay = day !== previousDay;
           previousDay = day;
           const mine = first.sender_id === user?.id;
+          const status = last.id <= receipts.read_through ? "Read"
+            : last.id <= receipts.delivered_through ? "Delivered" : "Sent";
           return (
             <div key={first.id} className="chat-message-group">
               {showDay ? <div className="chat-day"><span>{day}</span></div> : null}
@@ -332,7 +337,13 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
                       ) : <p>{message.body}</p>}
                     </div>
                   ))}
-                  <time className="message-group__time" dateTime={last.created_at}>{clockTime(last.created_at)}</time>
+                  <div className="message-group__meta">
+                    <time className="message-group__time" dateTime={last.created_at}>{clockTime(last.created_at)}</time>
+                    {mine ? <span className={`message-receipt message-receipt--${status.toLowerCase()}`} role="img" aria-label={status} title={status}>
+                      <Icon name="check" size={14} strokeWidth={2} />
+                      {status !== "Sent" ? <Icon name="check" size={14} strokeWidth={2} /> : null}
+                    </span> : null}
+                  </div>
                 </div>
               </div>
             </div>

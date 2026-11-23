@@ -136,6 +136,11 @@ export interface Conversation {
 
 export type MessageKind = "text" | "gif";
 
+export interface MessageReceipts {
+  delivered_through: number;
+  read_through: number;
+}
+
 export interface Message {
   id: number;
   sender_id: number;
