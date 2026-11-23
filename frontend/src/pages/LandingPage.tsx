@@ -5,6 +5,7 @@ import { SessionActions } from "../components/layout/SessionActions";
 
 export function LandingPage() {
   const { user } = useAuth();
+  const exploreTo = user ? "/discover" : "/register";
 
   return (
     <div className="landing">
@@ -31,69 +32,101 @@ export function LandingPage() {
       <main>
         <section className="hero container">
           <div className="hero__copy">
-            <p className="eyebrow">Dating, with better taste</p>
+            <p className="eyebrow">Dating, with more intention</p>
             <h1>Meet people who feel like <em>your</em> kind of people.</h1>
             <p className="lead">
-              Real common ground, a real sense of distance, and enough detail to start a
-              conversation that doesn't feel like a cold open.
+              Thoughtful matching, real common ground, and people nearby who are also
+              looking for a genuine connection.
             </p>
             <div className="hero__actions">
-              <Link to={user ? "/discover" : "/register"} className="btn btn--primary btn--lg">
-                {user ? "Explore profiles" : "Find your match"}
-              </Link>
-              {!user ? (
-                <Link to="/login" className="btn btn--secondary btn--lg">I already have an account</Link>
-              ) : null}
+              <Link to={exploreTo} className="btn btn--primary btn--lg">Explore profiles</Link>
+              <a href="#why-matcha" className="btn btn--secondary btn--lg hero__how">
+                <Icon name="play" size={15} /> See how Matcha works
+              </a>
             </div>
-            <p className="hero__note">Free to use · Location only with your consent · No noise</p>
+            <ul className="hero__trust">
+              <li><Icon name="pin" size={15} /> People nearby</li>
+              <li><Icon name="heart" size={15} /> Shared interests</li>
+              <li><Icon name="shield" size={15} /> Privacy by design</li>
+            </ul>
           </div>
+
           <div className="hero__art" aria-hidden="true">
-            <div className="hero__card hero__card--one">
-              <span className="hero__avatar">A</span>
-              <div><strong>Amélie, 27</strong><small>Montmartre · 2 km away</small></div>
-              <span className="hero__pill"><Icon name="heart" size={12} /> 3 shared</span>
-            </div>
-            <div className="hero__circle hero__circle--outer" />
-            <div className="hero__circle hero__circle--inner" />
-            <div className="hero__card hero__card--two">
-              <span className="hero__avatar hero__avatar--alt">J</span>
-              <div><strong>Jules, 29</strong><small>Jazz · Climbing · Vegan</small></div>
-              <span className="hero__pill hero__pill--green">Online</span>
-            </div>
+            <div className="hero__rings" />
+            <span className="hero__pin"><Icon name="pinSolid" size={30} /></span>
+
+            <figure className="hero__card hero__card--one">
+              <span className="hero__chip hero__chip--match">
+                <Icon name="heart" size={13} /> 92% match
+              </span>
+              <img src="/images/home-fatima.webp" alt="" width={256} height={256} />
+              <figcaption>
+                <strong>Fatima, 25</strong>
+                <span className="fame-badge"><Icon name="star" size={12} /> 88</span>
+              </figcaption>
+            </figure>
+
+            <figure className="hero__card hero__card--two">
+              <img src="/images/home-clara.webp" alt="" width={256} height={256} />
+              <figcaption>
+                <strong>Clara, 21</strong>
+                <span className="fame-badge"><Icon name="star" size={12} /> 48</span>
+              </figcaption>
+            </figure>
+
+            <span className="hero__chip hero__chip--place">
+              <Icon name="pin" size={16} />
+              <span><strong>Anfa, Casablanca</strong><small>Within 2 km</small></span>
+            </span>
+
+            <ul className="hero__interests">
+              <li><Icon name="book" size={14} /> Books</li>
+              <li><Icon name="mountain" size={14} /> Hiking</li>
+              <li><Icon name="gamepad" size={14} /> Gaming</li>
+            </ul>
           </div>
         </section>
 
-        <section className="landing__features container">
+        <section className="landing__features container" id="why-matcha">
           <div className="landing__section-head">
-            <p className="eyebrow">How it works</p>
-            <h2>Less swiping. More signal.</h2>
+            <p className="eyebrow">Why Matcha</p>
+            <h2>A calmer, more thoughtful way to date.</h2>
           </div>
           <div className="feature-grid">
             <article className="feature-card">
-              <span className="feature-card__icon"><Icon name="compass" size={20} /></span>
-              <h3>People, ranked with intention</h3>
-              <p>Distance, shared interests and fame shape your suggestions — no endless deck of strangers.</p>
-            </article>
-            <article className="feature-card">
-              <span className="feature-card__icon"><Icon name="heart" size={20} /></span>
-              <h3>A match opens the door</h3>
-              <p>Chat unlocks only when the feeling is mutual, so every conversation starts with something already there.</p>
+              <span className="feature-card__icon"><Icon name="target" size={20} /></span>
+              <h3>Discover with intention</h3>
+              <p>
+                People are ranked by compatibility, shared interests, and proximity — so you
+                spend less time swiping and more time meeting the right people.
+              </p>
             </article>
             <article className="feature-card">
               <span className="feature-card__icon"><Icon name="shield" size={20} /></span>
-              <h3>Your boundaries, respected</h3>
-              <p>Approximate location only. Blocks and reports are one tap away, always.</p>
+              <h3>Your privacy, respected</h3>
+              <p>
+                Control your visibility, location, and details. Matcha is built for real people
+                and meaningful connections.
+              </p>
+            </article>
+            <article className="feature-card">
+              <span className="feature-card__icon"><Icon name="message" size={20} /></span>
+              <h3>Better conversations</h3>
+              <p>
+                Matches are based on genuine common ground, giving you an easy starting point
+                for thoughtful, natural conversations.
+              </p>
             </article>
           </div>
         </section>
 
         <section className="landing__cta container">
           <div>
-            <h2>Your person might be around the corner.</h2>
-            <p className="lead">Join Matcha and see who's nearby.</p>
+            <h2>Find thoughtful people near you.</h2>
+            <p className="lead">Create a profile and discover compatible people in your area.</p>
           </div>
-          <Link to={user ? "/discover" : "/register"} className="btn btn--primary btn--lg">
-            {user ? "Discover people" : "Create an account"}
+          <Link to={exploreTo} className="btn btn--lg landing__cta-btn">
+            Explore profiles <Icon name="arrowRight" size={16} />
           </Link>
         </section>
       </main>

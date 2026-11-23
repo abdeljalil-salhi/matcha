@@ -50,7 +50,12 @@ export type IconName =
   | "crop"
   | "rotateLeft"
   | "rotateRight"
-  | "image";
+  | "image"
+  | "play"
+  | "arrowRight"
+  | "target"
+  | "mountain"
+  | "pinSolid";
 
 const PATHS: Record<IconName, ReactNode> = {
   layers: <><path d="m12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5" /></>,
@@ -212,6 +217,23 @@ const PATHS: Record<IconName, ReactNode> = {
       <circle cx="8.5" cy="9.5" r="1.5" />
       <path d="M21 16l-5.5-5.5L5 21" />
     </>
+  ),
+  play: <path d="M7 4.5v15l13-7.5-13-7.5Z" />,
+  arrowRight: <path d="M4 12h16m-6-6 6 6-6 6" />,
+  target: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1.2" />
+    </>
+  ),
+  mountain: <path d="m3 19 6.5-11 4 6.5L16 11l5 8H3Z" />,
+  pinSolid: (
+    <path
+      fill="currentColor"
+      fillRule="evenodd"
+      d="M12 2a8 8 0 0 0-8 8c0 5.4 8 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+    />
   ),
 };
 

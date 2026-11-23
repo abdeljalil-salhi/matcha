@@ -132,7 +132,12 @@ body {
 .auth-divider::before, .auth-divider::after { background: var(--line); }
 .auth-card .notice--success, .auth-card .notice--info { background: var(--matcha-tint); border-color: var(--line); color: var(--matcha-dark); }
 .auth-card .error-banner { background: var(--danger-light); border-color: #edc8bf; color: var(--danger); }
-.landing__cta { background: linear-gradient(145deg, #315a3a, #426c49); }
+.landing__cta {
+  background:
+    linear-gradient(90deg, #315a3a 0%, #3c6541 52%, rgba(60, 101, 65, 0) 74%),
+    url('/images/home-cta-leaves.png') right center / auto 100% no-repeat,
+    linear-gradient(145deg, #315a3a, #426c49);
+}
 
 @media (max-width: 1150px) {
   .main-nav__link { padding-inline: 8px; gap: 5px; font-size: .8rem; }
