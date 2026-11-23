@@ -1,7 +1,7 @@
 import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { api, ApiError, type Conversation, type Message } from "../../api";
+import { api, ApiError, type ChatGif, type Conversation, type Message } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationsContext";
 import { useToast } from "../../context/ToastContext";
@@ -11,11 +11,15 @@ import { Icon } from "../../components/ui/Icon";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui/Misc";
 import { clockTime, dayLabel, fullName, uuid } from "../../utils/format";
 
+import { GifPicker } from "./GifPicker";
 import { useReadMessages } from "./useReadMessages";
 
 interface PendingMessage {
   client_id: string;
   body: string;
+  kind: "text" | "gif";
+  media_url?: string;
+  media_alt?: string | null;
   failed?: boolean;
 }
 
@@ -40,6 +44,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [gifOpen, setGifOpen] = useState(false);
   const oldestId = useRef<number | null>(null);
   const lastId = useRef<number | null>(null);
   const inFlight = useRef(false);
@@ -157,7 +162,18 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const dispatch = async (item: PendingMessage) => {
     setSending(true);
     try {
-      const message = await api.chat.send(userId, item.body, item.client_id);
+      const message = await api.chat.send(
+        userId,
+        item.kind === "gif"
+          ? {
+              kind: "gif",
+              body: item.body,
+              client_id: item.client_id,
+              media_url: item.media_url!,
+              ...(item.media_alt ? { media_alt: item.media_alt } : {}),
+            }
+          : { body: item.body, client_id: item.client_id },
+      );
       merge([message]);
       onConversationUpdate();
       void poll();
@@ -179,10 +195,24 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     event.preventDefault();
     const body = draft.trim();
     if (!body || body.length > 2000) return;
-    const item: PendingMessage = { client_id: uuid(), body };
+    const item: PendingMessage = { client_id: uuid(), body, kind: "text" };
     setPending((current) => [...current, item]);
     setDraft("");
-    atBottom.current = true;
+    scrollToBottom(true);
+    void dispatch(item);
+  };
+
+  const sendGif = (gif: ChatGif) => {
+    const item: PendingMessage = {
+      client_id: uuid(),
+      body: "",
+      kind: "gif",
+      media_url: gif.url,
+      media_alt: gif.title,
+    };
+    setPending((current) => [...current, item]);
+    setGifOpen(false);
+    scrollToBottom(true);
     void dispatch(item);
   };
 
@@ -197,11 +227,26 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     notify("Messages marked as read.", "success");
   };
 
-  useEffect(() => {
+  const scrollToBottom = useCallback((force = false) => {
     const element = scrollRef.current;
-    if (!element || !atBottom.current) return;
-    element.scrollTop = element.scrollHeight;
-  }, [messages, pending]);
+    if (!element) return;
+    if (force) {
+      atBottom.current = true;
+      setViewingLatest(true);
+    }
+    const scroll = () => {
+      if (!atBottom.current) return;
+      element.scrollTop = element.scrollHeight;
+    };
+    scroll();
+    requestAnimationFrame(scroll);
+    window.setTimeout(scroll, 60);
+    window.setTimeout(scroll, 180);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, pending, scrollToBottom]);
 
   const onScroll = () => {
     const element = scrollRef.current;
@@ -273,8 +318,15 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           return (
             <div key={message.id} className={`chat-message${continued ? " chat-message--continued" : ""}`}>
               {showDay ? <div className="chat-day"><span>{day}</span></div> : null}
-              <div className={`bubble${message.sender_id === user?.id ? " bubble--mine" : ""}`}>
-                <p>{message.body}</p>
+              <div className={`bubble${message.sender_id === user?.id ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}`}>
+                {message.kind === "gif" && message.media_url ? (
+                  <figure className="bubble__media">
+                    <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
+                    {message.body ? <figcaption>{message.body}</figcaption> : null}
+                  </figure>
+                ) : (
+                  <p>{message.body}</p>
+                )}
                 <time dateTime={message.created_at}>{clockTime(message.created_at)}</time>
               </div>
             </div>
@@ -282,8 +334,15 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
         })}
 
         {pending.map((item) => (
-          <div key={item.client_id} className={`bubble bubble--mine${item.failed ? " bubble--failed" : ""}`}>
-            <p>{item.body}</p>
+          <div key={item.client_id} className={`bubble bubble--mine${item.failed ? " bubble--failed" : ""}${item.kind === "gif" ? " bubble--media" : ""}`}>
+            {item.kind === "gif" && item.media_url ? (
+              <figure className="bubble__media">
+                <img src={item.media_url} alt={item.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
+                {item.body ? <figcaption>{item.body}</figcaption> : null}
+              </figure>
+            ) : (
+              <p>{item.body}</p>
+            )}
             <time>{item.failed ? "Not sent" : "Sending…"}</time>
             {item.failed ? (
               <button type="button" className="link-button" onClick={() => void dispatch(item)}>Retry</button>
@@ -293,6 +352,18 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
       </div>
 
       <form className="chat-compose" onSubmit={send}>
+        <div className="chat-compose__tools">
+          <button
+            type="button"
+            className={`icon-button chat-compose__gif${gifOpen ? " is-active" : ""}`}
+            aria-label="Add GIF"
+            aria-expanded={gifOpen}
+            onClick={() => setGifOpen((value) => !value)}
+          >
+            <Icon name="image" size={18} />
+          </button>
+          <GifPicker open={gifOpen} onClose={() => setGifOpen(false)} onPick={sendGif} />
+        </div>
         <div className="chat-compose__field">
           <textarea
             className="input textarea"

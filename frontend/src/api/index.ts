@@ -2,6 +2,7 @@ import type { MapBounds, MapSettings, MapProfilePage } from "./types/userMap";
 import { apiUrl, request } from "./client";
 import type {
   BlockedUser,
+  ChatGif,
   Conversation,
   DiscoveryFilters,
   DiscoveryProfile,
@@ -167,11 +168,18 @@ export const api = {
       request<{ conversations: Conversation[] }>("/chat", { query: params }),
     messages: (userId: number, params?: MessagePageParams) =>
       request<{ messages: Message[] }>(`/chat/${userId}/messages`, { query: params }),
-    send: (userId: number, body: string, clientId: string) =>
+    send: (
+      userId: number,
+      payload:
+        | { body: string; client_id: string }
+        | { kind: "gif"; body?: string; client_id: string; media_url: string; media_alt?: string },
+    ) =>
       request<Message>(`/chat/${userId}/messages`, {
         method: "POST",
-        body: { body, client_id: clientId },
+        body: payload,
       }),
+    gifs: (q: string, limit = 24, signal?: AbortSignal) =>
+      request<{ gifs: ChatGif[] }>("/chat/gifs", { query: { q, limit }, signal }),
   },
 
   notifications: {

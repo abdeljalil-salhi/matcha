@@ -2678,17 +2678,32 @@
                 "properties": {
                   "body": {
                     "type": "string",
-                    "minLength": 1,
                     "maxLength": 2000,
                     "example": "Hello!"
                   },
                   "client_id": {
                     "type": "string",
                     "format": "uuid"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "text",
+                      "gif"
+                    ],
+                    "default": "text"
+                  },
+                  "media_url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "description": "Allowed GIPHY HTTPS media URL for GIF messages."
+                  },
+                  "media_alt": {
+                    "type": "string",
+                    "maxLength": 200
                   }
                 },
                 "required": [
-                  "body",
                   "client_id"
                 ],
                 "additionalProperties": false
@@ -2698,7 +2713,7 @@
         },
         "responses": {
           "201": {
-            "description": "Success.",
+            "description": "New message created.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2708,7 +2723,7 @@
             }
           },
           "200": {
-            "description": "The client ID and body match an existing message.",
+            "description": "The client ID matches an existing message with the same payload.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3655,6 +3670,92 @@
           }
         ]
       }
+    },
+    "/chat/gifs": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "summary": "Search GIFs",
+        "description": "Server-side GIPHY search for the chat picker. Returns normalized GIF options and requires GIPHY_API_KEY to be configured.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "description": "Search term."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24,
+              "default": 24
+            },
+            "description": "Maximum items to return."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "gifs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ChatGif"
+                      }
+                    }
+                  },
+                  "required": [
+                    "gifs"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "502": {
+            "description": "GIF provider unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4407,10 +4508,30 @@
             "format": "int64",
             "minimum": 1
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "gif"
+            ]
+          },
           "body": {
             "type": "string",
-            "minLength": 1,
             "maxLength": 2000
+          },
+          "media_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048
+          },
+          "media_alt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
           },
           "client_id": {
             "type": "string",
@@ -4425,7 +4546,10 @@
           "id",
           "sender_id",
           "recipient_id",
+          "kind",
           "body",
+          "media_url",
+          "media_alt",
           "client_id",
           "created_at"
         ]
@@ -4985,6 +5109,43 @@
           "iceTransportPolicy"
         ],
         "additionalProperties": false
+      },
+      "ChatGif": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "preview_url": {
+            "type": "string"
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url",
+          "preview_url",
+          "width",
+          "height"
+        ]
       }
     },
     "responses": {

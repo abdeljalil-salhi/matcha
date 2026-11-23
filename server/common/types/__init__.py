@@ -24,3 +24,4 @@ class Settings(TypedDict):
     CALL_TURN_URLS: list[str]
     CALL_TURN_SECRET: str
     CALL_RELAY_ONLY: bool
+    GIPHY_API_KEY: str
