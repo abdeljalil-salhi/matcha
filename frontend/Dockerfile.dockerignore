@@ -1,0 +1,13 @@
+**
+!frontend/
+!frontend/**
+!data/
+!data/places.json
+frontend/node_modules
+frontend/.vite
+frontend/.vitest
+frontend/dist
+frontend/dist-ssr
+frontend/**/*.tsbuildinfo
+frontend/.env
+frontend/.env.*

@@ -41,7 +41,8 @@ services:
       start_period: 10s
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     environment:
       VITE_API_URL: /api
       API_PROXY_TARGET: http://api:8000
@@ -52,10 +53,11 @@ services:
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
     volumes:
-      - ./frontend/src:/app/src:ro
-      - ./frontend/public:/app/public:ro
-      - ./frontend/index.html:/app/index.html:ro
-      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+      - ./frontend/src:/app/frontend/src:ro
+      - ./frontend/public:/app/frontend/public:ro
+      - ./frontend/index.html:/app/frontend/index.html:ro
+      - ./frontend/vite.config.ts:/app/frontend/vite.config.ts:ro
+      - ./data/places.json:/app/data/places.json:ro
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/api/health').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
       interval: 3s
