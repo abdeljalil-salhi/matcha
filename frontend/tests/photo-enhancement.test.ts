@@ -54,3 +54,27 @@ test("preview/export crop applies enhancement only when requested", () => {
   expect(putImageData).toHaveBeenCalledOnce();
   expect(data).not.toEqual(original);
 });
+
+test("default strength visibly expands washed-out tones without tinting neutral pixels", () => {
+  const source = grey([105, 115, 125, 135, 145, 155]);
+  const result = enhancePixels(source, 6, 1, 0.5);
+  expect(result[20]! - result[0]!).toBeGreaterThan(55);
+  for (let index = 0; index < result.length; index += 4) {
+    expect(result[index]).toBe(result[index + 1]);
+    expect(result[index]).toBe(result[index + 2]);
+  }
+});
+
+test("exposure adapts to dark photos and sharpening strengthens a soft edge", () => {
+  const dark = enhancePixels(grey([45, 45, 45, 45]), 4, 1, 0.5);
+  expect(dark[0]).toBeGreaterThanOrEqual(50);
+  const source = grey([80, 80, 80, 90, 110, 150, 170, 180, 180]);
+  const gentle = enhancePixels(source, 9, 1, 0.5);
+  const strong = enhancePixels(source, 9, 1, 1);
+  const before = source[5 * 4]! - source[3 * 4]!;
+  const after = gentle[5 * 4]! - gentle[3 * 4]!;
+  expect(after).toBeGreaterThan(before + 10);
+  expect(strong[5 * 4]! - strong[3 * 4]!).toBeGreaterThan(after);
+});
+
+
