@@ -9,6 +9,7 @@ import { ToastProvider } from "./context/ToastContext";
 import "./styles/base.css";
 import "./styles/components.css";
 import "./styles/pages.css";
+import "./styles/botanical.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
