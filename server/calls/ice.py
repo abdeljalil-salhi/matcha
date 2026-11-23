@@ -29,12 +29,14 @@ def ice_configuration() -> dict:
     if stun:
         servers.append({"urls": stun})
     if turn and secret:
-        # coturn REST credentials are "expiration:random-name" plus an HMAC-SHA256
-        # of that name. The user ID is deliberately not included: the relay does
-        # not need it, and this avoids exposing account IDs in relay logs.
+        # coturn's use-auth-secret REST API mandates HMAC-SHA1: it validates a
+        # 20-byte HMAC from the STUN MESSAGE-INTEGRITY attribute, so SHA-256
+        # credentials are rejected. Do not change the digest here.
+        # The user ID is deliberately not part of the name: the relay does not
+        # need it, and this avoids exposing account IDs in relay logs.
         username = f"{int(time.time()) + TURN_TTL_SECONDS}:{secrets.token_hex(16)}"
         credential = base64.b64encode(
-            hmac.new(secret.encode(), username.encode(), hashlib.sha256).digest()
+            hmac.new(secret.encode(), username.encode(), hashlib.sha1).digest()
         ).decode()
         servers.append({"urls": turn, "username": username, "credential": credential})
     return {
