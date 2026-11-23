@@ -33,7 +33,7 @@ export function LandingPage() {
         <section className="hero container">
           <div className="hero__copy">
             <p className="eyebrow">Dating, with more intention</p>
-            <h1>Meet people who feel like <em>your</em> kind of people.</h1>
+            <h1>Meet people who feel<br />like <em>your</em> kind of people.</h1>
             <p className="lead">
               Thoughtful matching, real common ground, and people nearby who are also
               looking for a genuine connection.

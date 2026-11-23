@@ -27,7 +27,7 @@ test("landing keeps the existing header and footer", () => {
 test("hero matches the botanical reference copy and trust row", () => {
   auth.user = null;
   renderLanding();
-  expect(screen.getByRole("heading", { level: 1, name: /Meet people who feel like your kind of people/ })).toBeTruthy();
+  expect(screen.getByRole("heading", { level: 1, name: /Meet people who feel\s*like your kind of people/ })).toBeTruthy();
   expect(screen.getByText("Dating, with more intention")).toBeTruthy();
   for (const label of ["People nearby", "Shared interests", "Privacy by design"]) {
     expect(screen.getByText(label)).toBeTruthy();
