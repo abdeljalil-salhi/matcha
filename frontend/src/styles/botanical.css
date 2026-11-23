@@ -440,3 +440,29 @@ body {
   .map-explorer__toolbar .map-filter-dropdown { top: calc(100% + 8px); left: 0; right: auto; width: min(280px, 100%); }
 }
 
+/* Keep the matching-area picker within its dialog at every viewport size. */
+.matching-area-modal.modal { display: flex; flex-direction: column; width: min(960px, 100%); max-width: 960px; max-height: calc(100dvh - 40px); overflow: hidden; }
+.matching-area-modal .modal__head { flex: none; align-items: center; }
+.matching-area-modal .modal__head > div { min-width: 0; }
+.matching-area-modal .modal__head > button { flex: none; }
+.matching-area-modal .modal__body { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.matching-area-modal .places-map { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.matching-area-modal .places-map__toolbar { flex-wrap: wrap; }
+.matching-area-modal .places-map__toolbar > div:first-child { flex: 1 1 240px; min-width: 0; }
+.matching-area-modal .places-map__actions { flex: 1 1 280px; min-width: 0; }
+.matching-area-modal .places-map__actions .btn { white-space: normal; min-width: 0; }
+.matching-area-modal .places-map__leaflet-wrap { min-width: 0; height: clamp(260px, 42dvh, 420px); }
+.matching-area-modal .places-map__detail { flex-wrap: wrap; min-width: 0; }
+.matching-area-modal .places-map__detail-copy { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.matching-area-modal .places-map__save { flex: 1 1 280px; min-width: 0; max-width: 100%; }
+.matching-area-modal .places-map__save .consent-row { min-width: 0; }
+.matching-area-modal .places-map__save .consent-row span { min-width: 0; overflow-wrap: anywhere; }
+.matching-area-modal .places-map__legend { font-size: .75rem; }
+@media (max-width: 600px) {
+  .matching-area-modal .modal__head { padding: 16px; }
+  .matching-area-modal .modal__body { padding: 16px; }
+  .matching-area-modal .places-map__toolbar > div:first-child, .matching-area-modal .places-map__actions { flex-basis: auto; width: 100%; }
+  .matching-area-modal .places-map__actions { justify-content: flex-start; }
+  .matching-area-modal .places-map__actions .btn { flex: 1 1 140px; }
+  .matching-area-modal .places-map__leaflet-wrap { height: 280px; }
+}

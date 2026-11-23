@@ -97,6 +97,6 @@ export function UsersMap() {
         <p className="text-small text-muted">Filters apply to members loaded in the current map view. Distances use approximate shared areas.</p>
       </div>
     </Modal>
-    <Modal open={placesOpen} onClose={() => setPlacesOpen(false)} title="Choose your matching area" size="lg">{placesOpen ? <PlacesMap /> : null}</Modal>
+    <Modal open={placesOpen} onClose={() => setPlacesOpen(false)} title="Choose your matching area" size="lg" className="matching-area-modal">{placesOpen ? <PlacesMap /> : null}</Modal>
   </div>;
 }
