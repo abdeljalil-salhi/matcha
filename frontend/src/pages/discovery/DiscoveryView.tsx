@@ -106,7 +106,7 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
   };
 
   const like = async (profile: DiscoveryProfile) => {
-    if (likedIds.includes(profile.id)) return;
+    if (profile.likes_them || likedIds.includes(profile.id)) return;
     setBusyLike(profile.id);
     try {
       const result = await api.relationships.like(profile.id);
@@ -239,8 +239,8 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
                   key={profile.id}
                   profile={profile}
                   viewerTags={user?.tags ?? []}
-                  liked={likedIds.includes(profile.id)}
-                  canLike={canLike && !likedIds.includes(profile.id)}
+                  liked={Boolean(profile.likes_them) || likedIds.includes(profile.id)}
+                  canLike={canLike && !profile.likes_them && !likedIds.includes(profile.id)}
                   onLike={(entry) => void like(entry)}
                   busy={busyLike === profile.id}
                 />

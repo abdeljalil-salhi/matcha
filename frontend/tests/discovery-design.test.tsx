@@ -13,10 +13,10 @@ const profile: DiscoveryProfile = {
   gender: "man", city: "Paris", area: "Montmartre", country_code: "FR", fame: 42,
   photo_id: 5, tags: ["art", "books", "gaming"], common_tags: 1, distance_km: 12, is_demo: false,
 };
-function open(mode: "suggestions" | "search" = "suggestions") {
+function open(mode: "suggestions" | "search" = "suggestions", entry = profile) {
   vi.spyOn(api.profile, "tags").mockResolvedValue({ tags: ["art", "books", "climbing", "coding", "cycling", "music"] });
-  const suggestions = vi.spyOn(api.discovery, "suggestions").mockResolvedValue({ profiles: [profile] });
-  const search = vi.spyOn(api.discovery, "search").mockResolvedValue({ profiles: [profile] });
+  const suggestions = vi.spyOn(api.discovery, "suggestions").mockResolvedValue({ profiles: [entry] });
+  const search = vi.spyOn(api.discovery, "search").mockResolvedValue({ profiles: [entry] });
   render(<MemoryRouter><DiscoveryView mode={mode} /></MemoryRouter>);
   return { suggestions, search };
 }
@@ -59,4 +59,13 @@ test("range sliders prevent inverted bounds and search remains explicitly submit
   const toggle = screen.getByRole("button", { name: "Refine results" });
   await userEvent.click(toggle);
   expect(toggle.getAttribute("aria-expanded")).toBe("true");
+});
+
+test("saved likes are shown after discovery loads", async () => {
+  open("suggestions", { ...profile, likes_them: true });
+  const like = vi.spyOn(api.relationships, "like");
+  const button = await screen.findByRole("button", { name: "Liked" });
+  expect((button as HTMLButtonElement).disabled).toBe(true);
+  expect(button.classList.contains("profile-card__like--liked")).toBe(true);
+  expect(like).not.toHaveBeenCalled();
 });

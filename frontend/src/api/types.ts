@@ -72,6 +72,7 @@ export interface PublicProfile {
 }
 
 export interface DiscoveryProfile {
+  likes_them?: boolean;
   id: number;
   username: string;
   first_name: string;

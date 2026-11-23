@@ -266,3 +266,5 @@ body {
 .public-profile .breadcrumbs a:hover, .app-footer__links a:hover { color: #285c34; }
 .profile-gallery__like.is-liked > svg, .profile-details__actions .is-liked > svg { fill: currentColor; }
 .public-profile .profile-gallery__like.is-liked, .profile-details__actions .is-liked { color: var(--matcha-dark); }
+
+.profile-card__like--liked > svg { fill: currentColor; }
