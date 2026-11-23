@@ -154,3 +154,23 @@ test("selecting one marker opens only its card and closing the popup clears sele
   fireEvent.click(container.querySelector(".leaflet-popup-close-button")!);
   expect(screen.queryByRole("region", { name: "Bob Example on the map" })).toBeNull();
 });
+
+test("privacy info opens on hover or tap and dismisses without changing sharing", () => {
+  const share = vi.spyOn(api.userMap, "share");
+  render(<MapSharing settings={{ map_visible: false, center: null }} onSaved={vi.fn()} />);
+  const info = screen.getByRole("button", { name: "Map privacy details" });
+  expect(screen.queryByRole("tooltip")).toBeNull();
+  fireEvent.pointerEnter(info.parentElement!);
+  expect(screen.getByRole("tooltip").textContent).toContain("exact device GPS stays private");
+  fireEvent.pointerLeave(info.parentElement!);
+  expect(screen.queryByRole("tooltip")).toBeNull();
+  fireEvent.click(info);
+  expect(screen.getByRole("tooltip")).toBeTruthy();
+  fireEvent.keyDown(info, { key: "Escape" });
+  expect(screen.queryByRole("tooltip")).toBeNull();
+  fireEvent.focus(info);
+  expect(screen.getByRole("tooltip")).toBeTruthy();
+  fireEvent.pointerDown(document.body);
+  expect(screen.queryByRole("tooltip")).toBeNull();
+  expect(share).not.toHaveBeenCalled();
+});

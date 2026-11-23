@@ -366,7 +366,7 @@ body {
 .map-explorer .user-map__sharing { padding: 0 10px 18px; border-bottom: 1px solid var(--line); }
 .map-explorer .user-map__sharing-row { gap: 6px; }
 .map-explorer .user-map__sharing-toggle { font-size: .78rem; gap: 12px; }
-.map-explorer .user-map__privacy { padding-left: 44px; font-size: .7rem; }
+.map-explorer .user-map__privacy { padding: 0; font-size: .7rem; }
 .map-explorer .user-map__privacy p { line-height: 1.5; }
 .map-explorer__list-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 16px 8px 12px; }
 .map-explorer__list-head h2 { font-size: 1.2rem; font-weight: 700; }
@@ -466,3 +466,11 @@ body {
   .matching-area-modal .places-map__actions .btn { flex: 1 1 140px; }
   .matching-area-modal .places-map__leaflet-wrap { height: 280px; }
 }
+
+.user-map__privacy { position: relative; display: inline-flex; }
+.user-map__privacy-info { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: help; }
+.user-map__privacy-info:hover, .user-map__privacy-info:focus-visible { color: var(--matcha-dark); background: var(--matcha-light); }
+.user-map__privacy-tooltip { position: absolute; top: calc(100% + 8px); right: 0; z-index: 700; width: 265px; max-width: calc(100vw - 64px); padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-md); color: var(--ink-soft); font-size: .75rem; font-weight: 400; line-height: 1.6; }
+.map-explorer .user-map__sharing-row { position: relative; }
+.map-explorer .user-map__privacy { position: static; }
+
