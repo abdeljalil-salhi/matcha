@@ -1,5 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { enhancePixels } from "../src/utils/photoEnhancement";
+import * as deblur from "../src/utils/photoDeblur";
 import { drawEditedImage } from "../src/utils/imageEditor";
 
 function grey(values: number[]) {
@@ -34,7 +35,8 @@ test("strength is bounded, output stays valid and alpha is preserved", () => {
   expect(enhancePixels(grey([200]), 1, 1, 0.5)[0]).not.toBe(enhancePixels(grey([200]), 1, 1, 1)[0]);
 });
 
-test("preview/export crop applies enhancement only when requested", () => {
+test("preview/export automatically deblurs only when enhancement is enabled", async () => {
+  const restore = vi.spyOn(deblur, "deblurPixels");
   const data = new Uint8ClampedArray(1080 * 1080 * 4).fill(200);
   const original = data.slice();
   const putImageData = vi.fn();
@@ -46,13 +48,16 @@ test("preview/export crop applies enhancement only when requested", () => {
   const canvas = { getContext: () => context } as unknown as HTMLCanvasElement;
   const image = { naturalWidth: 600, naturalHeight: 1200 } as HTMLImageElement;
   const edits = { rotation: 90, zoom: 1.5, offsetX: 20, offsetY: 0, filter: "grayscale(1)" };
-  drawEditedImage(canvas, image, edits, 320);
+  await drawEditedImage(canvas, image, edits, 320);
   expect(getImageData).not.toHaveBeenCalled();
+  expect(restore).not.toHaveBeenCalled();
   expect(context.rotate).toHaveBeenLastCalledWith(Math.PI / 2);
   expect(context.drawImage).toHaveBeenLastCalledWith(image, -300, -600);
-  drawEditedImage(canvas, image, { ...edits, enhancement: 0.5 }, 320);
+  await drawEditedImage(canvas, image, { ...edits, enhancement: 0.5 }, 320);
   expect(putImageData).toHaveBeenCalledOnce();
   expect(data).not.toEqual(original);
+  expect(restore).toHaveBeenCalledOnce();
+  restore.mockRestore();
 });
 
 test("default strength visibly expands washed-out tones without tinting neutral pixels", () => {
@@ -78,3 +83,25 @@ test("exposure adapts to dark photos and sharpening strengthens a soft edge", ()
 });
 
 
+test("cancelled deblur preview cannot overwrite a newer edit", async () => {
+  let finish: (data: Uint8ClampedArray) => void = () => {};
+  const restore = vi.spyOn(deblur, "deblurPixels").mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  const data = grey([100]);
+  const putImageData = vi.fn();
+  const context = {
+    translate: vi.fn(), rotate: vi.fn(), scale: vi.fn(), drawImage: vi.fn(),
+    getImageData: () => ({ data }), putImageData,
+  };
+  const canvas = { getContext: () => context } as unknown as HTMLCanvasElement;
+  const image = { naturalWidth: 600, naturalHeight: 600 } as HTMLImageElement;
+  let current = true;
+  const work = drawEditedImage(canvas, image, {
+    rotation: 0, zoom: 1, offsetX: 0, offsetY: 0, filter: "none", enhancement: 0.5,
+  }, 320, () => current);
+  expect(restore).toHaveBeenCalledWith(data, 1080, 1080, 0.5, expect.any(Function));
+  current = false;
+  finish(data);
+  await work;
+  expect(putImageData).not.toHaveBeenCalled();
+  restore.mockRestore();
+});

@@ -124,17 +124,18 @@ test("a source photo exceeding 10 MiB is rejected before opening the editor", as
 
 
 test("enhancement is opt-in, compares the same crop, and uploads the selected strength", async () => {
-  const drawPreview = vi.spyOn(editor, "drawEditedImage").mockImplementation(() => {});
+  const drawPreview = vi.spyOn(editor, "drawEditedImage").mockResolvedValue(undefined);
   const { image } = await openCrop(600, 1200);
   const toggle = screen.getByRole("checkbox", { name: "Enhance photo" });
   expect((toggle as HTMLInputElement).checked).toBe(false);
   expect(screen.queryByRole("slider", { name: "Enhancement strength" })).toBeNull();
   await userEvent.click(toggle);
+  expect(screen.queryByRole("checkbox", { name: "Reduce blur" })).toBeNull();
   expect(screen.queryByText("Adjust strength")).toBeNull();
   expect(screen.queryByText(/Compare before uploading/)).toBeNull();
   fireEvent.change(screen.getByRole("slider", { name: "Enhancement strength" }), { target: { value: "0.8" } });
   await waitFor(() => expect((screen.getByRole("button", { name: "Show before" }) as HTMLButtonElement).disabled).toBe(false));
-  expect(drawPreview).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ enhancement: 0.8 }), 320);
+  expect(drawPreview).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ enhancement: 0.8 }), 320, expect.any(Function));
   const crop = image.style.transform;
   await userEvent.click(screen.getByRole("button", { name: "Show before" }));
   expect(screen.getByText("Before enhancement")).toBeTruthy();
@@ -146,7 +147,7 @@ test("enhancement is opt-in, compares the same crop, and uploads the selected st
 });
 
 test("reset disables enhancement and a failed preview leaves the editor usable", async () => {
-  vi.spyOn(editor, "drawEditedImage").mockImplementation(() => {});
+  vi.spyOn(editor, "drawEditedImage").mockResolvedValue(undefined);
   await openCrop(600, 1200);
   await userEvent.click(screen.getByRole("checkbox", { name: "Enhance photo" }));
   await userEvent.click(screen.getByRole("button", { name: "Reset edits" }));

@@ -1,3 +1,4 @@
+import { deblurPixels } from "./photoDeblur";
 import { enhancePixels } from "./photoEnhancement";
 
 export interface ImageEdits {
@@ -62,12 +63,13 @@ async function encode(
 }
 
 /** Draw the same crop, filter and enhancement for preview and upload. */
-export function drawEditedImage(
+export async function drawEditedImage(
   canvas: HTMLCanvasElement,
   image: HTMLImageElement,
   edits: ImageEdits,
   viewportSize: number,
-): void {
+  isCurrent: () => boolean = () => true,
+): Promise<void> {
   const safeEdits = clampEdits(edits, image.naturalWidth, image.naturalHeight, viewportSize);
   const output = 1080;
   canvas.width = output;
@@ -90,7 +92,9 @@ export function drawEditedImage(
 
   if (edits.enhancement && edits.enhancement > 0) {
     const pixels = context.getImageData(0, 0, output, output);
-    pixels.data.set(enhancePixels(pixels.data, output, output, edits.enhancement));
+    const restored = await deblurPixels(pixels.data, output, output, edits.enhancement, isCurrent);
+    if (!isCurrent()) return;
+    pixels.data.set(enhancePixels(restored, output, output, edits.enhancement));
     context.putImageData(pixels, 0, 0);
   }
 }
@@ -104,7 +108,7 @@ export async function renderEditedImage(
   try {
     const image = await loadImage(url);
     const canvas = document.createElement("canvas");
-    drawEditedImage(canvas, image, edits, viewportSize);
+    await drawEditedImage(canvas, image, edits, viewportSize);
 
     let blob: Blob | null = null;
     for (const quality of [0.9, 0.78, 0.65]) {

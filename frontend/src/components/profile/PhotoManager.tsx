@@ -76,10 +76,10 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
     let active = true;
     // Coalesce slider/pan changes; never apply an old preview to a newer draft.
     const timer = window.setTimeout(() => {
-      void loadImage(draft.url).then((image) => {
+      void loadImage(draft.url).then(async (image) => {
         if (!active || !enhancedRef.current) return;
-        drawEditedImage(enhancedRef.current, image, draft, viewportSize());
-        setPreviewVersion(enhancementVersion);
+        await drawEditedImage(enhancedRef.current, image, draft, viewportSize(), () => active);
+        if (active) setPreviewVersion(enhancementVersion);
       }).catch(() => {
         if (!active) return;
         setError("Enhancement preview is unavailable. Try again or upload without enhancement.");
@@ -532,7 +532,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
                     disabled={busyId === "upload"}
                   />
                 </label>
-                <p className="text-small text-muted">Gently sharpen, soften noise and balance lighting.</p>
+                <p className="text-small text-muted">Reduce blur and noise, sharpen detail and balance lighting.</p>
                 {draft.enhancement ? (
                   <div className="photo-editor__strength">
                     <label className="photo-editor__zoom" htmlFor="photo-enhancement-strength">
