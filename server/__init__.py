@@ -23,6 +23,7 @@ def create_app(overrides: Mapping[str, object] | None = None) -> Flask:
         Flask: Configured application.
     """
     from .auth.routes.email_change import routes as email_change
+    from .auth.routes.google import routes as google
     from .auth.routes.recovery import routes as recovery
     from .auth.routes.registration import routes as registration
     from .auth.routes.sessions import routes as sessions
@@ -62,6 +63,7 @@ def create_app(overrides: Mapping[str, object] | None = None) -> Flask:
     app.teardown_appcontext(release_db)
     for blueprint in (
         email_change,
+        google,
         recovery,
         registration,
         sessions,

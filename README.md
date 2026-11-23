@@ -14,6 +14,7 @@ Run `make help` for development shortcuts, or see the
 ## Features
 
 - Email verification, password recovery, and cookie-based sessions
+- Optional Google sign-in (OAuth 2.0/OIDC with PKCE) using the same session
 - Editable profiles with photos, interest tags, and consent-based location
 - Profile suggestions and search by distance, interests, age, and fame
 - Mutual likes, blocking, reporting, chat, and unread notifications
