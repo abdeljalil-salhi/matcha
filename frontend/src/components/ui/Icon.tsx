@@ -35,6 +35,7 @@ export type IconName =
   | "flag"
   | "send"
   | "user"
+  | "sparkles"
   | "spark"
   | "crop"
   | "rotateLeft"
@@ -164,6 +165,7 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
     </>
   ),
+  sparkles: <><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z" /><path d="m20 2 .6 1.4L22 4l-1.4.6L20 6l-.6-1.4L18 4l1.4-.6L20 2ZM4 2l.6 1.4L6 4l-1.4.6L4 6l-.6-1.4L2 4l1.4-.6L4 2Z" /></>,
   spark: <path d="M12 3v5M12 16v5M3 12h5M16 12h5M6.4 6.4l3.5 3.5M14.1 14.1l3.5 3.5M17.6 6.4l-3.5 3.5M9.9 14.1l-3.5 3.5" />,
   crop: (
     <>

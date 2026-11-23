@@ -1,9 +1,14 @@
+import { clahePixels } from "./photoContrast";
+import { deblurPixels } from "./photoDeblur";
+import { enhancePixels } from "./photoEnhancement";
+
 export interface ImageEdits {
   rotation: number;
   zoom: number;
   offsetX: number;
   offsetY: number;
   filter: string;
+  enhancement?: number;
 }
 
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -58,6 +63,44 @@ async function encode(
   return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
 }
 
+/** Draw the same crop, filter and enhancement for preview and upload. */
+export async function drawEditedImage(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  edits: ImageEdits,
+  viewportSize: number,
+  isCurrent: () => boolean = () => true,
+): Promise<void> {
+  const safeEdits = clampEdits(edits, image.naturalWidth, image.naturalHeight, viewportSize);
+  const output = 1080;
+  canvas.width = output;
+  canvas.height = output;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Image editing is not supported in this browser.");
+
+  const ratio = output / Math.max(1, viewportSize);
+  const scale = (output / Math.min(image.naturalWidth, image.naturalHeight)) * safeEdits.zoom;
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.filter = safeEdits.filter;
+  context.translate(
+    output / 2 + safeEdits.offsetX * ratio,
+    output / 2 + safeEdits.offsetY * ratio,
+  );
+  context.rotate((safeEdits.rotation * Math.PI) / 180);
+  context.scale(scale, scale);
+  context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+
+  if (edits.enhancement && edits.enhancement > 0) {
+    const pixels = context.getImageData(0, 0, output, output);
+    const restored = await deblurPixels(pixels.data, output, output, edits.enhancement, isCurrent);
+    if (!isCurrent()) return;
+    const enhanced = enhancePixels(restored, output, output, edits.enhancement);
+    pixels.data.set(clahePixels(enhanced, output, output, edits.enhancement));
+    context.putImageData(pixels, 0, 0);
+  }
+}
+
 export async function renderEditedImage(
   file: File,
   edits: ImageEdits,
@@ -66,26 +109,8 @@ export async function renderEditedImage(
   const url = URL.createObjectURL(file);
   try {
     const image = await loadImage(url);
-    const safeEdits = clampEdits(edits, image.naturalWidth, image.naturalHeight, viewportSize);
-    const output = 1080;
     const canvas = document.createElement("canvas");
-    canvas.width = output;
-    canvas.height = output;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Image editing is not supported in this browser.");
-
-    const ratio = output / Math.max(1, viewportSize);
-    const scale = (output / Math.min(image.naturalWidth, image.naturalHeight)) * safeEdits.zoom;
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    context.filter = safeEdits.filter;
-    context.translate(
-      output / 2 + safeEdits.offsetX * ratio,
-      output / 2 + safeEdits.offsetY * ratio,
-    );
-    context.rotate((safeEdits.rotation * Math.PI) / 180);
-    context.scale(scale, scale);
-    context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+    await drawEditedImage(canvas, image, edits, viewportSize);
 
     let blob: Blob | null = null;
     for (const quality of [0.9, 0.78, 0.65]) {
