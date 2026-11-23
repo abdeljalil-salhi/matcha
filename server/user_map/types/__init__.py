@@ -40,6 +40,7 @@ class MapProfile(TypedDict):
     longitude: float
     fame: int
     is_demo: bool
+    tags: list[str]
 
 
 class MapPage(TypedDict):
