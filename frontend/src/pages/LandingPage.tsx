@@ -59,17 +59,17 @@ export function LandingPage() {
               <span className="hero__chip hero__chip--match">
                 <Icon name="heart" size={13} strokeWidth={2.2} /> 92% match
               </span>
-              <img src="/images/home-fatima.webp" alt="" width={256} height={256} />
+              <img src="/images/home-clara.webp" alt="" width={256} height={256} />
               <figcaption>
-                <strong>Fatima, 25</strong>
+                <strong>Clara, 25</strong>
                 <span className="fame-badge"><Icon name="star" size={12} strokeWidth={2.2} /> 88</span>
               </figcaption>
             </figure>
 
             <figure className="hero__card hero__card--two">
-              <img src="/images/home-clara.webp" alt="" width={256} height={256} />
+              <img src="/images/home-fatima.webp" alt="" width={256} height={256} />
               <figcaption>
-                <strong>Clara, 21</strong>
+                <strong>Fatima, 21</strong>
                 <span className="fame-badge"><Icon name="star" size={12} strokeWidth={2.2} /> 48</span>
               </figcaption>
             </figure>
