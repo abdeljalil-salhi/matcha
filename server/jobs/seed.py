@@ -7,10 +7,11 @@ from psycopg import Connection
 from ..auth.passwords import hasher
 from ..auth.validation import password
 from ..location.limits import LOCATION_DECIMAL_PLACES
-from ..location.places import PLACES
+from ..location.places import FEATURED_PLACES, PLACES
 from .limits import (
     DEMO_PROFILE_COUNT,
     SEED_ADVISORY_LOCK,
+    SEED_FEATURED_PLACE_REPEATS,
     SEED_RANDOM_STATE,
     SEED_STATEMENT_TIMEOUT,
     TAGS,
@@ -21,6 +22,14 @@ from .seed_photo import legacy_seed_photo, seed_portrait
 from .seed_refresh import refresh_demo
 
 LOG = logging.getLogger(__name__)
+
+# Repeating entries keeps one rng.choice call per profile, preserving the
+# deterministic identity/interest sequence while favoring featured fixtures.
+SEED_PLACES = tuple(
+    place
+    for place in PLACES
+    for _ in range(SEED_FEATURED_PLACE_REPEATS if place in FEATURED_PLACES else 1)
+)
 
 
 def seed(connection: Connection, phrase: str | None) -> None:
@@ -52,7 +61,7 @@ def seed(connection: Connection, phrase: str | None) -> None:
             seeks = rng.choice(
                 [None, ["woman"], ["man"], ["woman", "man"], list(genders)]
             )
-            city, area, country, lat, lon = rng.choice(PLACES)
+            city, area, country, lat, lon = rng.choice(SEED_PLACES)
             selected_tags = rng.sample(TAGS, rng.randrange(2, 7))
             birthday = date(
                 date.today().year - rng.randrange(20, 67),
