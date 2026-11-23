@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 export type IconName =
+  | "info"
   | "layers"
   | "book"
   | "gamepad"
@@ -124,6 +125,7 @@ const PATHS: Record<IconName, ReactNode> = {
       <circle cx="12" cy="10" r="2.6" />
     </>
   ),
+  info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7h.01" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
   crosshair: (
     <>

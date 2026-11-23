@@ -4812,6 +4812,13 @@
           },
           "is_demo": {
             "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Public interests used in map member cards and viewport filters."
           }
         },
         "required": [
@@ -4827,7 +4834,8 @@
           "latitude",
           "longitude",
           "area",
-          "is_demo"
+          "is_demo",
+          "tags"
         ]
       },
       "MapProfilePage": {

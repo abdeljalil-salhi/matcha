@@ -5,6 +5,7 @@ import { Icon } from "../ui/Icon";
 
 interface Props {
   map: L.Map;
+  showNavigation?: boolean;
   hasSavedArea: boolean;
   locating: boolean;
   onWorldwide: () => void;
@@ -13,7 +14,7 @@ interface Props {
 }
 
 /** Keep React controls in Leaflet's corners without capturing map gestures. */
-export function MapControls({ map, hasSavedArea, locating, onWorldwide, onSavedArea, onLocate }: Props) {
+export function MapControls({ map, hasSavedArea, locating, onWorldwide, onSavedArea, onLocate, showNavigation = true }: Props) {
   const [navigation] = useState(() => document.createElement("div"));
   const [position] = useState(() => document.createElement("div"));
   useEffect(() => {
@@ -32,10 +33,10 @@ export function MapControls({ map, hasSavedArea, locating, onWorldwide, onSavedA
     return () => controls.forEach((control) => control.remove());
   }, [map, navigation, position]);
   return <>
-    {createPortal(<div className="user-map-control-group" role="group" aria-label="Map areas">
+    {showNavigation ? createPortal(<div className="user-map-control-group" role="group" aria-label="Map areas">
       <button type="button" onClick={onWorldwide} aria-label="Explore worldwide" title="Explore worldwide"><Icon name="compass" size={16} /><span>Worldwide</span></button>
       {hasSavedArea ? <button type="button" onClick={onSavedArea} aria-label="My saved area" title="My saved area"><Icon name="pin" size={16} /><span>My area</span></button> : null}
-    </div>, navigation)}
+    </div>, navigation) : null}
     {createPortal(<div className="user-map-control-group user-map-control-group--vertical" role="group" aria-label="Map position and zoom">
       <button type="button" onClick={onLocate} disabled={locating} aria-busy={locating || undefined} aria-label="Center on my device" title="Center on my device (GPS stays local)"><Icon name={locating ? "refresh" : "crosshair"} size={19} /></button>
       <button type="button" onClick={() => map.zoomIn()} aria-label="Zoom in" title="Zoom in"><Icon name="plus" size={19} /></button>

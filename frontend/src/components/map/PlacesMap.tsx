@@ -92,8 +92,12 @@ export function PlacesMap() {
     map.on("zoomend", () => setZoomLevel(map.getZoom()));
     mapRef.current = map;
     setZoomLevel(map.getZoom());
+    const observer = typeof ResizeObserver === "undefined" ? null
+      : new ResizeObserver(() => map.invalidateSize());
+    observer?.observe(container);
 
     return () => {
+      observer?.disconnect();
       map.remove();
       mapRef.current = null;
     };

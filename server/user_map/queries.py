@@ -52,7 +52,7 @@ def profiles(bounds: MapBounds, after: int, limit: int) -> list[MapProfile]:
             """WITH viewer AS (SELECT gender, seeks FROM users WHERE id = %(me)s),
         candidates AS (
             SELECT p.id, p.username, p.first_name, p.last_name, p.age, p.city, p.area,
-                   p.country_code, p.photo_id, p.fame, p.is_demo,
+                   p.country_code, p.photo_id, p.fame, p.is_demo, p.tags,
                    round(u.latitude::numeric, %(precision)s)::double precision
                        AS latitude,
                    round(u.longitude::numeric, %(precision)s)::double precision

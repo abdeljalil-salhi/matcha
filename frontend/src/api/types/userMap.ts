@@ -8,6 +8,7 @@ export interface MapBounds {
 export interface MapCenter { latitude: number; longitude: number }
 export interface MapSettings { map_visible: boolean; center: MapCenter | null }
 export interface MapProfile extends MapCenter {
+  tags?: string[];
   id: number;
   username: string;
   first_name: string;
