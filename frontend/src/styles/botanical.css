@@ -474,3 +474,23 @@ body {
 .map-explorer .user-map__sharing-row { position: relative; }
 .map-explorer .user-map__privacy { position: static; }
 
+.notification-item__body { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .notification-menu__panel {
+    position: fixed;
+    top: calc(var(--header-h) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - var(--header-h) - 24px);
+    display: flex;
+    flex-direction: column;
+  }
+  .notification-menu__head { flex: none; align-items: center; padding: 14px; gap: 10px; }
+  .notification-menu__head > div { min-width: 0; }
+  .notification-menu__head > button { flex: none; font-size: .8rem; }
+  .notification-menu__list { min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
+  .notification-menu__foot { flex: none; }
+  .notification-item { padding: 12px 14px; gap: 10px; }
+}
