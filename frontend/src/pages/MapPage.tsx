@@ -7,7 +7,7 @@ export function MapPage() {
   const [placesOpen, setPlacesOpen] = useState(false);
   return (
     <div className="container map-page">
-      <header className="page-heading">
+      <header className="page-heading page-heading--compact">
         <p className="eyebrow inline-with-icon"><Icon name="pin" size={15} /> People nearby</p>
         <h1>Explore people on the map</h1>
         <p className="lead">

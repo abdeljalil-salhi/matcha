@@ -31,8 +31,10 @@ export function UsersMap() {
       <MapSharing settings={settings} onSaved={setSettings} />
       <section className="card user-map__browse" aria-label="People on the map">
         <UserMapCanvas center={settings.center} profiles={profiles} onBounds={setBounds} onSelect={setSelected} selectedId={visibleSelection[0]?.id ?? null} />
-        <p role="status">{loading ? "Loading people…" : `${profiles.length} people in this view`}</p>
-        <p className="text-small text-muted">Tap a numbered cluster to zoom in. Select an individual marker to see their profile card here. Shared area markers fan out when zooming cannot separate them; all positions remain approximate.</p>
+        <p role="status">{loading ? "Loading people…" : `${profiles.length} ${profiles.length === 1 ? "person" : "people"} in this view`}</p>
+        <details className="user-map__help"><summary>Map help & privacy</summary>
+          <p>Tap a numbered cluster to zoom in, then select a person for their card. Shared points fan out at maximum zoom. All member positions are approximate. Device GPS only centers your map and is never saved. OpenStreetMap receives requests for the map areas you view.</p>
+        </details>
         {error ? <div className="error-banner" role="alert">{error} <Button onClick={retry}>Retry</Button></div> : null}
         {limited ? <p role="status">Showing the first 1,000 people. Zoom in to see a smaller area.</p> : null}
         {!loading && !error && profiles.length === 0 ? <p>No opted-in compatible members in this view. Zoom out or explore another area.</p> : null}

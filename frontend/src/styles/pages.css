@@ -301,11 +301,11 @@
 .error-page { padding: 60px 0; }
 
 /* ---------- Places map ---------- */
-.map-page { padding-top: 36px; padding-bottom: 44px; }
-.map-page .lead { max-width: 720px; }
+.map-page { padding-top: 0; padding-bottom: 32px; }
+.map-page .lead { max-width: 760px; font-size: 0.9375rem; }
 .map-card { padding: 28px; }
 @media (max-width: 600px) {
-  .map-page { padding-top: 24px; padding-bottom: 32px; }
+  .map-page { padding-top: 0; padding-bottom: 24px; }
   .map-card { padding: 18px; }
 }
 
