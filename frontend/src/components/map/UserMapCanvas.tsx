@@ -6,7 +6,10 @@ import { useMemberMarkers } from "./useMemberMarkers";
 import { MapMemberPopup } from "./MapMemberPopup";
 import { MapControls } from "./MapControls";
 
+export interface MapAreaRequest { mode: "nearby" | "worldwide" | "all"; revision: number }
+
 interface Props {
+  areaRequest?: MapAreaRequest;
   center: MapCenter | null;
   profiles: MapProfile[];
   onBounds: (bounds: MapBounds) => void;
@@ -33,7 +36,7 @@ export function publicBounds(map: L.Map): MapBounds {
 }
 
 /** Render public area markers; precise device coordinates remain local to this map. */
-export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId = null }: Props) {
+export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId = null, areaRequest }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const ownMarker = useRef<L.CircleMarker | null>(null);
@@ -49,6 +52,8 @@ export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId
     setPopupAnchor(point); onSelect([person]);
   }, [onSelect]);
   useMemberMarkers(popupMap, profiles, selectMember, setError);
+  const currentProfiles = useRef(profiles);
+  currentProfiles.current = profiles;
   const selected = profiles.find((person) => person.id === selectedId);
 
   useEffect(() => {
@@ -81,6 +86,23 @@ export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId
   }, [center?.latitude, center?.longitude]);
 
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !areaRequest) return;
+    map.closePopup();
+    if (areaRequest.mode === "worldwide") map.setView(WORLD_CENTER, WORLD_ZOOM);
+    else if (areaRequest.mode === "all" && currentProfiles.current.length) {
+      map.fitBounds(L.latLngBounds(currentProfiles.current.map((person) => [person.latitude, person.longitude])), { padding: [50, 50], maxZoom: 13 });
+    } else if (center) map.setView([center.latitude, center.longitude], 10);
+  }, [areaRequest]);
+
+  useEffect(() => {
+    if (!selected || !mapRef.current) return;
+    const point = L.latLng(selected.latitude, selected.longitude);
+    setPopupAnchor(point);
+    mapRef.current.panInside(point, { padding: [60, 60] });
+  }, [selectedId]);
+
   const locate = () => {
     setError(null);
     if (!navigator.geolocation) { setError("Device location is unavailable. You can still browse the map."); return; }
@@ -109,7 +131,7 @@ export function UserMapCanvas({ center, profiles, onBounds, onSelect, selectedId
     {popupMap ? <MapControls map={popupMap} hasSavedArea={!!center} locating={locating}
       onWorldwide={() => { popupMap.closePopup(); popupMap.setView(WORLD_CENTER, WORLD_ZOOM); }}
       onSavedArea={() => { if (center) { popupMap.closePopup(); popupMap.setView([center.latitude, center.longitude], 10); } }}
-      onLocate={locate} /> : null}
+      onLocate={locate} showNavigation={!areaRequest} /> : null}
     {popupMap && popupAnchor && selected ? <MapMemberPopup map={popupMap} person={selected} anchor={popupAnchor} onClose={closeSelection} /> : null}
   </>;
 }
