@@ -100,7 +100,7 @@ export function AppShell() {
                     My profile
                   </Link>
                   <Link to="/map" onClick={() => setUserOpen(false)}>
-                    <Icon name="pin" size={16} /> Places map
+                    <Icon name="pin" size={16} /> People map
                   </Link>
                   <Link to="/settings" onClick={() => setUserOpen(false)}>
                     Settings
@@ -162,7 +162,7 @@ export function AppShell() {
         <div className="container app-footer__inner">
           <span><strong>matcha</strong> — a quieter way to meet people nearby.</span>
           <span className="app-footer__links">
-            <Link to="/map">Places map</Link>
+            <Link to="/map">People map</Link>
             <Link to="/settings">Account settings</Link>
             <Link to="/blocks">Blocked accounts</Link>
           </span>
