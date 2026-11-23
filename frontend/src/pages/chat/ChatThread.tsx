@@ -1,7 +1,8 @@
+import { ConversationMenu } from "./ConversationMenu";
 import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { api, ApiError, type ChatGif, type Conversation, type Message } from "../../api";
+import { api, ApiError, type ChatGif, type Conversation, type Message, type MessageReceipts } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationsContext";
 import { useToast } from "../../context/ToastContext";
@@ -11,6 +12,7 @@ import { Icon } from "../../components/ui/Icon";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui/Misc";
 import { clockTime, dayLabel, fullName, uuid } from "../../utils/format";
 
+import { groupMessages } from "./groupMessages";
 import { GifPicker } from "./GifPicker";
 import { useReadMessages } from "./useReadMessages";
 
@@ -37,6 +39,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const { user } = useAuth();
   const { notify } = useToast();
   const { notifications, markOne } = useNotifications();
+  const [receipts, setReceipts] = useState<MessageReceipts>({ delivered_through: 0, read_through: 0 });
   const [messages, setMessages] = useState<Message[]>([]);
   const [pending, setPending] = useState<PendingMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -80,6 +83,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
       const page = await api.chat.messages(userId, { limit: PAGE_SIZE });
       lastId.current = 0;
       merge(page.messages);
+      if (page.receipts) setReceipts(page.receipts);
       setHasMore(page.messages.length === PAGE_SIZE);
     } catch (cause) {
       if (cause instanceof ApiError && cause.status === 403) {
@@ -104,6 +108,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
       let after = lastId.current;
       for (let round = 0; round < 5; round += 1) {
         const page = await api.chat.messages(userId, { after, limit: 100 });
+        if (page.receipts) setReceipts(page.receipts);
         if (page.messages.length === 0) break;
         merge(page.messages);
         const newest = Math.max(...page.messages.map((message) => message.id));
@@ -278,11 +283,14 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
         <Link to={`/profile/${userId}`} className="chat-thread__person">
           <Avatar photoId={conversation.photo_id} name={conversation} size="sm" online={conversation.online} />
           <span>
-            <strong>{fullName(conversation)}</strong>
-            <small>{conversation.online ? <span className="chat-thread__online">Online now</span> : <>@{conversation.username}</>} · view profile</small>
+            <strong>{fullName(conversation)} {conversation.online ? <span className="chat-thread__online">Online now</span> : null}</strong>
+            <small>@{conversation.username} <span>·</span> <b>View profile</b></small>
           </span>
         </Link>
-        <CallButtons userId={userId} />
+        <div className="chat-thread__controls">
+          <CallButtons userId={userId} />
+          <ConversationMenu userId={userId} name={fullName(conversation)} onBlocked={onConversationUpdate} />
+        </div>
         {relatedUnread.length > 0 ? (
           <button type="button" className="link-button" onClick={() => void markRead()}>
             Mark {unreadMessages} read
@@ -308,26 +316,39 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           </div>
         ) : null}
 
-        {messages.map((message, index) => {
-          const day = dayLabel(message.created_at);
+        {groupMessages(messages).map((group) => {
+          const first = group[0]!;
+          const last = group[group.length - 1]!;
+          const day = dayLabel(first.created_at);
           const showDay = day !== previousDay;
           previousDay = day;
-          const previous = messages[index - 1];
-          const continued = !showDay && previous?.sender_id === message.sender_id
-            && new Date(message.created_at).getTime() - new Date(previous.created_at).getTime() < 180000;
+          const mine = first.sender_id === user?.id;
+          const status = last.id <= receipts.read_through ? "Read"
+            : last.id <= receipts.delivered_through ? "Delivered" : "Sent";
           return (
-            <div key={message.id} className={`chat-message${continued ? " chat-message--continued" : ""}`}>
+            <div key={first.id} className="chat-message-group">
               {showDay ? <div className="chat-day"><span>{day}</span></div> : null}
-              <div className={`bubble${message.sender_id === user?.id ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}`}>
-                {message.kind === "gif" && message.media_url ? (
-                  <figure className="bubble__media">
-                    <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
-                    {message.body ? <figcaption>{message.body}</figcaption> : null}
-                  </figure>
-                ) : (
-                  <p>{message.body}</p>
-                )}
-                <time dateTime={message.created_at}>{clockTime(message.created_at)}</time>
+              <div className={`message-group${mine ? " message-group--mine" : ""}`}>
+                {!mine ? <Avatar photoId={conversation.photo_id} name={conversation} size="sm" /> : null}
+                <div className="message-group__content">
+                  {group.map((message) => (
+                    <div key={message.id} className={`bubble${mine ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}`}>
+                      {message.kind === "gif" && message.media_url ? (
+                        <figure className="bubble__media">
+                          <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
+                          {message.body ? <figcaption>{message.body}</figcaption> : null}
+                        </figure>
+                      ) : <p>{message.body}</p>}
+                    </div>
+                  ))}
+                  <div className="message-group__meta">
+                    <time className="message-group__time" dateTime={last.created_at}>{clockTime(last.created_at)}</time>
+                    {mine ? <span className={`message-receipt message-receipt--${status.toLowerCase()}`} role="img" aria-label={status} title={status}>
+                      <Icon name="check" size={14} strokeWidth={2} />
+                      {status !== "Sent" ? <Icon name="check" size={14} strokeWidth={2} /> : null}
+                    </span> : null}
+                  </div>
+                </div>
               </div>
             </div>
           );
@@ -384,8 +405,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
             <span className="chat-compose__count">{draft.length}/2000</span>
           ) : null}
         </div>
-        <Button type="submit" disabled={!draft.trim() || sending} loading={sending}>
-          <Icon name="send" size={15} /> Send
+        <Button type="submit" disabled={!draft.trim() || sending} loading={sending} icon={<Icon name="send" size={18} />}>
+          Send
         </Button>
       </form>
     </section>

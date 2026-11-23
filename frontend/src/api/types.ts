@@ -122,6 +122,8 @@ export interface BlockedUser {
 }
 
 export interface Conversation {
+  latest_message_body?: string | null;
+  latest_message_kind?: MessageKind | null;
   online: boolean;
   id: number;
   username: string;
@@ -133,6 +135,11 @@ export interface Conversation {
 }
 
 export type MessageKind = "text" | "gif";
+
+export interface MessageReceipts {
+  delivered_through: number;
+  read_through: number;
+}
 
 export interface Message {
   id: number;

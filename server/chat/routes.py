@@ -103,7 +103,35 @@ def messages(user_id: int) -> MessagePage:
                 .fetchall()
             )
             rows.reverse()
-    return serialize({"messages": rows})
+        incoming = [row["id"] for row in rows if row["recipient_id"] == g.user_id]
+        if incoming:
+            db().execute(
+                """INSERT INTO chat_receipts
+                   (recipient_id, sender_id, delivered_through)
+                   VALUES (%s, %s, %s) ON CONFLICT (recipient_id, sender_id)
+                   DO UPDATE SET delivered_through = greatest(
+                       chat_receipts.delivered_through, excluded.delivered_through)""",
+                (g.user_id, user_id, max(incoming)),
+            )
+        receipt = (
+            db()
+            .execute(
+                """SELECT delivered_through, read_through FROM chat_receipts
+               WHERE recipient_id = %s AND sender_id = %s""",
+                (user_id, g.user_id),
+            )
+            .fetchone()
+        )
+    return serialize(
+        {
+            "messages": rows,
+            "receipts": receipt
+            or {
+                "delivered_through": 0,
+                "read_through": 0,
+            },
+        }
+    )
 
 
 def _client_id(data: dict) -> UUID:
@@ -258,3 +286,38 @@ def send_message(user_id: int) -> dict | tuple[dict, int]:
                 "That client_id already belongs to a different message.",
             )
         return serialize(row)
+
+
+@routes.put("/chat/<int:user_id>/read")
+@signed_in
+def read_messages(user_id: int) -> tuple[str, int]:
+    """Acknowledge incoming messages through the latest displayed message."""
+    data = object_body("through")
+    through = data.get("through")
+    if type(through) is not int or not 1 <= through <= MAX_ID:
+        raise ApiError(HTTPStatus.UNPROCESSABLE_ENTITY, "through must be a message ID.")
+    with db().transaction():
+        pair(user_id)
+        connection_required(user_id)
+        row = (
+            db()
+            .execute(
+                """SELECT max(id) AS through FROM messages
+               WHERE recipient_id = %s AND sender_id = %s AND id <= %s""",
+                (g.user_id, user_id, through),
+            )
+            .fetchone()
+        )
+        if row["through"]:
+            db().execute(
+                """INSERT INTO chat_receipts
+                   (recipient_id, sender_id, delivered_through, read_through)
+                   VALUES (%s, %s, %s, %s)
+                   ON CONFLICT (recipient_id, sender_id) DO UPDATE SET
+                   delivered_through = greatest(chat_receipts.delivered_through,
+                       excluded.delivered_through),
+                   read_through = greatest(chat_receipts.read_through,
+                       excluded.read_through)""",
+                (g.user_id, user_id, row["through"], row["through"]),
+            )
+    return "", HTTPStatus.NO_CONTENT

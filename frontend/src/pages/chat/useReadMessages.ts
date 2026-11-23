@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { Message } from "../../api";
+import { api, type Message } from "../../api";
 import { useNotifications } from "../../context/NotificationsContext";
 
 const READ_RETRY_MS = 2000;
@@ -7,12 +7,21 @@ const READ_RETRY_MS = 2000;
 /** Acknowledge displayed incoming messages only while the conversation is visible. */
 export function useReadMessages(userId: number, messages: Message[], enabled: boolean) {
   const { notifications, markOne } = useNotifications();
+  const acknowledged = useRef(0);
+  const acknowledging = useRef(false);
   const pending = useRef(new Set<number>());
   const attemptedAt = useRef(new Map<number, number>());
 
   const markDisplayed = useCallback(() => {
     if (!enabled || document.visibilityState !== "visible") return;
     const displayed = new Set(messages.filter((item) => item.sender_id === userId).map((item) => item.id));
+    const through = Math.max(0, ...displayed);
+    if (through > acknowledged.current && !acknowledging.current) {
+      acknowledging.current = true;
+      void api.chat.readMessages(userId, through).then(() => {
+        acknowledged.current = Math.max(acknowledged.current, through);
+      }).catch(() => undefined).finally(() => { acknowledging.current = false; });
+    }
     for (const item of notifications) {
       if (item.read_at) {
         attemptedAt.current.delete(item.id);

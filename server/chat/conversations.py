@@ -30,13 +30,14 @@ def conversations() -> dict:
             .execute(
                 """SELECT u.id, u.username, u.first_name, u.last_name, p.id AS photo_id,
                   m.id AS latest_message_id, m.created_at AS latest_message_at,
+                  m.body AS latest_message_body, m.kind AS latest_message_kind,
                   EXISTS (SELECT 1 FROM sessions s WHERE s.user_id = u.id
                       AND s.expires_at > now()
                       AND s.last_seen > now() - %s * interval '1 second') AS online
            FROM likes l JOIN users u ON u.id = l.target_id
            LEFT JOIN photos p ON p.user_id = u.id AND p.is_primary
            LEFT JOIN LATERAL (
-               SELECT id, created_at FROM messages
+               SELECT id, created_at, body, kind FROM messages
                WHERE (sender_id, recipient_id) IN ((l.actor_id, u.id), (u.id,
                    l.actor_id))
                ORDER BY id DESC LIMIT 1

@@ -16,6 +16,7 @@ export function ChatPage() {
   const { notifications, refresh: refreshNotifications } = useNotifications();
   const { notify } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const userId = Number(id);
@@ -84,7 +85,11 @@ export function ChatPage() {
 
       <div className={`chat-layout${active ? " chat-layout--thread" : ""}`}>
         <aside className="conversation-list" aria-label="Conversations">
-          <div className="conversation-list__head"><h2>Inbox</h2><span>{conversations.length}</span></div>
+          <label className="conversation-search">
+            <Icon name="search" size={18} />
+            <input className="input" type="search" aria-label="Search conversations" placeholder="Search conversations" value={search} onChange={(event) => setSearch(event.target.value)} />
+          </label>
+          <div className="conversation-list__head"><h2>Inbox</h2><span>{conversations.length} conversations</span></div>
           {loading ? <div className="results-loader"><Spinner label="Loading conversations" /></div> : null}
           {!loading && conversations.length === 0 && !error ? (
             <EmptyState
@@ -94,7 +99,7 @@ export function ChatPage() {
               action={<Link to="/discover" className="btn btn--secondary btn--sm">Discover people</Link>}
             />
           ) : null}
-          {conversations.map((entry) => (
+          {conversations.filter((entry) => `${fullName(entry)} ${entry.username}`.toLowerCase().includes(search.trim().toLowerCase())).map((entry) => (
             <Link
               key={entry.id}
               to={`/chat/${entry.id}`}
@@ -105,7 +110,7 @@ export function ChatPage() {
               <span className="conversation-row__body">
                 <strong>{fullName(entry)}{entry.online ? <span className="sr-only"> — Online now</span> : null}</strong>
                 <span className="conversation-row__preview">
-                  {entry.latest_message_at ? "View latest message" : "New connection — say hello"}
+                  {entry.latest_message_kind === "gif" ? "GIF" : entry.latest_message_body || (entry.latest_message_at ? "View latest message" : "New connection — say hello")}
                 </span>
               </span>
               <span className="conversation-row__meta">
@@ -118,6 +123,7 @@ export function ChatPage() {
               </span>
             </Link>
           ))}
+          {!loading && search.trim() && !conversations.some((entry) => `${fullName(entry)} ${entry.username}`.toLowerCase().includes(search.trim().toLowerCase())) ? <p className="conversation-list__no-results">No conversations found.</p> : null}
         </aside>
 
         {active ? (
