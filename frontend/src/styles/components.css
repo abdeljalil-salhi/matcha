@@ -1481,6 +1481,8 @@ select.input {
 .photo-editor__comparison .btn { pointer-events: auto; padding: 6px 10px; min-height: 30px; background: rgba(255, 254, 250, 0.94); font-size: var(--text-xs); }
 .photo-editor__strength { font-size: var(--text-xs); }
 .photo-editor__strength input { margin-block: 10px; }
+.photo-editor__strength > .photo-editor__zoom { margin-top: 12px; }
+
 .photo-editor__enhancement { display: grid; gap: 12px; padding-top: 26px; margin-top: 4px; border-top: 1px solid var(--line); }
 .photo-editor__enhancement p { margin: 0; font-size: 0.875rem; line-height: 1.5; }
 .photo-editor__enhancement > label:first-child { width: 100%; cursor: pointer; }

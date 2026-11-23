@@ -28,7 +28,7 @@ Run `make help` for commands or see the
 - Email verification, password recovery, and cookie-based sessions
 - Optional Google sign-in (OAuth 2.0/OIDC with PKCE) using the same session
 - Editable profiles with photos, interest tags, and consent-based location
-- Optional local photo enhancement with adjustable strength and before/after preview
+- Optional local photo enhancement combining mild deblurring and adaptive local contrast, with adjustable strength and before/after preview
 - Profile suggestions and search by distance, interests, age, and fame
 - Mutual likes, blocking, reporting, chat, and unread notifications
 - One-to-one audio/video calls for connected members, with optional TURN relay

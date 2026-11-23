@@ -1,3 +1,4 @@
+import { clahePixels } from "./photoContrast";
 import { deblurPixels } from "./photoDeblur";
 import { enhancePixels } from "./photoEnhancement";
 
@@ -94,7 +95,8 @@ export async function drawEditedImage(
     const pixels = context.getImageData(0, 0, output, output);
     const restored = await deblurPixels(pixels.data, output, output, edits.enhancement, isCurrent);
     if (!isCurrent()) return;
-    pixels.data.set(enhancePixels(restored, output, output, edits.enhancement));
+    const enhanced = enhancePixels(restored, output, output, edits.enhancement);
+    pixels.data.set(clahePixels(enhanced, output, output, edits.enhancement));
     context.putImageData(pixels, 0, 0);
   }
 }

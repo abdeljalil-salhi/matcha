@@ -1,6 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { enhancePixels } from "../src/utils/photoEnhancement";
 import * as deblur from "../src/utils/photoDeblur";
+import * as contrast from "../src/utils/photoContrast";
 import { drawEditedImage } from "../src/utils/imageEditor";
 
 function grey(values: number[]) {
@@ -35,8 +36,9 @@ test("strength is bounded, output stays valid and alpha is preserved", () => {
   expect(enhancePixels(grey([200]), 1, 1, 0.5)[0]).not.toBe(enhancePixels(grey([200]), 1, 1, 1)[0]);
 });
 
-test("preview/export automatically deblurs only when enhancement is enabled", async () => {
+test("preview/export automatically combines deblur and CLAHE only when enhancement is enabled", async () => {
   const restore = vi.spyOn(deblur, "deblurPixels");
+  const equalize = vi.spyOn(contrast, "clahePixels");
   const data = new Uint8ClampedArray(1080 * 1080 * 4).fill(200);
   const original = data.slice();
   const putImageData = vi.fn();
@@ -51,13 +53,17 @@ test("preview/export automatically deblurs only when enhancement is enabled", as
   await drawEditedImage(canvas, image, edits, 320);
   expect(getImageData).not.toHaveBeenCalled();
   expect(restore).not.toHaveBeenCalled();
+  expect(equalize).not.toHaveBeenCalled();
   expect(context.rotate).toHaveBeenLastCalledWith(Math.PI / 2);
   expect(context.drawImage).toHaveBeenLastCalledWith(image, -300, -600);
   await drawEditedImage(canvas, image, { ...edits, enhancement: 0.5 }, 320);
   expect(putImageData).toHaveBeenCalledOnce();
   expect(data).not.toEqual(original);
   expect(restore).toHaveBeenCalledOnce();
+  expect(equalize).toHaveBeenCalledOnce();
+  expect(restore.mock.invocationCallOrder[0]!).toBeLessThan(equalize.mock.invocationCallOrder[0]!);
   restore.mockRestore();
+  equalize.mockRestore();
 });
 
 test("default strength visibly expands washed-out tones without tinting neutral pixels", () => {

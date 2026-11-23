@@ -532,7 +532,7 @@ export function PhotoManager({ photos, onChanged }: PhotoManagerProps) {
                     disabled={busyId === "upload"}
                   />
                 </label>
-                <p className="text-small text-muted">Reduce blur and noise, sharpen detail and balance lighting.</p>
+                <p className="text-small text-muted">Reduce blur and noise, sharpen detail and improve local contrast.</p>
                 {draft.enhancement ? (
                   <div className="photo-editor__strength">
                     <label className="photo-editor__zoom" htmlFor="photo-enhancement-strength">
