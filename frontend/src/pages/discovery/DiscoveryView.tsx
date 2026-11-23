@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, ApiError, type DiscoveryProfile } from "../../api";
+import { api, ApiError, type SortKey, type DiscoveryProfile } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
-import { FilterPanel } from "../../components/discovery/FilterPanel";
+import { FilterPanel, SORTS } from "../../components/discovery/FilterPanel";
 import { EMPTY_FILTERS, toApiFilters, type FilterValues } from "../../components/discovery/filters";
 import { ProfileCard } from "../../components/discovery/ProfileCard";
 import { Button } from "../../components/ui/Button";
@@ -17,6 +17,8 @@ type Mode = "suggestions" | "search";
 export function DiscoveryView({ mode }: { mode: Mode }) {
   const { user } = useAuth();
   const { notify } = useToast();
+  const [quickView, setQuickView] = useState("recommended");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [values, setValues] = useState<FilterValues>(EMPTY_FILTERS);
   const [applied, setApplied] = useState<FilterValues>(EMPTY_FILTERS);
   const [profiles, setProfiles] = useState<DiscoveryProfile[]>([]);
@@ -88,6 +90,7 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
   }, [appliedKey, mode, user?.id, fetchPage]);
 
   const changeValues = (next: FilterValues) => {
+    setQuickView(next.sort);
     setValues(next);
     if (mode === "suggestions") {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
@@ -97,6 +100,7 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
 
   const reset = () => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    setQuickView("recommended");
     setValues(EMPTY_FILTERS);
     setApplied(EMPTY_FILTERS);
   };
@@ -123,6 +127,14 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
     }
   };
 
+  const applyQuick = (patch: Partial<FilterValues>, view?: string) => {
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    const next = { ...values, ...patch };
+    if (view) setQuickView(view);
+    setValues(next);
+    setApplied(next);
+  };
+
   const canLike = Boolean(user?.photos.some((photo) => photo.is_primary));
   const isSuggestions = mode === "suggestions";
 
@@ -134,7 +146,7 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
           <h1>{isSuggestions ? "People worth meeting" : "Find exactly who you're looking for"}</h1>
           <p className="lead">
             {isSuggestions
-              ? "Ranked by proximity, shared interests, and fame — closest connections first."
+              ? "Discover like-minded people nearby, and make meaningful connections."
               : "Combine as many criteria as you like, then fine-tune the results."}
           </p>
         </div>
@@ -146,7 +158,16 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
         ) : null}
       </header>
 
-      <div className="discovery-layout">
+      {isSuggestions ? <nav className="discovery-tabs" aria-label="Discovery views">
+        {([
+          ["recommended", "For you", "sparkles"], ["location", "Nearby", "pin"],
+          ["newest", "New here", "userPlus"], ["common_tags", "Best matches", "heart"],
+        ] as const).map(([sort, label, icon]) => <button type="button" key={sort} className={quickView === sort ? "is-active" : ""} aria-pressed={quickView === sort} onClick={() => applyQuick({ sort, direction: "" }, sort)}><Icon name={icon} size={19} /><span>{label}</span></button>)}
+      </nav> : null}
+      <button type="button" className="discovery-filter-toggle btn btn--secondary btn--sm" aria-expanded={filtersOpen} aria-controls="discovery-filters" onClick={() => setFiltersOpen((current) => !current)}><Icon name="sliders" size={16} /> Refine results</button>
+
+      <div className={`discovery-layout${filtersOpen ? " discovery-layout--filters-open" : ""}`}>
+        <div id="discovery-filters" className="discovery-filters">
         <FilterPanel
           values={values}
           onChange={changeValues}
@@ -155,10 +176,16 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
           busy={loading && !isSuggestions}
           mode={mode}
         />
+        </div>
 
         <section className="discovery-results">
           <div className="results-head">
-            <strong>{isSuggestions ? "Suggested profiles" : "Search results"}</strong>
+            <div className="discovery-toolbar" aria-label="Quick profile filters">
+              <label className="discovery-toolbar__pill"><Icon name="pin" size={15} /><span className="sr-only">Maximum distance</span><select aria-label="Quick maximum distance" value={values.max_distance_km} onChange={(event) => applyQuick({ max_distance_km: event.target.value })}><option value="">Anywhere</option>{[25, 50, 100, 250, 500, 1000].map((km) => <option key={km} value={km}>Within {km} km</option>)}{values.max_distance_km && ![25, 50, 100, 250, 500, 1000].includes(Number(values.max_distance_km)) ? <option value={values.max_distance_km}>Within {values.max_distance_km} km</option> : null}</select></label>
+              <label className="discovery-toolbar__pill"><Icon name="layers" size={15} /><select aria-label="Quick shared interests" value={values.min_common_tags} onChange={(event) => applyQuick({ min_common_tags: event.target.value })}><option value="">Shared interests</option><option value="0">Any shared interests</option>{Array.from({ length: 15 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}+ in common</option>)}</select></label>
+              <label className="discovery-toolbar__pill"><Icon name="star" size={15} /><select aria-label="Quick minimum fame" value={values.min_fame} onChange={(event) => applyQuick({ min_fame: event.target.value, max_fame: "" })}><option value="">Fame</option>{[0, 20, 40, 60, 80].map((fame) => <option key={fame} value={fame}>{fame}+ fame</option>)}{values.min_fame && ![0, 20, 40, 60, 80].includes(Number(values.min_fame)) ? <option value={values.min_fame}>{values.min_fame}+ fame</option> : null}</select></label>
+              <label className="discovery-toolbar__pill discovery-toolbar__sort"><Icon name="sort" size={15} /><span>Sort:</span><select aria-label="Sort profiles" value={values.sort} onChange={(event) => applyQuick({ sort: event.target.value as SortKey, direction: "" }, event.target.value)}>{SORTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+            </div>
             <span className="text-muted text-small" role="status" aria-live="polite" aria-atomic="true">
               {loading && profiles.length === 0 ? "Looking…" : `${profiles.length} shown`}
             </span>
@@ -211,6 +238,8 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
                 <ProfileCard
                   key={profile.id}
                   profile={profile}
+                  viewerTags={user?.tags ?? []}
+                  liked={likedIds.includes(profile.id)}
                   canLike={canLike && !likedIds.includes(profile.id)}
                   onLike={(entry) => void like(entry)}
                   busy={busyLike === profile.id}
