@@ -1,3 +1,4 @@
+import type { MapBounds, MapSettings, MapProfilePage } from "./types/userMap";
 import { apiUrl, request } from "./client";
 import type {
   BlockedUser,
@@ -17,6 +18,14 @@ import type {
 } from "./types";
 
 export const api = {
+  userMap: {
+    settings: () => request<MapSettings>("/me/map"),
+    share: (visible: boolean) => request<MapSettings>("/me/map", {
+      method: "PUT", body: visible ? { map_visible: true, consent: true } : { map_visible: false },
+    }),
+    profiles: (bounds: MapBounds, after: number, signal?: AbortSignal) =>
+      request<MapProfilePage>("/map/profiles", { query: { ...bounds, after, limit: 100 }, signal }),
+  },
   system: {
     health: () => request<StatusResponse>("/health"),
   },

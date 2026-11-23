@@ -106,6 +106,20 @@ def test_seed_is_repeatable(backend: tuple[Flask, Connection]) -> None:
         ]
         == 500
     )
+    assert (
+        conn.execute(
+            "SELECT count(*) AS total FROM users WHERE is_demo AND map_visible"
+        ).fetchone()["total"]
+        == 500
+    )
+    conn.execute("UPDATE users SET map_visible = false WHERE username = 'demo_003'")
+    seed(conn, PASSWORD)
+    assert (
+        conn.execute(
+            "SELECT map_visible FROM users WHERE username = 'demo_003'"
+        ).fetchone()["map_visible"]
+        is False
+    )
     client = app.test_client()
     assert login(client, "demo_001").status_code == HTTPStatus.OK
     assert login(client, "demo_003").status_code == HTTPStatus.UNAUTHORIZED

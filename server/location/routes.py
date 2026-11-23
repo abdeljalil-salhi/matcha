@@ -121,7 +121,8 @@ def remove_location() -> tuple[str, int]:
     db().execute(
         """UPDATE users SET city = NULL, area = NULL, country_code = NULL, latitude =
             NULL,
-                  longitude = NULL, location_source = NULL, location_set_at = NULL WHERE
+                  longitude = NULL, location_source = NULL, location_set_at = NULL,
+                  map_visible = false, map_shared_at = NULL WHERE
                       id = %s""",
         (g.user_id,),
     )

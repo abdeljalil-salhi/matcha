@@ -113,3 +113,6 @@ The PostgreSQL volume persists between runs. Continue with the
 [frontend API contract](API.md) to wire up browser requests and email links.
 
 If device location finds a city without a neighborhood, confirm the offered city to save it as a manual approximate location, or cancel and enter another place. The city suggestion alone does not change your saved location.
+
+
+The `/map` page displays opted-in compatible members. Migration `013_user_map.sql` leaves real accounts hidden and enables the existing fictional demo fixtures for evaluation. No database reset or reseed is needed. New demo fixtures are map-visible; seed reruns preserve an existing fixture's explicit map choice. Real users can enable or disable approximate area sharing from “Your map visibility”. The separate device GPS button centers only their own browser view.

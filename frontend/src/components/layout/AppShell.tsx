@@ -10,6 +10,7 @@ import { SessionActions } from "./SessionActions";
 const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: "/discover", label: "Discover", icon: "compass" },
   { to: "/search", label: "Search", icon: "search" },
+  { to: "/map", label: "Map", icon: "pin" },
   { to: "/likes", label: "Likes", icon: "heart" },
   { to: "/visitors", label: "Visitors", icon: "eye" },
   { to: "/chat", label: "Messages", icon: "message" },
@@ -99,9 +100,6 @@ export function AppShell() {
                   <Link to="/profile/me" onClick={() => setUserOpen(false)}>
                     My profile
                   </Link>
-                  <Link to="/map" onClick={() => setUserOpen(false)}>
-                    <Icon name="pin" size={16} /> Places map
-                  </Link>
                   <Link to="/settings" onClick={() => setUserOpen(false)}>
                     Settings
                   </Link>
@@ -144,9 +142,6 @@ export function AppShell() {
             <NavLink to="/profile/me" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
               <Icon name="user" size={19} /> My profile
             </NavLink>
-            <NavLink to="/map" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
-              <Icon name="pin" size={19} /> Map
-            </NavLink>
             <NavLink to="/settings" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
               <Icon name="sliders" size={19} /> Settings
             </NavLink>
@@ -162,7 +157,7 @@ export function AppShell() {
         <div className="container app-footer__inner">
           <span><strong>matcha</strong> — a quieter way to meet people nearby.</span>
           <span className="app-footer__links">
-            <Link to="/map">Places map</Link>
+            <Link to="/map">People map</Link>
             <Link to="/settings">Account settings</Link>
             <Link to="/blocks">Blocked accounts</Link>
           </span>

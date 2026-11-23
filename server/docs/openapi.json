@@ -34,6 +34,10 @@
     },
     {
       "name": "Notifications"
+    },
+    {
+      "name": "Map",
+      "description": "Opt-in approximate member map."
     }
   ],
   "paths": {
@@ -2815,6 +2819,241 @@
           }
         }
       }
+    },
+    "/map/profiles": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "List compatible opted-in members in a viewport",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapProfilePage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "409": {
+            "$ref": "#/components/responses/HTTP409"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        },
+        "description": "Complete profile required. Self, blocked pairs, hidden/incomplete profiles and incompatible preferences are excluded. Coordinates and viewport matching use public rounded points only. west greater than east crosses the antimeridian.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "west",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          },
+          {
+            "in": "query",
+            "name": "east",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          },
+          {
+            "in": "query",
+            "name": "south",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
+          },
+          {
+            "in": "query",
+            "name": "north",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
+          },
+          {
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 100
+            }
+          }
+        ]
+      }
+    },
+    "/me/map": {
+      "get": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Read your private map sharing settings",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "409": {
+            "$ref": "#/components/responses/HTTP409"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Map"
+        ],
+        "summary": "Opt in to or revoke approximate map visibility",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "409": {
+            "$ref": "#/components/responses/HTTP409"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          },
+          "415": {
+            "$ref": "#/components/responses/HTTP415"
+          }
+        },
+        "description": "Real accounts default to hidden. Enabling requires a complete profile and consent true. Disabling works while incomplete. This never enables GPS or changes matching location.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "map_visible": {
+                        "const": true
+                      },
+                      "consent": {
+                        "const": true
+                      }
+                    },
+                    "required": [
+                      "map_visible",
+                      "consent"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "map_visible": {
+                        "const": false
+                      },
+                      "consent": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "map_visible"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3657,6 +3896,129 @@
           "created_at",
           "read_at",
           "unread_count"
+        ]
+      },
+      "MapSettings": {
+        "type": "object",
+        "properties": {
+          "map_visible": {
+            "type": "boolean"
+          },
+          "center": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "map_visible",
+          "center"
+        ]
+      },
+      "MapProfile": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "age": {
+            "type": "integer"
+          },
+          "photo_id": {
+            "type": "integer"
+          },
+          "fame": {
+            "type": "integer"
+          },
+          "latitude": {
+            "type": "number",
+            "description": "Public area coordinate rounded to two decimal places."
+          },
+          "longitude": {
+            "type": "number",
+            "description": "Public area coordinate rounded to two decimal places."
+          },
+          "area": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_demo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "username",
+          "first_name",
+          "last_name",
+          "city",
+          "country_code",
+          "id",
+          "age",
+          "photo_id",
+          "fame",
+          "latitude",
+          "longitude",
+          "area",
+          "is_demo"
+        ]
+      },
+      "MapProfilePage": {
+        "type": "object",
+        "properties": {
+          "profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapProfile"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_after": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "profiles",
+          "has_more",
+          "next_after"
         ]
       }
     },
