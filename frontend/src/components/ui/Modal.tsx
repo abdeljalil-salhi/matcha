@@ -10,10 +10,14 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   size?: "sm" | "md" | "lg";
+  className?: string;
+  backdropClassName?: string;
 }
 
-export function Modal({ open, onClose, title, description, children, footer, size = "md" }: ModalProps) {
+export function Modal({ open, onClose, title, description, children, footer, size = "md", className = "", backdropClassName = "" }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -23,7 +27,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     panelRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") closeRef.current();
       if (event.key !== "Tab" || !panelRef.current) return;
       const focusable = panelRef.current.querySelectorAll<HTMLElement>(
         'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -46,15 +50,15 @@ export function Modal({ open, onClose, title, description, children, footer, siz
       document.removeEventListener("keydown", onKeyDown);
       previous?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
   return createPortal(
-    <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <div className={`modal-backdrop ${backdropClassName}`} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div
         ref={panelRef}
-        className={`modal modal--${size}`}
+        className={`modal modal--${size} ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

@@ -621,7 +621,7 @@ select.input {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 150;
+  z-index: 1100;
   display: grid;
   place-items: center;
   padding: 20px;
