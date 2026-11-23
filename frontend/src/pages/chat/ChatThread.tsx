@@ -224,10 +224,10 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   let previousDay = "";
 
   return (
-    <section className="chat-thread">
+    <section className="chat-thread" aria-label={`Conversation with ${fullName(conversation)}`}>
       <header className="chat-thread__head">
-        <Link to="/chat" className="chat-thread__back">
-          <Icon name="chevronLeft" size={17} /> Conversations
+        <Link to="/chat" className="chat-thread__back" aria-label="Back to conversations">
+          <Icon name="chevronLeft" size={17} /><span>Conversations</span>
         </Link>
         <Link to={`/profile/${userId}`} className="chat-thread__person">
           <Avatar photoId={conversation.photo_id} name={conversation} size="sm" />
@@ -261,12 +261,15 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           </div>
         ) : null}
 
-        {messages.map((message) => {
+        {messages.map((message, index) => {
           const day = dayLabel(message.created_at);
           const showDay = day !== previousDay;
           previousDay = day;
+          const previous = messages[index - 1];
+          const continued = !showDay && previous?.sender_id === message.sender_id
+            && new Date(message.created_at).getTime() - new Date(previous.created_at).getTime() < 180000;
           return (
-            <div key={message.id}>
+            <div key={message.id} className={`chat-message${continued ? " chat-message--continued" : ""}`}>
               {showDay ? <div className="chat-day"><span>{day}</span></div> : null}
               <div className={`bubble${message.sender_id === user?.id ? " bubble--mine" : ""}`}>
                 <p>{message.body}</p>
@@ -291,7 +294,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
         <div className="chat-compose__field">
           <textarea
             className="input textarea"
-            rows={2}
+            rows={1}
             value={draft}
             maxLength={2000}
             placeholder="Write a message…"

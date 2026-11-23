@@ -82,7 +82,8 @@ export function ChatPage() {
       {error ? <ErrorBanner message={error} onRetry={() => void loadConversations()} /> : null}
 
       <div className={`chat-layout${active ? " chat-layout--thread" : ""}`}>
-        <aside className="conversation-list card">
+        <aside className="conversation-list" aria-label="Conversations">
+          <div className="conversation-list__head"><h2>Inbox</h2><span>{conversations.length}</span></div>
           {loading ? <div className="results-loader"><Spinner label="Loading conversations" /></div> : null}
           {!loading && conversations.length === 0 && !error ? (
             <EmptyState
@@ -96,22 +97,24 @@ export function ChatPage() {
             <Link
               key={entry.id}
               to={`/chat/${entry.id}`}
+              aria-current={entry.id === userId ? "page" : undefined}
               className={`conversation-row${entry.id === userId ? " is-active" : ""}`}
             >
-              <Avatar photoId={entry.photo_id} name={entry} size="md" />
+              <Avatar photoId={entry.photo_id} name={entry} size="sm" />
               <span className="conversation-row__body">
                 <strong>{fullName(entry)}</strong>
                 <span className="conversation-row__preview">
                   {entry.latest_message_at ? "View latest message" : "New connection — say hello"}
                 </span>
               </span>
-              {unreadFor(entry.id) > 0 ? (
-                <span className="conversation-row__unread" aria-label={`${unreadFor(entry.id)} unread messages`}>
-                  {unreadFor(entry.id)}
-                </span>
-              ) : entry.latest_message_at ? (
-                <span className="conversation-row__time">{clockTime(entry.latest_message_at)}</span>
-              ) : null}
+              <span className="conversation-row__meta">
+                {entry.latest_message_at ? <time dateTime={entry.latest_message_at} className="conversation-row__time">{clockTime(entry.latest_message_at)}</time> : null}
+                {unreadFor(entry.id) > 0 ? (
+                  <span className="conversation-row__unread" aria-label={`${unreadFor(entry.id)} unread messages`}>
+                    {unreadFor(entry.id)}
+                  </span>
+                ) : null}
+              </span>
             </Link>
           ))}
         </aside>
@@ -125,7 +128,7 @@ export function ChatPage() {
             onConversationUpdate={onConversationUpdate}
           />
         ) : (
-          <div className="chat-placeholder card">
+          <div className="chat-placeholder">
             <Icon name="message" size={34} />
             <h2>Choose a conversation</h2>
             <p className="text-muted">Your messages with connected members appear on the left.</p>
