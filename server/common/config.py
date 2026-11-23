@@ -112,4 +112,5 @@ def settings() -> Settings:
         "CALL_TURN_URLS": turn_urls,
         "CALL_TURN_SECRET": turn_secret,
         "CALL_RELAY_ONLY": relay_only,
+        "GIPHY_API_KEY": os.environ.get("GIPHY_API_KEY", "").strip(),
     }
