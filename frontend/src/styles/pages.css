@@ -541,3 +541,9 @@
   .chat-thread { height: calc(100vh - 210px); min-height: 420px; }
   .landing__footer { flex-direction: column; text-align: center; }
 }
+
+.standalone-page { min-height: 100vh; display: flex; flex-direction: column; }
+.standalone-page > .auth-layout { flex: 1; min-height: 0; }
+.standalone-page > .not-found { flex: 1; padding-block: 40px; }
+.standalone-footer { padding: 18px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--text-xs); text-align: center; }
+.standalone-footer a { color: var(--matcha); font-weight: 700; }
