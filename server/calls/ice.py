@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import secrets
 import time
 
 from flask import Blueprint, current_app, g
@@ -28,8 +29,10 @@ def ice_configuration() -> dict:
     if stun:
         servers.append({"urls": stun})
     if turn and secret:
-        username = f"{int(time.time()) + TURN_TTL_SECONDS}:{g.user_id}"
-        # HMAC-SHA1 is the coturn REST credential protocol, not password hashing.
+        # coturn REST credentials are "expiration:random-name" plus an HMAC-SHA1
+        # of that name. The user ID is deliberately not included: the relay does
+        # not need it, and this avoids exposing account IDs in relay logs.
+        username = f"{int(time.time()) + TURN_TTL_SECONDS}:{secrets.token_hex(16)}"
         credential = base64.b64encode(
             hmac.new(secret.encode(), username.encode(), hashlib.sha1).digest()
         ).decode()

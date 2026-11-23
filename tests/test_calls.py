@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import re
 import secrets
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
@@ -203,6 +204,7 @@ def test_call_validation_and_temporary_turn_credentials(callers):
     ).decode()
     assert server["credential"] == expected
     assert secret not in str(config)
+    assert re.fullmatch(r"\d+:[0-9a-f]{32}", server["username"])
 
 
 def test_signal_pagination_leases_declines_and_private_ownership(callers):
