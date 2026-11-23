@@ -32,6 +32,8 @@ WITH viewer AS (
     FROM users u WHERE id = %(me)s
 ), candidates AS (
     SELECT p.*, u.created_at AS joined_at,
+           EXISTS (SELECT 1 FROM likes WHERE actor_id = %(me)s
+                   AND target_id = p.id) AS likes_them,
            round(%(earth_radius_km)s * acos(least(1.0, greatest(-1.0,
            sin(radians(v.latitude)) * sin(radians(u.latitude)) +
            cos(radians(v.latitude)) * cos(radians(u.latitude)) *
@@ -62,6 +64,6 @@ WITH viewer AS (
         %(max_distance_km)s
 )
 SELECT id, username, first_name, last_name, age, gender, city, area, country_code,
-       tags, fame, photo_id, distance_km, common_tags, is_demo
+       tags, fame, photo_id, distance_km, common_tags, is_demo, likes_them
 FROM scored ORDER BY {}{}, id LIMIT %(limit)s OFFSET %(offset)s
 """

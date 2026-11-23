@@ -15,7 +15,7 @@ interface ProfileCardProps {
   liked?: boolean;
 }
 
-export function ProfileCard({ profile, canLike, onLike, busy = false, viewerTags = [], liked = false }: ProfileCardProps) {
+export function ProfileCard({ profile, canLike, onLike, busy = false, viewerTags = [], liked = Boolean(profile.likes_them) }: ProfileCardProps) {
   return (
     <article className="profile-card card">
       <Link to={`/profile/${profile.id}`} className="profile-card__photo" aria-label={`View ${fullName(profile)}'s profile`}>
@@ -49,10 +49,11 @@ export function ProfileCard({ profile, canLike, onLike, busy = false, viewerTags
         <div className="profile-card__actions">
           <Link to={`/profile/${profile.id}`} className="btn btn--secondary btn--sm">View profile</Link>
           <Button
+            className={liked ? "profile-card__like--liked" : undefined}
             variant="primary"
             size="sm"
             onClick={() => onLike(profile)}
-            disabled={!canLike || busy}
+            disabled={liked || !canLike || busy}
             loading={busy}
             title={liked ? "You liked this profile" : canLike ? "Like this profile" : "Add a profile photo before liking"}
             icon={<Icon name="heart" size={15} />}
