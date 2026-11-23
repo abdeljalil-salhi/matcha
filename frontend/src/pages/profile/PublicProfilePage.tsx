@@ -4,9 +4,10 @@ import { api, ApiError, type PublicProfile } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { Button } from "../../components/ui/Button";
-import { EmptyState, Presence, Spinner, Stat, TagList } from "../../components/ui/Misc";
+import { EmptyState, Presence, Spinner } from "../../components/ui/Misc";
 import { Icon } from "../../components/ui/Icon";
 import { Modal } from "../../components/ui/Modal";
+import { InterestIcon } from "../../components/discovery/InterestIcon";
 import { Photo } from "../../components/ui/Photo";
 import { fullName, genderLabel, placeLabel, relativeTime } from "../../utils/format";
 
@@ -141,17 +142,38 @@ export function PublicProfilePage() {
   }
 
   const displayPhoto = activePhoto ?? profile.photo_id;
+  const sharedTags = profile.tags.filter((tag) => user.tags.includes(tag));
+  const lifestyle = [...new Set(profile.tags.map((tag) => {
+    if (["art", "books", "reading", "film", "films", "cinema", "music"].includes(tag)) return "Culture";
+    if (["games", "gaming"].includes(tag)) return "Games";
+    if (["gardening", "nature", "hiking"].includes(tag)) return "Nature";
+    if (["cycling", "biking", "climbing", "fitness", "running"].includes(tag)) return "Active";
+    return null;
+  }).filter(Boolean))];
+  const changePhoto = (direction: number) => {
+    const index = photos.findIndex((photo) => photo.id === displayPhoto);
+    const next = photos[(Math.max(index, 0) + direction + photos.length) % photos.length];
+    if (next) setActivePhoto(next.id);
+  };
 
   return (
     <div className="public-profile container">
       <nav className="breadcrumbs">
         <Link to="/discover">Discover</Link>
         <span>/</span>
-        <span>{profile.username}</span>
+        <Link to="/discover">People</Link>
+        <span>/</span>
+        <span>{fullName(profile)}</span>
       </nav>
 
       <div className="public-profile__layout">
-        <section className="profile-gallery">
+        <section className="profile-gallery" aria-label="Profile photos">
+          <Button className={`profile-gallery__like${profile.likes_them ? " is-liked" : ""}`} variant="secondary" size="sm"
+            aria-label={profile.likes_them ? "Remove like" : `Like ${profile.first_name}`}
+            aria-pressed={profile.likes_them}
+            onClick={() => profile.likes_them ? setDialog("unlike") : void like()}
+            disabled={!profile.likes_them && !canLike} loading={busy === "like"}
+            icon={<Icon name="heart" size={27} />} />
           <Photo
             className="profile-gallery__main"
             photoId={displayPhoto}
@@ -159,7 +181,10 @@ export function PublicProfilePage() {
             eager
           />
           {photos.length > 1 ? (
-            <div className="profile-gallery__thumbs">
+            <>
+            <button className="profile-gallery__previous" type="button" aria-label="Previous photo" onClick={() => changePhoto(-1)}><Icon name="chevronLeft" size={20} /></button>
+            <button className="profile-gallery__next" type="button" aria-label="Next photo" onClick={() => changePhoto(1)}><Icon name="chevronRight" size={20} /></button>
+            <div className="profile-gallery__dots">
               {photos.map((photo, index) => (
                 <button
                   key={photo.id}
@@ -169,10 +194,11 @@ export function PublicProfilePage() {
                   aria-label={`View photo ${index + 1}`}
                   aria-pressed={displayPhoto === photo.id}
                 >
-                  <Photo photoId={photo.id} alt="" />
+                  <span />
                 </button>
               ))}
             </div>
+            </>
           ) : null}
         </section>
 
@@ -195,9 +221,9 @@ export function PublicProfilePage() {
           </div>
 
           <div className="profile-details__facts">
-            <Stat value={genderLabel(profile.gender)} label="Identity" />
-            <Stat value={profile.seeks?.length ? profile.seeks.map(genderLabel).join(", ") : "Everyone"} label="Interested in" />
-            <Stat value={placeLabel(profile)} label="Area" />
+            <div><Icon name="user" size={26} /><div className="stat"><span>Identity</span><strong>{genderLabel(profile.gender)}</strong></div></div>
+            <div><Icon name="heart" size={26} /><div className="stat"><span>Interested in</span><strong>{profile.seeks?.length ? profile.seeks.map(genderLabel).join(", ") : "Everyone"}</strong></div></div>
+            <div><Icon name="pin" size={26} /><div className="stat"><span>Area</span><strong>{placeLabel(profile)}</strong></div></div>
           </div>
 
           <div className="profile-details__section">
@@ -207,41 +233,54 @@ export function PublicProfilePage() {
 
           <div className="profile-details__section">
             <h3>Interests</h3>
-            <TagList tags={profile.tags} />
+            <ul className="profile-details__interests">
+              {profile.tags.map((tag) => <li key={tag}><InterestIcon tag={tag} /> #{tag}</li>)}
+            </ul>
           </div>
 
-          <div className="profile-details__actions">
-            {profile.likes_them ? (
-              <Button variant="secondary" size="lg" onClick={() => setDialog("unlike")}>
-                <Icon name="heart" size={16} /> Liked — unlike
-              </Button>
-            ) : (
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => void like()}
-                loading={busy === "like"}
-                disabled={!canLike}
-                title={!canLike ? "Add a profile photo before liking" : undefined}
-              >
-                <Icon name="heart" size={16} /> Like {profile.first_name}
-              </Button>
-            )}
-            {profile.connected ? (
-              <Link to={`/chat/${profile.id}`} className="btn btn--primary btn--lg">Send a message</Link>
-            ) : null}
+          <div className="profile-details__highlights">
+            <div className="profile-details__common">
+              <Icon name="userPlus" size={30} />
+              <div><h3>Common ground</h3><p>{sharedTags.length} shared {sharedTags.length === 1 ? "interest" : "interests"}</p></div>
+              <ul aria-label="Shared interests">{sharedTags.slice(0, 4).map((tag) => <li key={tag} title={tag}><InterestIcon tag={tag} /><span className="sr-only">{tag}</span></li>)}</ul>
+            </div>
+            {lifestyle.length ? <div><Icon name="sparkles" size={30} /><div><h3>Lifestyle highlights</h3><p>{lifestyle.join(" · ")}</p></div></div> : null}
           </div>
+          <div className="profile-details__footer">
+            <div className="profile-details__actions">
+              {profile.likes_them ? (
+                <Button className="is-liked" variant="secondary" size="lg" aria-pressed={true} onClick={() => setDialog("unlike")} icon={<Icon name="heart" size={24} />}>
+                  Liked
+                </Button>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  icon={<Icon name="heart" size={24} />}
+                  onClick={() => void like()}
+                  loading={busy === "like"}
+                  disabled={!canLike}
+                  title={!canLike ? "Add a profile photo before liking" : undefined}
+                >
+                  Like {profile.first_name}
+                </Button>
+              )}
+              {profile.connected ? (
+                <Link to={`/chat/${profile.id}`} className="btn btn--secondary btn--lg"><Icon name="message" size={24} /> Send message</Link>
+              ) : <Button variant="secondary" size="lg" disabled title="Connect through mutual likes to send a message" icon={<Icon name="message" size={24} />}>Send message</Button>}
+            </div>
 
+            <div className="profile-details__moderation">
+              <button type="button" className="link-button" onClick={() => setDialog("report")}>Report as fake</button>
+              <button type="button" className="link-button link-button--danger" onClick={() => setDialog("block")}>Block user</button>
+            </div>
+
+          </div>
           {!canLike && !profile.likes_them ? (
             <p className="text-small text-muted">
               You need a profile photo before you can like someone. <Link to="/profile/me">Add one here.</Link>
             </p>
           ) : null}
-
-          <div className="profile-details__moderation">
-            <button type="button" className="link-button" onClick={() => setDialog("report")}>Report as fake</button>
-            <button type="button" className="link-button link-button--danger" onClick={() => setDialog("block")}>Block user</button>
-          </div>
 
           {profile.last_seen && !profile.online ? (
             <p className="text-small text-muted profile-details__seen">
