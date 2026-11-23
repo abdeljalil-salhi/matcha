@@ -1,3 +1,4 @@
+import { ConversationMenu } from "./ConversationMenu";
 import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -286,7 +287,10 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
             <small>@{conversation.username} <span>·</span> <b>View profile</b></small>
           </span>
         </Link>
-        <CallButtons userId={userId} />
+        <div className="chat-thread__controls">
+          <CallButtons userId={userId} />
+          <ConversationMenu userId={userId} name={fullName(conversation)} onBlocked={onConversationUpdate} />
+        </div>
         {relatedUnread.length > 0 ? (
           <button type="button" className="link-button" onClick={() => void markRead()}>
             Mark {unreadMessages} read

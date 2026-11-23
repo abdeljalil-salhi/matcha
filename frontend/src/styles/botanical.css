@@ -345,3 +345,10 @@ body {
 .message-receipt svg + svg { margin-left: -9px; }
 .message-receipt--read { color: var(--matcha); }
 
+.chat-thread__controls { display: flex; align-items: center; gap: 8px; margin-left: auto; flex: none; }
+.conversation-menu { position: relative; }
+.conversation-menu > .icon-button { width: 36px; height: 36px; }
+.conversation-menu__dots { letter-spacing: 2px; font-size: 15px; line-height: 1; padding-left: 2px; }
+.conversation-menu__panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; min-width: 170px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-md); }
+.conversation-menu__panel button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--danger); font-size: .85rem; text-align: left; cursor: pointer; }
+.conversation-menu__panel button:hover, .conversation-menu__panel button:focus-visible { background: var(--danger-light); }
