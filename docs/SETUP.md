@@ -61,7 +61,7 @@ Google sign-in is optional and off until all three settings are present.
    ```
 
 4. Recreate the containers so they pick up the new values:
-   `docker compose up -d --force-recreate`. Migration `014_google_auth.sql`
+   `docker compose up -d --force-recreate`. Migration `015_google_auth.sql`
    creates the account-link table automatically.
 
 The “Continue with Google” button appears on the login and registration pages
