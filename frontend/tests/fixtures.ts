@@ -15,6 +15,7 @@ export const conversation: Conversation = {
 };
 
 export const message: Message = {
-  id: 1, sender_id: 2, recipient_id: 1, body: "The first incoming message",
+  id: 1, sender_id: 2, recipient_id: 1, kind: "text", body: "The first incoming message",
+  media_url: null, media_alt: null,
   client_id: "00000000-0000-4000-8000-000000000001", created_at: "2026-11-22T12:00:00Z",
 };

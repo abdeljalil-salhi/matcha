@@ -49,7 +49,8 @@ export type IconName =
   | "spark"
   | "crop"
   | "rotateLeft"
-  | "rotateRight";
+  | "rotateRight"
+  | "image";
 
 const PATHS: Record<IconName, ReactNode> = {
   layers: <><path d="m12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5" /></>,
@@ -203,6 +204,13 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="M20 11a8 8 0 1 0-.8 4.4" />
       <path d="M20 5v6h-6" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+      <path d="M21 16l-5.5-5.5L5 21" />
     </>
   ),
 };
