@@ -18,6 +18,7 @@ FAME_WEIGHT = Decimal("0.15")
 ORDERS = {
     "recommended": sql.SQL("area_priority, score DESC, distance_km"),
     "age": sql.SQL("age"),
+    "newest": sql.SQL("joined_at"),
     "location": sql.SQL("distance_km"),
     "fame": sql.SQL("fame"),
     "common_tags": sql.SQL("common_tags"),
@@ -30,7 +31,8 @@ WITH viewer AS (
                          ARRAY[]::text[]) AS tags
     FROM users u WHERE id = %(me)s
 ), candidates AS (
-    SELECT p.*, round(%(earth_radius_km)s * acos(least(1.0, greatest(-1.0,
+    SELECT p.*, u.created_at AS joined_at,
+           round(%(earth_radius_km)s * acos(least(1.0, greatest(-1.0,
            sin(radians(v.latitude)) * sin(radians(u.latitude)) +
            cos(radians(v.latitude)) * cos(radians(u.latitude)) *
            cos(radians(v.longitude - u.longitude))))))::integer AS distance_km,

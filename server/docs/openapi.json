@@ -1660,7 +1660,8 @@
                 "age",
                 "location",
                 "fame",
-                "common_tags"
+                "common_tags",
+                "newest"
               ],
               "default": "recommended"
             }
@@ -1848,7 +1849,8 @@
                 "age",
                 "location",
                 "fame",
-                "common_tags"
+                "common_tags",
+                "newest"
               ],
               "default": "recommended"
             }

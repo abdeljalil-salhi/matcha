@@ -1,6 +1,16 @@
 import type { ReactNode } from "react";
 
 export type IconName =
+  | "layers"
+  | "book"
+  | "gamepad"
+  | "leaf"
+  | "bike"
+  | "film"
+  | "palette"
+  | "sort"
+  | "tag"
+  | "userPlus"
   | "microphone"
   | "microphoneOff"
   | "videoOff"
@@ -42,6 +52,16 @@ export type IconName =
   | "rotateRight";
 
 const PATHS: Record<IconName, ReactNode> = {
+  layers: <><path d="m12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5" /></>,
+  book: <><path d="M12 5c-3-2-6-2-10-1v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1ZM12 5v15" /></>,
+  gamepad: <><path d="M7 7h10a4 4 0 0 1 4 3l1 7a2 2 0 0 1-3 2l-4-3H9l-4 3a2 2 0 0 1-3-2l1-7a4 4 0 0 1 4-3Z" /><path d="M7 10v4M5 12h4M16 11h.01M19 13h.01" /></>,
+  leaf: <><path d="M20 3C9 1 3 6 4 13c1 7 13 9 16-10ZM4 21 16 8" /></>,
+  bike: <><circle cx="5" cy="17" r="4" /><circle cx="19" cy="17" r="4" /><path d="m5 17 5-9 5 9H5l8-11h4M8 5h4M16 3h3l2 4" /></>,
+  film: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4" /></>,
+  palette: <><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-4c-1-1 0-3 2-3h2a3 3 0 0 0 3-3c0-5-4-8-9-8Z" /><path d="M7 10h.01M10 6h.01M15 7h.01M6 14h.01" /></>,
+  sort: <><path d="M6 4v16m-3-3 3 3 3-3M18 20V4m-3 3 3-3 3 3" /></>,
+  tag: <><path d="m20 13-7 7L3 10V3h7l10 10Z" /><circle cx="7.5" cy="7.5" r=".5" /></>,
+  userPlus: <><circle cx="9" cy="7" r="4" /><path d="M2 21v-3a7 7 0 0 1 14 0v3M20 8v6M17 11h6" /></>,
   microphone: <><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" /></>,
   microphoneOff: <><path d="M9 5V5a3 3 0 0 1 6 0v4M9 9v3a3 3 0 0 0 5 2M5 10v2a7 7 0 0 0 12 5M19 10v2a7 7 0 0 1-.3 2M12 19v3M8 22h8M3 3l18 18" /></>,
   videoOff: <><path d="M10 5h4a2 2 0 0 1 2 2v3l6-4v12l-6-4M16 16v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2M2 2l20 20" /></>,
