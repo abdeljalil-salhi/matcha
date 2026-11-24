@@ -152,3 +152,14 @@ test.each([['propose', 'Date invitation'], ['reschedule', 'New date proposal'],
     expect(onOpen).toHaveBeenCalledOnce();
   },
 );
+
+
+test("activity selection is sent to the API and retained when editing", async () => {
+  vi.spyOn(planApi, "update").mockResolvedValue({ ...plan, activity: "outdoors", version: 2 });
+  setup([{ ...plan, activity: "dining" }]);
+  fireEvent.click(await screen.findByRole("button", { name: "Reschedule" }));
+  expect((screen.getByLabelText("Activity type") as HTMLSelectElement).value).toBe("dining");
+  fireEvent.change(screen.getByLabelText("Activity type"), { target: { value: "outdoors" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send new proposal" }));
+  await waitFor(() => expect(planApi.update).toHaveBeenCalledWith(expect.anything(), "reschedule", expect.objectContaining({ activity: "outdoors" })));
+});

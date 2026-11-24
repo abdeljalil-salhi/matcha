@@ -371,3 +371,55 @@ def test_existing_plan_revisions_are_backfilled_into_chat(backend, monkeypatch):
             if item["kind"] == "plan"
         )
         assert notice["message_id"] in {item["id"] for item in messages}
+
+
+@pytest.mark.parametrize(
+    "activity", ["coffee", "dining", "outdoors", "culture", "other"]
+)
+def test_activity_is_saved_in_plan_and_message(backend, monkeypatch, activity):
+    """Every supported activity is persisted for both conversation participants."""
+    alice, alice_id, bob, bob_id = connected_pair(backend, monkeypatch)
+    data = proposal(activity=activity)
+    plan = alice.post(f"/api/chat/{bob_id}/plans", json=data).json
+    assert plan["activity"] == activity
+    assert alice.post(f"/api/chat/{bob_id}/plans", json=data).status_code == 200
+    assert (
+        alice.post(
+            f"/api/chat/{bob_id}/plans",
+            json={**data, "activity": "other" if activity != "other" else "coffee"},
+        ).status_code
+        == 409
+    )
+    assert (
+        bob.get(f"/api/chat/{alice_id}/messages").json["messages"][0]["plan_snapshot"][
+            "activity"
+        ]
+        == activity
+    )
+    accepted = bob.patch(
+        f'/api/plans/{plan["id"]}', json={"action": "accept", "version": 1}
+    ).json
+    assert accepted["activity"] == activity
+    # Older clients rescheduling without the new field preserve its existing value.
+    details = {key: value for key, value in proposal().items() if key != "client_id"}
+    changed = bob.patch(
+        f'/api/plans/{plan["id"]}',
+        json={**details, "action": "reschedule", "version": 2},
+    ).json
+    assert changed["activity"] == activity
+    changed = alice.patch(
+        f'/api/plans/{plan["id"]}',
+        json={**details, "activity": "culture", "action": "reschedule", "version": 3},
+    ).json
+    assert changed["activity"] == "culture"
+    messages = bob.get(f"/api/chat/{alice_id}/messages").json["messages"]
+    assert messages[0]["plan_snapshot"]["activity"] == activity
+    assert messages[-1]["plan_snapshot"]["activity"] == "culture"
+
+
+@pytest.mark.parametrize("activity", ["unknown", None, 42, ["coffee"]])
+def test_invalid_activity_is_rejected(backend, monkeypatch, activity):
+    """Activity artwork is selected from an enum, never client-supplied URLs."""
+    alice, _, _, bob_id = connected_pair(backend, monkeypatch)
+    response = alice.post(f"/api/chat/{bob_id}/plans", json=proposal(activity=activity))
+    assert response.status_code == 422

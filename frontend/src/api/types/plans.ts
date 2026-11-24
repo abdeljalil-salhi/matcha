@@ -1,7 +1,9 @@
+export type PlanActivity = "coffee" | "dining" | "outdoors" | "culture" | "other";
 export type PlanState = "proposed" | "accepted" | "declined" | "cancelled";
 export type PlanAction = "accept" | "decline" | "cancel" | "reschedule";
 
 export interface DatePlan {
+  activity?: PlanActivity;
   id: number;
   creator_id: number;
   partner_id: number;
@@ -23,6 +25,7 @@ export interface DatePlan {
 }
 
 export interface PlanDetails {
+  activity: PlanActivity;
   title: string;
   local_time: string;
   timezone: string;

@@ -7,7 +7,7 @@ from ..common.http import ApiError
 from ..common.request_data import require_string
 from ..common.validation import text
 
-DETAIL_FIELDS = ("title", "local_time", "timezone", "venue", "notes")
+DETAIL_FIELDS = ("title", "local_time", "timezone", "venue", "notes", "activity")
 
 
 def request_id(value: object) -> UUID:
@@ -20,6 +20,9 @@ def request_id(value: object) -> UUID:
 
 def details(data: dict) -> dict:
     """Resolve an unambiguous local meeting time in its selected IANA timezone."""
+    activity = require_string(data.get("activity", "other"), "activity")
+    if activity not in ("coffee", "dining", "outdoors", "culture", "other"):
+        raise ApiError(HTTPStatus.UNPROCESSABLE_ENTITY, "Choose a valid activity type.")
     title = text(require_string(data.get("title"), "title"), "title", 100)
     venue = text(require_string(data.get("venue"), "venue"), "venue", 200)
     notes = text(
@@ -61,6 +64,7 @@ def details(data: dict) -> dict:
             "This time is skipped or repeated by a clock change. Choose another time.",
         )
     return {
+        "activity": activity,
         "title": title,
         "starts_at": candidates.pop(),
         "timezone": timezone,

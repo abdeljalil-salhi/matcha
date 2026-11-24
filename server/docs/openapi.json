@@ -4029,6 +4029,18 @@
                   "client_id": {
                     "type": "string",
                     "format": "uuid"
+                  },
+                  "activity": {
+                    "type": "string",
+                    "enum": [
+                      "coffee",
+                      "dining",
+                      "outdoors",
+                      "culture",
+                      "other"
+                    ],
+                    "default": "other",
+                    "description": "Activity type for the invitation artwork. Defaults to other for older clients and plans."
                   }
                 },
                 "required": [
@@ -4235,6 +4247,18 @@
                         "type": "integer",
                         "minimum": 1,
                         "maximum": 2147483646
+                      },
+                      "activity": {
+                        "type": "string",
+                        "enum": [
+                          "coffee",
+                          "dining",
+                          "outdoors",
+                          "culture",
+                          "other"
+                        ],
+                        "default": "other",
+                        "description": "Activity type for the invitation artwork. Defaults to other for older clients and plans."
                       }
                     },
                     "required": [
@@ -5838,6 +5862,18 @@
           },
           "partner_last_name": {
             "type": "string"
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "coffee",
+              "dining",
+              "outdoors",
+              "culture",
+              "other"
+            ],
+            "default": "other",
+            "description": "Activity type for the invitation artwork. Defaults to other for older clients and plans."
           }
         },
         "required": [
@@ -5856,7 +5892,8 @@
           "version",
           "cancellation_reason",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "activity"
         ]
       },
       "PlanPage": {

@@ -1,5 +1,6 @@
+import { PLAN_ACTIVITIES } from "../../data/planActivities";
 import { useState, type FormEvent } from "react";
-import type { DatePlan, PlanDetails } from "../../api/types/plans";
+import type { DatePlan, PlanDetails, PlanActivity } from "../../api/types/plans";
 import { Button } from "../ui/Button";
 
 function localTime(plan: DatePlan): string {
@@ -19,6 +20,7 @@ export function PlanForm({ plan, busy, stale = false, onSubmit, onCancel }: {
   onCancel: () => void;
 }) {
   const [details, setDetails] = useState<PlanDetails>(() => ({
+    activity: plan?.activity ?? "other",
     title: plan?.title ?? "", venue: plan?.venue ?? "", notes: plan?.notes ?? "",
     local_time: plan ? localTime(plan) : "",
     timezone: plan?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC",
@@ -30,6 +32,10 @@ export function PlanForm({ plan, busy, stale = false, onSubmit, onCancel }: {
   return <form className="date-plan-form" onSubmit={submit}>
     <h3>{plan ? "Suggest new details" : "Plan something together"}</h3>
     {plan ? <p className="text-small text-muted">The other person will need to accept these changes.</p> : null}
+    <label>Activity type<select className="input" value={details.activity}
+      onChange={(event) => setDetails({ ...details, activity: event.target.value as PlanActivity })}>
+      {PLAN_ACTIVITIES.map((activity) => <option key={activity.value} value={activity.value}>{activity.label}</option>)}
+    </select></label>
     <label>Title<input className="input" required maxLength={100} value={details.title} placeholder="Coffee and a walk"
       onChange={(event) => setDetails({ ...details, title: event.target.value })} /></label>
     <div className="date-plan-form__time">

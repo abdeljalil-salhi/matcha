@@ -120,9 +120,10 @@ def create_plan(user_id: int) -> tuple[dict, int]:
             .execute(
                 """INSERT INTO date_plans
                (creator_id, partner_id, proposed_by, updated_by,
-               client_id, title, starts_at, timezone, venue, notes)
+               client_id, title, starts_at, timezone, venue, notes, activity)
                VALUES (%(me)s, %(other)s, %(me)s, %(me)s, %(client)s, %(title)s,
-                   %(starts_at)s, %(timezone)s, %(venue)s, %(notes)s) RETURNING *""",
+                   %(starts_at)s, %(timezone)s, %(venue)s, %(notes)s, %(activity)s)
+                   RETURNING *""",
                 {**values, "me": me, "other": other, "client": client_id},
             )
             .fetchone()
@@ -190,7 +191,7 @@ def update_plan(plan_id: int) -> dict:
             raise ApiError(HTTPStatus.FORBIDDEN, "Only the invited member can respond.")
         values = {
             key: row[key]
-            for key in ("title", "starts_at", "timezone", "venue", "notes")
+            for key in ("title", "starts_at", "timezone", "venue", "notes", "activity")
         }
         state = {
             "accept": "accepted",
@@ -200,7 +201,9 @@ def update_plan(plan_id: int) -> dict:
         }[action]
         proposed_by = row["proposed_by"]
         if action == "reschedule":
-            values = details(data)
+            values = details(
+                {**data, "activity": data.get("activity", row["activity"])}
+            )
             require_future(values["starts_at"])
             proposed_by = g.user_id
         updated = (
@@ -208,6 +211,7 @@ def update_plan(plan_id: int) -> dict:
             .execute(
                 """UPDATE date_plans SET title = %(title)s, starts_at = %(starts_at)s,
                timezone = %(timezone)s, venue = %(venue)s, notes = %(notes)s,
+               activity = %(activity)s,
                state = %(state)s, proposed_by = %(proposed_by)s,
                version = version + 1, updated_by = %(me)s, updated_at = now(),
                cancellation_reason = CASE WHEN %(state)s = 'cancelled'
