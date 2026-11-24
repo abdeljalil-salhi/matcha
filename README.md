@@ -3,6 +3,7 @@
 [![Backend checks](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/backend.yml?branch=main&style=flat-square&label=backend)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/backend.yml)
 [![Frontend checks](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/frontend.yml?branch=main&style=flat-square&label=frontend)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/frontend.yml)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/codeql.yml?branch=main&style=flat-square&label=codeql)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/codeql.yml)
+[![MIT license](https://img.shields.io/badge/license-MIT-97CA00?style=flat-square)](LICENSE)
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?style=flat-square)](server/)
 [![React 18](https://img.shields.io/badge/react-18-149ECA?style=flat-square)](frontend/)
@@ -203,3 +204,11 @@ docs/       Setup, API, calling, and development guides
 
 When changing an endpoint, update the [API guide](docs/API.md) and
 [OpenAPI specification](server/docs/openapi.json) alongside the implementation.
+
+## License
+
+Original project code is licensed under the [MIT License](LICENSE).
+Third-party components and assets retain their own licenses, including the
+[demo portraits](server/jobs/assets/portraits/LICENSE.md) and
+[bundled API documentation assets](server/docs/static/LICENSE), with their
+[associated notices](server/docs/static/NOTICE).
