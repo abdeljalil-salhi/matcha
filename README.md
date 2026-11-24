@@ -1,5 +1,15 @@
 # Matcha
 
+[![Backend checks](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/backend.yml?branch=main&style=flat-square&label=backend)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/backend.yml)
+[![Frontend checks](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/frontend.yml?branch=main&style=flat-square&label=frontend)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/frontend.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/codeql.yml?branch=main&style=flat-square&label=codeql)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/codeql.yml)
+[![MIT license](https://img.shields.io/badge/license-MIT-97CA00?style=flat-square)](LICENSE)
+
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?style=flat-square)](server/)
+[![React 18](https://img.shields.io/badge/react-18-149ECA?style=flat-square)](frontend/)
+[![TypeScript 5.8](https://img.shields.io/badge/typescript-5.8-3178C6?style=flat-square)](frontend/)
+[![PostgreSQL 17](https://img.shields.io/badge/postgresql-17-4169E1?style=flat-square)](sql/)
+
 **A quieter way to meet people nearby.**
 
 Matcha is a full-stack dating app built for the 42 web curriculum. Discover
@@ -179,7 +189,6 @@ and workflow details.
 | [Development and CI](docs/DEVELOPMENT.md) | Tests, linting, formatting, and automated checks |
 | [UI screenshots](docs/EXAMPLES.md) | Fresh captures of the current application |
 | [Frontend guide](frontend/README.md) | Frontend structure and development details |
-| [Project subject](en.subject.pdf) | Original 42 requirements |
 
 ## Repository layout
 
@@ -194,3 +203,11 @@ docs/       Setup, API, calling, and development guides
 
 When changing an endpoint, update the [API guide](docs/API.md) and
 [OpenAPI specification](server/docs/openapi.json) alongside the implementation.
+
+## License
+
+Original project code is licensed under the [MIT License](LICENSE).
+Third-party components and assets retain their own licenses, including the
+[demo portraits](server/jobs/assets/portraits/LICENSE.md) and
+[bundled API documentation assets](server/docs/static/LICENSE), with their
+[associated notices](server/docs/static/NOTICE).
