@@ -629,3 +629,16 @@ body {
   .date-plan-form__layout { grid-template-columns: minmax(0, 1fr); }
   .date-plan-form__preview { position: static; }
 }
+
+/* Keep each profile field group distinct, including helper text and actions. */
+.profile-form { display: grid; gap: 26px; }
+.profile-form .form-grid { gap: 24px; }
+.profile-form .field { gap: 10px; min-width: 0; }
+.profile-form .checkbox-row { gap: 10px; padding-block: 2px; }
+.profile-form .field__hint { margin-top: 2px; line-height: 1.5; }
+.profile-form .form-actions { padding-top: 6px; }
+@media (max-width: 600px) {
+  .profile-form { gap: 22px; }
+  .profile-form .form-grid { gap: 22px; }
+  .profile-form .field { gap: 8px; }
+}
