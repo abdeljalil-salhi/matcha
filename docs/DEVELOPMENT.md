@@ -35,6 +35,11 @@ The frontend uses `/api`, which Vite proxies to `api:8000` inside Docker; browse
 requests do not require a Docker hostname or a separate API port setting.
 Stop any existing host Vite server before starting Docker on the same port.
 
+For LAN/Wi‑Fi testing, set `API_BIND_HOST=0.0.0.0`, `FRONTEND_BIND_HOST=0.0.0.0`,
+`FRONTEND_URL`/`ALLOWED_ORIGINS` to the LAN origin, and `COOKIE_SECURE=false` for
+plain HTTP; then `docker compose up -d --force-recreate`. Camera/mic calls still
+need HTTPS or localhost on the device browser.
+
 Compose commands honor local overrides and project settings. Keep the same
 configuration for an existing database volume. `COMPOSE` and `DOCKER` can override
 the command names. `make ps`, `make health`, `make shell`, and `make db-shell`
