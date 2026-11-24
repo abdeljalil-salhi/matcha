@@ -32,7 +32,7 @@ test("hero matches the botanical reference copy and trust row", () => {
   for (const label of ["People nearby", "Shared interests", "Privacy by design"]) {
     expect(screen.getByText(label)).toBeTruthy();
   }
-  expect(screen.getByRole("link", { name: "See how Matcha works" }).getAttribute("href")).toBe("#why-matcha");
+  expect(screen.queryByRole("link", { name: "See how Matcha works" })).toBeNull();
   expect(screen.getAllByRole("link", { name: "Explore profiles" })[0]?.getAttribute("href")).toBe("/register");
 });
 
