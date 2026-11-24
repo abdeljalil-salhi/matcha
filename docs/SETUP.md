@@ -14,8 +14,9 @@ and mail services. The first run downloads images and dependencies.
 
 Startup creates missing `.env` files and generates independent development secrets
 for `POSTGRES_PASSWORD`, `MATCHA_SECRET`, and `SEED_PASSWORD`. Existing settings
-are preserved. Compose applies migrations before starting the API and waits for
-API/frontend readiness. Demo profiles are optional: run `make seed` separately.
+are preserved. `.env`/`.env.example` are localhost-only defaults; `.env.lan`/`.env.lan.example`
+are for LAN/Wi‑Fi access. Compose applies migrations before starting the API and
+waits for API/frontend readiness. Demo profiles are optional: run `make seed`.
 
 Use `make logs`, `make ps`, or `make health` to inspect the stack. `make down`
 stops services while preserving the database. Run `make up` after code or dependency
@@ -132,26 +133,17 @@ is preferable for real users' GPS data. The location form and map credit
 
 ## Local network access (LAN / Wi‑Fi)
 
-To open Matcha from another device on the same network:
+Use the dedicated LAN env file to avoid mixing localhost and LAN settings:
 
-1. Find your machine's LAN IP (for example `192.168.1.10`).
-2. In `.env`, set the bind hosts and browser origin:
-   ```ini
-   API_BIND_HOST=0.0.0.0
-   FRONTEND_BIND_HOST=0.0.0.0
-   MAILPIT_BIND_HOST=0.0.0.0 # optional
-   FRONTEND_URL=http://192.168.1.10:5173
-   ALLOWED_ORIGINS=http://192.168.1.10:5173
-   COOKIE_SECURE=false
-   ```
-   Add any other origins you will use to `ALLOWED_ORIGINS` (comma-separated), e.g. a local hostname.
-3. Recreate services:
+1. Copy the template: `cp .env.lan.example .env.lan`
+2. Set your LAN IP/hostname and secrets in `.env.lan`. For camera/mic calls on other devices, prefer HTTPS + a hostname Google accepts (e.g. `192.168.1.55.sslip.io`) and configure `TLS_CERT_FILE`/`TLS_KEY_FILE` (see below).
+3. Start the LAN stack:
    ```sh
-   docker compose up -d --force-recreate
+   make up-lan
    ```
-4. Open `http://192.168.1.10:5173` from another device on the same Wi‑Fi.
+4. Open the `FRONTEND_URL` from `.env.lan` on another device on the same Wi‑Fi.
 
-Keep `VITE_API_URL=/api` (Docker default) so the browser talks same-origin through the Vite proxy. Do not expose these dev ports to untrusted networks.
+`make up-local` (or `make up`) uses `.env` for localhost-only HTTP. Keep `VITE_API_URL=/api` (Docker default) so the browser talks same-origin through the Vite proxy. Do not expose these dev ports to untrusted networks.
 
 ### Audio/video calls over LAN
 
@@ -177,17 +169,17 @@ Use HTTPS so other devices get a secure context for camera/microphone. The easie
    mv 192.168.1.55+3-key.pem dev.key
    cd ../..
    ```
-3. In `.env`, point Vite at the cert and switch the browser origin to HTTPS:
+3. In `.env.lan`, point Vite at the cert and switch the browser origin to HTTPS:
    ```ini
-   FRONTEND_URL=https://192.168.1.55:5173
-   ALLOWED_ORIGINS=https://192.168.1.55:5173,http://localhost:5173
+   FRONTEND_URL=https://192.168.1.55.sslip.io:5173
+   ALLOWED_ORIGINS=https://192.168.1.55.sslip.io:5173,https://192.168.1.55:5173,http://localhost:5173
    COOKIE_SECURE=true
    TLS_CERT_FILE=/app/infra/certs/dev.crt
    TLS_KEY_FILE=/app/infra/certs/dev.key
    ```
 4. Recreate services:
    ```sh
-   docker compose up -d --force-recreate frontend api
+   make up-lan
    ```
 5. Trust the cert on other devices. The simplest way is to install mkcert's local CA (`mkcert -CAROOT` shows it) on the phone/laptop you test with. Without trust, browsers will show a certificate warning and some features may still be blocked.
 

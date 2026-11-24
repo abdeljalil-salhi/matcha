@@ -17,9 +17,9 @@ npm, or virtual environment is required on the host. The first run downloads
 images and dependencies; subsequent runs reuse Docker's build cache.
 
 Open [Matcha](http://localhost:5173), [API docs](http://localhost:8000/docs), or
-[Mailpit](http://localhost:8025). For other devices on the same Wi‑Fi/LAN, see
-[Local network access](docs/SETUP.md#local-network-access-lan--wi-fi). Use `make seed` for optional demo profiles and
-`make down` to stop the stack while keeping your database.
+[Mailpit](http://localhost:8025). For LAN/Wi‑Fi on other devices, run `make up-lan`
+(uses `.env.lan`; see [Local network access](docs/SETUP.md#local-network-access-lan--wi-fi)).
+Use `make seed` for optional demo profiles and `make down` to stop the stack.
 
 Run `make help` for commands or see the
 [development guide](docs/DEVELOPMENT.md).

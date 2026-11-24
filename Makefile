@@ -26,13 +26,13 @@ up: env ## Build and start the full app, waiting for frontend and API health
 
 dev: up ## Start the full Docker development stack with frontend hot reload
 
-up-local: ## Build and start localhost-only stack using .env.local
-	@test -f .env.local || (echo "Missing .env.local. Copy .env.local.example to .env.local and fill secrets." && exit 1)
-	MATCHA_ENV_FILE=.env.local $(COMPOSE) --env-file .env.local up --build -d --wait
-
-up-lan: ## Build and start LAN/Wi-Fi stack using .env
+up-local: ## Build and start localhost-only stack using .env
 	@test -f .env || $(MAKE) env
 	MATCHA_ENV_FILE=.env $(COMPOSE) --env-file .env up --build -d --wait
+
+up-lan: ## Build and start LAN/Wi-Fi stack using .env.lan
+	@test -f .env.lan || (echo "Missing .env.lan. Copy .env.lan.example to .env.lan and fill values." && exit 1)
+	MATCHA_ENV_FILE=.env.lan $(COMPOSE) --env-file .env.lan up --build -d --wait
 
 dev-local: up-local ## Start localhost-only stack (alias for up-local)
 
