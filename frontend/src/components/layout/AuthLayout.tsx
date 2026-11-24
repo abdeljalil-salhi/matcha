@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { StandaloneHeader, StandaloneFooter } from "./StandaloneChrome";
+import { LandingHeader, StandaloneFooter } from "./StandaloneChrome";
 
 interface AuthLayoutProps {
   eyebrow: string;
@@ -41,14 +40,11 @@ export function AuthLayout({
   pillLabel = "Continue",
 }: AuthLayoutProps) {
   return (
-    <div className="standalone-page">
-      <StandaloneHeader />
+    <div className="standalone-page auth-page">
+      <LandingHeader />
       <div className={`auth-layout${dissolving ? " is-dissolving" : ""}`}>
         <aside className="auth-aside">
-          <Link to="/" className="brand brand--light">
-            <span className="brand__mark" aria-hidden="true">m</span>
-            <span className="brand__word">matcha</span>
-          </Link>
+          <div aria-hidden="true" />
           <div className="auth-aside__content">
             <p className="eyebrow eyebrow--light">A better kind of meeting</p>
             <h2>Good chemistry starts with the little things.</h2>

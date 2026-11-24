@@ -8,6 +8,7 @@
   padding-block: 10px;
 }
 .landing__nav-actions { display: flex; align-items: center; gap: 10px; }
+.auth-page .landing__nav { border-bottom: 1px solid rgba(63, 107, 75, 0.08); }
 @media (max-width: 600px) {
   .landing__nav { flex-wrap: wrap; gap: 12px; }
   .landing__nav-actions { align-items: center; flex-wrap: wrap; }

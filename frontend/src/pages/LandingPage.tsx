@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/ui/Icon";
-import { SessionActions } from "../components/layout/SessionActions";
+import { LandingHeader } from "../components/layout/StandaloneChrome";
 
 export function LandingPage() {
   const { user } = useAuth();
@@ -9,25 +9,7 @@ export function LandingPage() {
 
   return (
     <div className="landing">
-      <header className="landing__nav container">
-        <Link to="/" className="brand">
-          <span className="brand__mark" aria-hidden="true">m</span>
-          <span className="brand__word">matcha</span>
-        </Link>
-        <div className="landing__nav-actions">
-          {user ? (
-            <>
-              <SessionActions />
-              <Link to="/discover" className="btn btn--primary btn--md">Open Matcha</Link>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn btn--ghost btn--md">Sign in</Link>
-              <Link to="/register" className="btn btn--primary btn--md">Get started</Link>
-            </>
-          )}
-        </div>
-      </header>
+      <LandingHeader />
 
       <main>
         <section className="hero container">
