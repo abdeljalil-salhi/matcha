@@ -44,6 +44,7 @@ export function AuthLayout({
       <LandingHeader />
       <div className={`auth-layout${dissolving ? " is-dissolving" : ""}`}>
         <aside className="auth-aside">
+          <div aria-hidden="true" />
           <div className="auth-aside__content">
             <p className="eyebrow eyebrow--light">A better kind of meeting</p>
             <h2>Good chemistry starts with the little things.</h2>
