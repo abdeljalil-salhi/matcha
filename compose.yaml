@@ -62,7 +62,17 @@ services:
       - ./data/places.json:/app/data/places.json:ro
       - ${TLS_CERTS_DIR:-./infra/certs}:/app/infra/certs:ro
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/api/health').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
+      # Vite serves HTTPS when TLS_CERT_FILE/TLS_KEY_FILE are set (.env.lan),
+      # plain HTTP otherwise (.env). The dev cert is self-signed, so skip
+      # verification for this loopback probe only.
+      test:
+        - CMD-SHELL
+        - >-
+          NODE_TLS_REJECT_UNAUTHORIZED=0 node --no-warnings -e
+          "const proto = process.env.TLS_CERT_FILE && process.env.TLS_KEY_FILE ? 'https' : 'http';
+          fetch(proto + '://127.0.0.1:5173/api/health')
+            .then(r => { if (!r.ok) process.exit(1); })
+            .catch(() => process.exit(1))"
       interval: 3s
       timeout: 5s
       retries: 30
