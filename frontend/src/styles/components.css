@@ -137,6 +137,13 @@
   background: var(--matcha-tint);
   border-color: var(--line-strong);
 }
+.icon-button--danger { color: var(--danger); border-color: rgba(184, 92, 92, 0.28); }
+.icon-button--danger:hover,
+.icon-button--danger.is-active {
+  background: rgba(184, 92, 92, 0.08);
+  border-color: rgba(184, 92, 92, 0.4);
+  color: var(--danger);
+}
 .icon-button svg {
   width: 20px;
   height: 20px;

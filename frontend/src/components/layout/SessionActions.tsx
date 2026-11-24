@@ -25,7 +25,7 @@ export function SessionActions() {
         ) : null}
       </Link>
       <NotificationMenu />
-      <SignOutButton />
+      <SignOutButton className="icon-button icon-button--danger" />
     </div>
   );
 }
