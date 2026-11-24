@@ -29,8 +29,8 @@
   grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 3.1vw;
-  padding-top: 1.6vw;
-  padding-bottom: 0.6vw;
+  padding-top: 4.5vw;
+  padding-bottom: 1.5vw;
 }
 .hero__copy h1 {
   margin: 1.1vw 0 1.2vw; font-size: clamp(2.4rem, 2.96vw, 4.4rem);
