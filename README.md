@@ -189,7 +189,6 @@ and workflow details.
 | [Development and CI](docs/DEVELOPMENT.md) | Tests, linting, formatting, and automated checks |
 | [UI screenshots](docs/EXAMPLES.md) | Fresh captures of the current application |
 | [Frontend guide](frontend/README.md) | Frontend structure and development details |
-| [Project subject](en.subject.pdf) | Original 42 requirements |
 
 ## Repository layout
 
