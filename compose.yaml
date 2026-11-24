@@ -22,7 +22,7 @@ services:
   mail:
     image: axllent/mailpit:v1.27
     ports:
-      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
+      - "${MAILPIT_BIND_HOST:-127.0.0.1}:${MAILPIT_PORT:-8025}:8025"
   setup:
     <<: *backend
     command: ["python", "-m", "server.manage", "migrate"]
@@ -32,7 +32,7 @@ services:
       setup:
         condition: service_completed_successfully
     ports:
-      - "127.0.0.1:${API_PORT:-8000}:8000"
+      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/api/health', timeout=2).read()"]
       interval: 3s
@@ -47,17 +47,20 @@ services:
       VITE_API_URL: /api
       API_PROXY_TARGET: http://api:8000
       VITE_USE_POLLING: "true"
+      TLS_CERT_FILE: ${TLS_CERT_FILE:-}
+      TLS_KEY_FILE: ${TLS_KEY_FILE:-}
     depends_on:
       api:
         condition: service_healthy
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+      - "${FRONTEND_BIND_HOST:-127.0.0.1}:${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ./frontend/src:/app/frontend/src:ro
       - ./frontend/public:/app/frontend/public:ro
       - ./frontend/index.html:/app/frontend/index.html:ro
       - ./frontend/vite.config.ts:/app/frontend/vite.config.ts:ro
       - ./data/places.json:/app/data/places.json:ro
+      - ${TLS_CERTS_DIR:-./infra/certs}:/app/infra/certs:ro
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/api/health').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
       interval: 3s

@@ -76,7 +76,14 @@ export function useCallController(userId: number | undefined) {
   }, [device, finish]);
 
   const acquire = useCallback(async (mode: CallMode, version: number) => {
-    if (!navigator.mediaDevices?.getUserMedia || !globalThis.RTCPeerConnection) throw new Error("Calling requires a supported browser and HTTPS (or localhost).");
+    if (!globalThis.RTCPeerConnection) throw new Error("Calling requires a browser with WebRTC support.");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error(
+        window.isSecureContext
+          ? "Calling requires camera or microphone access in this browser."
+          : "Calling requires HTTPS or localhost. On LAN, open Matcha over HTTPS or use a secure tunnel.",
+      );
+    }
     const acquired = await navigator.mediaDevices.getUserMedia({ audio: true, video: mode === "video" ? { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" } : false });
     if (version !== epoch.current) { stop(acquired); return null; }
     stream.current = acquired; setLocal(acquired);
