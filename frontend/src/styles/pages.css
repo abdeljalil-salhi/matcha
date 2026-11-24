@@ -43,7 +43,7 @@
   height: clamp(40px, 2.75vw, 56px); padding: 0 clamp(16px, 1.45vw, 30px);
   border-radius: 10px; font-size: clamp(0.85rem, 0.95vw, 1.15rem);
 }
-.hero__how { gap: 0.55vw; }
+
 .hero__trust {
   display: flex; flex-wrap: wrap; align-items: center; margin: 1.6vw 0 0; padding: 0; list-style: none;
 }
@@ -184,7 +184,7 @@
   background: #eaf0e2;
 }
 .hero__chip--place > svg { background: #f5eddb; }
-.hero__how svg { color: var(--matcha-dark); }
+
 
 /* ---------- Auth ---------- */
 .auth-layout {

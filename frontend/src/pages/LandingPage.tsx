@@ -22,9 +22,6 @@ export function LandingPage() {
             </p>
             <div className="hero__actions">
               <Link to={exploreTo} className="btn btn--primary btn--lg">Explore profiles</Link>
-              <a href="#why-matcha" className="btn btn--secondary btn--lg hero__how">
-                <Icon name="play" size={15} strokeWidth={2} /> See how Matcha works
-              </a>
             </div>
             <ul className="hero__trust">
               <li><Icon name="pin" size={15} strokeWidth={2} /> People nearby</li>
