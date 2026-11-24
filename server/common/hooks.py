@@ -28,7 +28,9 @@ def register_http_hooks(app: Flask) -> None:
         if request.method in {"GET", "HEAD", "OPTIONS"}:
             return
         origin = request.headers.get("Origin")
-        allowed_origins = {app.config["FRONTEND_URL"], request.host_url.rstrip("/")}
+        allowed_origins = set(app.config.get("ALLOWED_ORIGINS", []))
+        allowed_origins.add(app.config["FRONTEND_URL"])
+        allowed_origins.add(request.host_url.rstrip("/"))
         if origin is not None and origin not in allowed_origins:
             raise ApiError(
                 HTTPStatus.FORBIDDEN, "This origin cannot modify Matcha data."
@@ -59,8 +61,11 @@ def register_http_hooks(app: Flask) -> None:
         )
         response.headers["Referrer-Policy"] = "no-referrer"
         response.vary.add("Origin")
-        if request.headers.get("Origin") == app.config["FRONTEND_URL"]:
-            response.headers["Access-Control-Allow-Origin"] = app.config["FRONTEND_URL"]
+        origin = request.headers.get("Origin")
+        allowed_origins = set(app.config.get("ALLOWED_ORIGINS", []))
+        allowed_origins.add(app.config["FRONTEND_URL"])
+        if origin in allowed_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = (
                 "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS"

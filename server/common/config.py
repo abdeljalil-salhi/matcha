@@ -21,6 +21,30 @@ GOOGLE_SETTING_KEYS = (
 GOOGLE_CALLBACK_PATH = "/api/auth/google/callback"
 
 
+def _origin(value: str, name: str) -> str:
+    """Parse and validate an HTTP(S) browser origin.
+
+    Args:
+        value (str): Origin string to validate.
+        name (str): Setting name used in errors.
+
+    Returns:
+        str: Canonical ``scheme://netloc`` origin.
+    """
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or parsed.path not in {"", "/"}
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise RuntimeError(f"{name} must be an HTTP(S) origin.")
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
 def google_settings() -> dict[str, str]:
     """Read and validate the optional Google sign-in credentials.
 
@@ -57,17 +81,15 @@ def settings() -> Settings:
         Settings: Flask configuration and database connection settings.
     """
     load_dotenv()
-    frontend = urlsplit(os.environ.get("FRONTEND_URL", "http://localhost:5173"))
-    if (
-        frontend.scheme not in {"http", "https"}
-        or not frontend.hostname
-        or frontend.username
-        or frontend.password
-        or frontend.path not in {"", "/"}
-        or frontend.query
-        or frontend.fragment
-    ):
-        raise RuntimeError("FRONTEND_URL must be an HTTP(S) origin.")
+
+    frontend_url = _origin(
+        os.environ.get("FRONTEND_URL", "http://localhost:5173"), "FRONTEND_URL"
+    )
+    allowed_origins = [frontend_url]
+    for raw in os.environ.get("ALLOWED_ORIGINS", "").split(","):
+        value = raw.strip()
+        if value and (item := _origin(value, "ALLOWED_ORIGINS")) not in allowed_origins:
+            allowed_origins.append(item)
     dsn = os.environ.get("DATABASE_URL")
     if not dsn:
         dsn = make_conninfo(
@@ -101,7 +123,8 @@ def settings() -> Settings:
     return {
         "DATABASE_URL": dsn,
         "MATCHA_SECRET": os.environ.get("MATCHA_SECRET", ""),
-        "FRONTEND_URL": f"{frontend.scheme}://{frontend.netloc}",
+        "FRONTEND_URL": frontend_url,
+        "ALLOWED_ORIGINS": allowed_origins,
         **google_settings(),
         "COOKIE_SECURE": os.environ.get("COOKIE_SECURE", "true").lower() != "false",
         "MAX_CONTENT_LENGTH": MAX_PHOTO_BYTES + MULTIPART_OVERHEAD_BYTES,
