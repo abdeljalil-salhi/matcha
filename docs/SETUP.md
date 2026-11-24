@@ -14,8 +14,9 @@ and mail services. The first run downloads images and dependencies.
 
 Startup creates missing `.env` files and generates independent development secrets
 for `POSTGRES_PASSWORD`, `MATCHA_SECRET`, and `SEED_PASSWORD`. Existing settings
-are preserved. Compose applies migrations before starting the API and waits for
-API/frontend readiness. Demo profiles are optional: run `make seed` separately.
+are preserved. `.env`/`.env.example` are localhost-only defaults; `.env.lan`/`.env.lan.example`
+are for LAN/Wi‑Fi access. Compose applies migrations before starting the API and
+waits for API/frontend readiness. Demo profiles are optional: run `make seed`.
 
 Use `make logs`, `make ps`, or `make health` to inspect the stack. `make down`
 stops services while preserving the database. Run `make up` after code or dependency
@@ -24,7 +25,8 @@ changes, and `make restart` after editing environment settings.
 `FRONTEND_URL` must match the exact frontend browser origin (by default
 `http://localhost:5173`). If changing `FRONTEND_PORT`, update that origin too.
 `API_PORT` changes the published API/docs port; the frontend's internal proxy
-continues to use the backend container on port 8000.
+continues to use the backend container on port 8000. For LAN/Wi‑Fi access, also
+set `ALLOWED_ORIGINS` to extra browser origins you will use (comma-separated).
 
 ## Local URLs
 
@@ -128,6 +130,63 @@ submitting personal or confidential information. Autocomplete stays local;
 external calls happen only when a user saves a location. A self-hosted provider
 is preferable for real users' GPS data. The location form and map credit
 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
+
+## Local network access (LAN / Wi‑Fi)
+
+Use the dedicated LAN env file to avoid mixing localhost and LAN settings:
+
+1. Copy the template: `cp .env.lan.example .env.lan`
+2. Set your LAN IP/hostname and secrets in `.env.lan`. For camera/mic calls on other devices, prefer HTTPS + a hostname Google accepts (e.g. `192.168.1.55.sslip.io`) and configure `TLS_CERT_FILE`/`TLS_KEY_FILE` (see below).
+3. Start the LAN stack:
+   ```sh
+   make up-lan
+   ```
+4. Open the `FRONTEND_URL` from `.env.lan` on another device on the same Wi‑Fi.
+
+`make up-local` (or `make up`) uses `.env` for localhost-only HTTP. Keep `VITE_API_URL=/api` (Docker default) so the browser talks same-origin through the Vite proxy. Do not expose these dev ports to untrusted networks.
+
+### Audio/video calls over LAN
+
+WebRTC signaling already works over HTTP polling. For media:
+
+- **Same LAN/Wi‑Fi**: TURN is usually **not required**. Blank `CALL_STUN_URLS`/`CALL_TURN_URLS` are fine when browsers can make a direct peer connection.
+- **Browser secure context required**: camera/microphone access requires **HTTPS or localhost**. A plain `http://192.168.x.x:5173` page is usually not a secure context on phones/laptops, so `getUserMedia` will fail even though the call UI loads. For real camera/mic calls across LAN devices, serve Matcha over HTTPS (trusted local cert/reverse proxy) or use a secure tunnel. This is a browser security constraint, not a TURN issue.
+- **Different networks/NAT**: configure a reachable TURN server (`CALL_STUN_URLS`, `CALL_TURN_URLS`, `CALL_TURN_SECRET`, optionally `CALL_RELAY_ONLY=true`) as documented in [CALLS.md](CALLS.md). The bundled `compose.turn.yaml` is for public relay hosts; its coturn config denies private/loopback peers and is not intended for internal-network relay testing.
+
+## HTTPS for LAN (recommended for calls)
+
+Use HTTPS so other devices get a secure context for camera/microphone. The easiest dev path is `mkcert`.
+
+1. Install [mkcert](https://github.com/FiloSottile/mkcert) and trust its local CA on your dev machine:
+   ```sh
+   mkcert -install
+   ```
+2. Generate a cert that includes your LAN IP/hostname:
+   ```sh
+   cd infra/certs
+   mkcert 192.168.1.55 localhost 127.0.0.1 ::1
+   mv 192.168.1.55+3.pem dev.crt
+   mv 192.168.1.55+3-key.pem dev.key
+   cd ../..
+   ```
+3. In `.env.lan`, point Vite at the cert and switch the browser origin to HTTPS:
+   ```ini
+   FRONTEND_URL=https://192.168.1.55.sslip.io:5173
+   ALLOWED_ORIGINS=https://192.168.1.55.sslip.io:5173,https://192.168.1.55:5173,http://localhost:5173
+   COOKIE_SECURE=true
+   TLS_CERT_FILE=/app/infra/certs/dev.crt
+   TLS_KEY_FILE=/app/infra/certs/dev.key
+   ```
+4. Recreate services:
+   ```sh
+   make up-lan
+   ```
+5. Trust the cert on other devices. The simplest way is to install mkcert's local CA (`mkcert -CAROOT` shows it) on the phone/laptop you test with. Without trust, browsers will show a certificate warning and some features may still be blocked.
+
+Notes:
+- Vite serves the frontend over HTTPS; it proxies `/api` to the internal HTTP API container. Browser traffic stays same-origin HTTPS.
+- If you use a different port/hostname, include it in the mkcert command and in `FRONTEND_URL`/`ALLOWED_ORIGINS`.
+- For a more production-like setup, put Nginx/Caddy/Traefik in front with TLS and proxy to frontend/API; the same `FRONTEND_URL=https://...` and `COOKIE_SECURE=true` rules apply.
 
 ## Stop the stack
 

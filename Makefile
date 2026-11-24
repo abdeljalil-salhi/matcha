@@ -11,7 +11,7 @@ export MATCHA_WORKSPACE := $(CURDIR)
 
 .PHONY: help env install backend-install frontend-install up down restart build \
 	backend-build frontend-build dev frontend logs ps health migrate seed shell \
-	db-shell format lint test backend-test frontend-test smoke check
+	db-shell format lint test backend-test frontend-test smoke check up-local up-lan dev-local dev-lan
 
 help: ## List development commands
 	@awk 'BEGIN { FS = ":.*## "; printf "Usage: make <target>\n\n" } /^[a-zA-Z][a-zA-Z0-9_-]*:.*## / { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -25,6 +25,18 @@ up: env ## Build and start the full app, waiting for frontend and API health
 	$(COMPOSE) up --build -d --wait
 
 dev: up ## Start the full Docker development stack with frontend hot reload
+
+up-local: ## Build and start localhost-only stack using .env
+	@test -f .env || $(MAKE) env
+	MATCHA_ENV_FILE=.env $(COMPOSE) --env-file .env up --build -d --wait
+
+up-lan: ## Build and start LAN/Wi-Fi stack using .env.lan
+	@test -f .env.lan || (echo "Missing .env.lan. Copy .env.lan.example to .env.lan and fill values." && exit 1)
+	MATCHA_ENV_FILE=.env.lan $(COMPOSE) --env-file .env.lan up --build -d --wait
+
+dev-local: up-local ## Start localhost-only stack (alias for up-local)
+
+dev-lan: up-lan ## Start LAN/Wi-Fi stack (alias for up-lan)
 
 frontend: env ## Start the frontend container and its API dependencies
 	$(COMPOSE) up --build -d --wait frontend

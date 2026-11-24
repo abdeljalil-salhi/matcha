@@ -18,6 +18,14 @@ Run the normal migration/setup and frontend commands. `014_calls.sql` adds call 
 
 Camera/microphone capture requires HTTPS or localhost. Two localhost browser sessions can test direct calling, using different accounts with mutual likes. Blank ICE settings are sufficient only when the browser/network can establish a direct connection; they do not establish cross-network reliability. The browser may require another click on **Play call audio** if autoplay is blocked.
 
+## LAN / Wi‑Fi
+
+For same-network devices, expose the dev stack and set the browser origin as described in [SETUP.md](SETUP.md#local-network-access-lan--wi-fi). Keep `VITE_API_URL=/api` so requests stay same-origin through the Vite proxy.
+
+- **Calls on the same LAN** usually do not need TURN; direct WebRTC peer connections can work when the network allows them.
+- **Camera/mic still require a secure context**. Opening `http://<lan-ip>:5173` from another device is not localhost; most browsers block `getUserMedia` on insecure origins. Use HTTPS (trusted local cert/reverse proxy) or a secure tunnel for real call testing on LAN devices.
+- **TURN** is for NAT/firewall/cross-network traversal. The optional `compose.turn.yaml` relay is configured for public peers and denies private/loopback peer addresses, so it is not a drop-in fix for insecure-context LAN camera access.
+
 ## TURN for different networks
 
 Use a reachable authenticated TURN server for cross-network use. The API supports coturn REST-style temporary credentials. Configure the following environment variables and recreate the API:

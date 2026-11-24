@@ -10,6 +10,8 @@ and test dependencies run inside containers.
 make                 # Generate missing env files, build, migrate, and start everything
 make up              # Same as make
 make dev             # Same as make, with frontend hot reload
+make up-local        # Localhost-only stack using .env
+make up-lan          # LAN/Wi-Fi stack using .env.lan
 make seed            # Optional: populate 500 demo profiles
 make logs SERVICES='frontend api worker'
 make down            # Stop services, keeping the development database
@@ -34,6 +36,10 @@ When changing the frontend port, update `FRONTEND_URL` to its exact browser orig
 The frontend uses `/api`, which Vite proxies to `api:8000` inside Docker; browser
 requests do not require a Docker hostname or a separate API port setting.
 Stop any existing host Vite server before starting Docker on the same port.
+
+For LAN/Wi‑Fi testing, copy `.env.lan.example` to `.env.lan`, fill in your LAN
+IP/hostname and secrets, then run `make up-lan`. Camera/mic calls still need
+HTTPS or localhost on the device browser (see [SETUP.md](SETUP.md#https-for-lan-recommended-for-calls)).
 
 Compose commands honor local overrides and project settings. Keep the same
 configuration for an existing database volume. `COMPOSE` and `DOCKER` can override

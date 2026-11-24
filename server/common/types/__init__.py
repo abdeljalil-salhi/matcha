@@ -12,6 +12,7 @@ class Settings(TypedDict):
     DATABASE_URL: str
     MATCHA_SECRET: str
     FRONTEND_URL: str
+    ALLOWED_ORIGINS: list[str]
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
     GOOGLE_REDIRECT_URI: str
