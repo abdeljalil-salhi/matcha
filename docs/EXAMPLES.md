@@ -1,18 +1,45 @@
-# UI examples
+# UI screenshots
 
-These screenshots show the current frontend flows. They are also served by the
-dev server at `http://localhost:5173/examples/<filename>`.
+## Discovery and profiles
 
-| Example | What it shows | File |
-| --- | --- | --- |
-| Location search | Typing `ber` suggests Berlin, Bergen, Kreuzberg and Neukölln from the built-in place list. Example chips let users try other cities. | [location-search.jpg](../frontend/public/examples/location-search.jpg) |
-| Saved location | After saving Berlin, the profile hero and location summary both show the new area. The value survives a reload. | [profile-location-saved.jpg](../frontend/public/examples/profile-location-saved.jpg) |
-| World map | Featured city pins on real OpenStreetMap tiles. Click a pin to fly to it. | [map-world.jpg](../frontend/public/examples/map-world.jpg) |
-| Neighborhoods | Zooming into Paris reveals Montmartre, Latin Quarter, Le Marais and Belleville pins. | [map-neighborhoods.jpg](../frontend/public/examples/map-neighborhoods.jpg) |
-| Photo gallery | Drag-and-drop uploads, crop/rotate/filter editor, primary photo switching and deletion. | [photo-gallery.jpg](../frontend/public/examples/photo-gallery.jpg) |
-| Discovery | Profile cards with photos, tags, fame and location. | [discovery.jpg](../frontend/public/examples/discovery.jpg) |
-| Mobile location | The same location picker and example chips at a 390px viewport. | [mobile-location.jpg](../frontend/public/examples/mobile-location.jpg) |
+![Discovery with filters and populated profile cards](../frontend/public/examples/discovery.jpg)
 
-To regenerate them, run `node /tmp/opencode/examples-capture.mjs` with
-`PLAYWRIGHT_BROWSERS_PATH=/tmp/opencode/pw/browsers` while the dev server and API
-are running.
+![Public profile with interests and common ground](../frontend/public/examples/profile.jpg)
+
+## People map
+
+The worldwide view groups opted-in members into clusters. Location sharing is
+controlled separately from the matching area.
+
+![Worldwide people map](../frontend/public/examples/map-world.jpg)
+
+![Matching-area map picker](../frontend/public/examples/location-map.jpg)
+
+## Profile management
+
+![Photo gallery and primary-photo controls](../frontend/public/examples/photo-gallery.jpg)
+
+![Saved manual matching area](../frontend/public/examples/profile-location-saved.jpg)
+
+![Manual location search suggestions](../frontend/public/examples/location-search.jpg)
+
+<img src="../frontend/public/examples/mobile-location.jpg" alt="Location controls at a 390-pixel mobile viewport" width="390">
+
+## Conversations and invitations
+
+Chat includes date-plan history, read receipts, and call controls. Cancelled cards
+use the yellow status treatment.
+
+![Conversation with cancelled invitation cards](../frontend/public/examples/chat.jpg)
+
+The invitation preview reflects the draft's activity, title, meeting place, and
+notes. This capture shows an unsent draft with the date still to be chosen.
+
+![Live invitation preview](../frontend/public/examples/invitation-preview.jpg)
+
+## Calendar
+
+The account menu opens the monthly calendar. This capture shows its empty state;
+pending invitations and confirmed plans appear here when available.
+
+![Monthly calendar empty state](../frontend/public/examples/calendar.jpg)
