@@ -100,6 +100,9 @@ export function AppShell() {
                   <Link to="/profile/me" onClick={() => setUserOpen(false)}>
                     My profile
                   </Link>
+                  <Link to="/calendar" onClick={() => setUserOpen(false)}>
+                    Calendar
+                  </Link>
                   <Link to="/settings" onClick={() => setUserOpen(false)}>
                     Settings
                   </Link>
@@ -141,6 +144,9 @@ export function AppShell() {
             ))}
             <NavLink to="/profile/me" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
               <Icon name="user" size={19} /> My profile
+            </NavLink>
+            <NavLink to="/calendar" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
+              <Icon name="calendar" size={19} /> Calendar
             </NavLink>
             <NavLink to="/settings" className="mobile-nav__link" onClick={() => setMobileOpen(false)}>
               <Icon name="sliders" size={19} /> Settings

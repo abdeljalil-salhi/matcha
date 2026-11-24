@@ -37,7 +37,8 @@ def unread_counts(recipient: int) -> UnreadCounts:
         .execute(
             GROUPED_INBOX + """
         SELECT count(*) FILTER (WHERE unread_count > 0) AS total,
-               coalesce(sum(unread_count) FILTER (WHERE kind = 'message'), 0)::bigint
+               coalesce(sum(unread_count) FILTER (
+                   WHERE kind IN ('message', 'plan')), 0)::bigint
                    AS messages
         FROM grouped""",
             {"recipient": recipient},

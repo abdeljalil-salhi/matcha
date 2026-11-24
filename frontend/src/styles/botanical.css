@@ -494,3 +494,113 @@ body {
   .notification-menu__foot { flex: none; }
   .notification-item { padding: 12px 14px; gap: 10px; }
 }
+
+/* Shared arrangements inside a conversation. */
+.date-planner-bar { flex: none; border-bottom: 1px solid var(--line); background: #f3f5ec; }
+.date-planner-bar__open { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 20px; background: transparent; border: 0; color: var(--matcha-dark); text-align: left; font-size: .78rem; cursor: pointer; }
+.date-planner-bar__open > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.date-planner-bar__open > svg { flex: none; }
+.date-planner-modal.modal { width: min(780px, 100%); max-width: 780px; display: flex; flex-direction: column; max-height: calc(100dvh - 40px); overflow: hidden; }
+.date-planner-modal .modal__head { flex: none; align-items: center; }
+.date-planner-modal .modal__head > div { min-width: 0; }
+.date-planner-modal .modal__head > button { flex: none; }
+.date-planner-modal .modal__body { min-height: 0; overflow-y: auto; }
+.date-planner { display: grid; gap: 16px; min-width: 0; }
+.date-planner__toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+.date-planner__toolbar > div { display: flex; gap: 4px; padding: 4px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 999px; }
+.date-planner__toolbar > div button { min-height: 36px; padding: 6px 12px; border: 0; background: transparent; border-radius: 999px; font-size: .8rem; font-weight: 600; cursor: pointer; }
+.date-planner__toolbar button[aria-pressed='true'] { background: var(--matcha-light); color: var(--matcha-dark); }
+.date-planner__empty { padding: 32px 12px; text-align: center; color: var(--muted); }
+.date-plan-card { display: grid; gap: 12px; min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(#fffdf9, #faf9f2); }
+.date-plan-card header { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.date-plan-card h3 { font-size: 1.3rem; font-weight: 700; overflow-wrap: anywhere; }
+.date-plan-status { padding: 5px 10px; border-radius: 999px; background: #f2ead4; color: #765416; font-size: .72rem; font-weight: 600; }
+.date-plan-status--accepted { background: #e2eddc; color: var(--matcha-dark); }
+.date-plan-status--cancelled, .date-plan-status--declined { background: #eeeae4; color: var(--muted); }
+.date-plan-card__partner { color: var(--matcha-dark); font-size: .85rem; }
+.date-plan-card__detail { display: flex; align-items: flex-start; gap: 10px; color: var(--ink-soft); font-size: .85rem; overflow-wrap: anywhere; }
+.date-plan-card__detail svg { flex: none; margin-top: 2px; color: var(--matcha-dark); }
+.date-plan-card__notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
+.date-plan-card__actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.date-plan-form { display: grid; gap: 16px; }
+.date-plan-form h3 { font-size: 1.3rem; font-weight: 700; }
+.date-plan-form label { display: grid; gap: 6px; font-size: .85rem; font-weight: 600; }
+.date-plan-form .input { width: 100%; min-width: 0; }
+.date-plan-form__time { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.date-plan-form__actions, .date-plan-cancel > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.date-plan-cancel { display: grid; gap: 16px; }
+.chat-thread__controls > .icon-button { width: 36px; height: 36px; }
+@media (max-width: 600px) {
+  .date-planner-modal .modal__head, .date-planner-modal .modal__body { padding: 16px; }
+  .date-plan-form__time { grid-template-columns: minmax(0, 1fr); }
+  .date-planner__toolbar { align-items: stretch; }
+  .date-planner__toolbar > div { flex: 1; justify-content: center; }
+  .date-plan-card { padding: 16px; }
+  .chat-thread__controls { gap: 4px; }
+}
+
+/* Plan revisions remain distinct from conversational message groups. */
+.bubble.bubble--plan {
+  background: #f7f8f0;
+  border: 1px solid #dce3d3;
+  color: #243d2c;
+  max-width: min(100%, 26rem);
+}
+.plan-message { display: grid; gap: .65rem; padding: .25rem; overflow-wrap: anywhere; }
+.plan-message__label { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 700; }
+.plan-message h3 { margin: 0; font-size: 1.25rem; }
+.plan-message p { margin: 0; font-size: .9rem; }
+.plan-message__notes { white-space: pre-wrap; }
+.plan-message .btn { justify-self: start; margin-top: .25rem; }
+
+.message-group .bubble--plan .plan-message__schedule {
+  margin: 0;
+  color: var(--muted);
+  font-size: .625rem;
+  line-height: 1.5;
+}
+.bubble--plan .plan-message__schedule time {
+  display: inline;
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: start;
+}
+
+.calendar-page { padding-top: 36px; padding-bottom: 48px; }
+.plans-calendar-layout { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); gap: 24px; align-items: start; }
+.plans-calendar { min-width: 0; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow-sm); }
+.plans-calendar__header, .calendar-agenda > header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 20px; }
+.plans-calendar__header h2, .calendar-agenda h2 { margin: 0; font-size: 1.35rem; }
+.plans-calendar__header > div { display: flex; align-items: center; gap: 8px; }
+.plans-calendar__weekdays, .plans-calendar__days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.plans-calendar__weekdays { background: #f3f5ec; color: var(--matcha-dark); font-size: .75rem; font-weight: 600; text-align: center; }
+.plans-calendar__weekdays > span { padding: 12px 4px; }
+.plans-calendar__day { min-width: 0; min-height: 94px; padding: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; border: 0; border-top: 1px solid var(--line); border-right: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; font-size: .85rem; }
+.plans-calendar__day:nth-child(7n) { border-right: 0; }
+.plans-calendar__day--outside { color: var(--muted); background: #faf9f4; }
+.plans-calendar__day:hover, .plans-calendar__day[aria-pressed='true'] { background: #e8eedf; }
+.plans-calendar__day[aria-current='date'] > span:first-child { background: var(--matcha-dark); color: white; border-radius: 50%; width: 25px; height: 25px; display: grid; place-items: center; margin: -3px; }
+.plans-calendar__count { display: inline-block; border-radius: 999px; padding: 3px 7px; background: #e2ebd8; color: var(--matcha-dark); font-size: .65rem; font-weight: 600; white-space: nowrap; }
+.plans-calendar__timezone { margin: 0; padding: 14px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .75rem; }
+.calendar-agenda { min-width: 0; display: grid; gap: 14px; }
+.calendar-agenda > header { padding: 0 0 6px; }
+.calendar-agenda .empty-state { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 32px 20px; }
+.calendar-plan { min-width: 0; padding: 20px; display: grid; justify-items: start; gap: 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); overflow-wrap: anywhere; }
+.calendar-plan h3 { margin: 0; font-size: 1.25rem; }
+.calendar-plan p { margin: 0; font-size: .8rem; color: var(--ink-soft); display: flex; align-items: flex-start; gap: 8px; }
+.calendar-plan p svg { flex: none; margin-top: 2px; }
+.calendar-plan .calendar-plan__partner { color: var(--matcha-dark); }
+.calendar-plan > a { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; }
+@media (max-width: 900px) {
+  .plans-calendar-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .plans-calendar__header { padding: 16px 12px; }
+  .plans-calendar__header h2 { font-size: 1.15rem; }
+  .plans-calendar__header > div { gap: 4px; }
+  .plans-calendar__day { min-height: 66px; padding: 8px 5px; gap: 9px; }
+  .plans-calendar__count-label { display: none; }
+  .plans-calendar__timezone { padding: 12px; }
+}

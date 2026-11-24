@@ -10,7 +10,7 @@ export function groupMessages(messages: Message[]): Message[][] {
     const time = new Date(message.created_at);
     const previousTime = previous ? new Date(previous.created_at) : null;
     const gap = previousTime ? time.getTime() - previousTime.getTime() : Infinity;
-    if (group && previous?.sender_id === message.sender_id && previousTime
+    if (!message.plan_id && !previous?.plan_id && group && previous?.sender_id === message.sender_id && previousTime
       && time.toDateString() === previousTime.toDateString() && gap >= 0 && gap < GROUP_WINDOW_MS) {
       group.push(message);
     } else {

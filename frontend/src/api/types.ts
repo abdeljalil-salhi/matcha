@@ -1,6 +1,7 @@
+import type { DatePlan } from "./types/plans";
 export type Gender = "woman" | "man" | "nonbinary" | "other";
 export type LocationSource = "manual" | "gps";
-export type NotificationKind = "like" | "visit" | "message" | "match" | "unlike";
+export type NotificationKind = "like" | "visit" | "message" | "match" | "unlike" | "plan";
 export type SortKey = "recommended" | "age" | "location" | "fame" | "common_tags" | "newest";
 export type SortDirection = "asc" | "desc";
 
@@ -142,6 +143,10 @@ export interface MessageReceipts {
 }
 
 export interface Message {
+  plan_id?: number | null;
+  plan_version?: number | null;
+  plan_action?: "propose" | "reschedule" | "accept" | "decline" | "cancel" | "connection_ended" | null;
+  plan_snapshot?: DatePlan | null;
   id: number;
   sender_id: number;
   recipient_id: number;

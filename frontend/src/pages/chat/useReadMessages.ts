@@ -27,7 +27,7 @@ export function useReadMessages(userId: number, messages: Message[], enabled: bo
         attemptedAt.current.delete(item.id);
         continue;
       }
-      if (item.kind !== "message" || item.actor_id !== userId ||
+      if ((item.kind !== "message" && item.kind !== "plan") || item.actor_id !== userId ||
           item.message_id === null || !displayed.has(item.message_id) ||
           pending.current.has(item.id)) continue;
       const now = Date.now();

@@ -7,6 +7,7 @@ import { CheckEmailPage } from "./pages/auth/CheckEmailPage";
 import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
+import { CalendarPage } from "./pages/CalendarPage";
 import { ChatPage } from "./pages/chat/ChatPage";
 import { LandingPage } from "./pages/LandingPage";
 import { MapPage } from "./pages/MapPage";
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="visitors" element={<PeopleListPage mode="visitors" />} />
         <Route path="blocks" element={<PeopleListPage mode="blocks" />} />
         <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
         <Route path="chat" element={<ChatPage />} />
         <Route path="chat/:id" element={<ChatPage />} />
         <Route path="settings" element={<SettingsPage />} />

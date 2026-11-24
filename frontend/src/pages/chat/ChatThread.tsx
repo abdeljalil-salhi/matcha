@@ -1,7 +1,9 @@
+import { PlanMessage } from "../../components/plans/PlanMessage";
+import { DatePlanner } from "../../components/plans/DatePlanner";
 import { ConversationMenu } from "./ConversationMenu";
 import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, ApiError, type ChatGif, type Conversation, type Message, type MessageReceipts } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationsContext";
@@ -47,6 +49,14 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [search, setSearch] = useSearchParams();
+  const plansOpen = search.get("plans") === "1";
+  const setPlansOpen = useCallback((open: boolean) => {
+    const next = new URLSearchParams(search);
+    if (open) next.set("plans", "1");
+    else next.delete("plans");
+    setSearch(next, { replace: true });
+  }, [search, setSearch]);
   const [gifOpen, setGifOpen] = useState(false);
   const oldestId = useRef<number | null>(null);
   const lastId = useRef<number | null>(null);
@@ -222,7 +232,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   };
 
   const relatedUnread = notifications.filter(
-    (entry) => entry.kind === "message" && entry.actor_id === userId && !entry.read_at,
+    (entry) => (entry.kind === "message" || entry.kind === "plan") && entry.actor_id === userId && !entry.read_at,
   );
 
   const unreadMessages = relatedUnread.reduce((count, item) => count + item.unread_count, 0);
@@ -288,6 +298,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           </span>
         </Link>
         <div className="chat-thread__controls">
+          <button type="button" className="icon-button" aria-label="Date plans" title="Plan a date" onClick={() => setPlansOpen(true)}><Icon name="calendar" size={19} /></button>
           <CallButtons userId={userId} />
           <ConversationMenu userId={userId} name={fullName(conversation)} onBlocked={onConversationUpdate} />
         </div>
@@ -297,6 +308,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           </button>
         ) : null}
       </header>
+
+      <DatePlanner userId={userId} name={fullName(conversation)} onAccessLost={onAccessLost} open={plansOpen} onOpenChange={setPlansOpen} onChanged={() => void poll()} />
 
       {error ? <ErrorBanner message={error} onRetry={() => void loadInitial()} /> : null}
 
@@ -332,8 +345,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
                 {!mine ? <Avatar photoId={conversation.photo_id} name={conversation} size="sm" /> : null}
                 <div className="message-group__content">
                   {group.map((message) => (
-                    <div key={message.id} className={`bubble${mine ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}`}>
-                      {message.kind === "gif" && message.media_url ? (
+                    <div key={message.id} className={`bubble${mine ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}${message.plan_id ? " bubble--plan" : ""}`}>
+                      {message.plan_id ? <PlanMessage message={message} onOpen={() => setPlansOpen(true)} /> : message.kind === "gif" && message.media_url ? (
                         <figure className="bubble__media">
                           <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
                           {message.body ? <figcaption>{message.body}</figcaption> : null}

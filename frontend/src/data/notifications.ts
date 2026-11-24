@@ -2,8 +2,9 @@ import type { Notification, NotificationKind } from "../api";
 
 export const NOTIFICATION_COPY: Record<
   NotificationKind,
-  { menu: string; page: string; icon: "heart" | "star" | "eye" | "message" | "heartOff" }
+  { menu: string; page: string; icon: "heart" | "star" | "eye" | "message" | "heartOff" | "calendar" }
 > = {
+  plan: { menu: "sent you a date plan invitation or update", page: "sent you a date plan invitation or update", icon: "calendar" },
   like: { menu: "liked you", page: "liked your profile", icon: "heart" },
   match: { menu: "is now connected with you", page: "is now connected with you", icon: "star" },
   visit: { menu: "viewed your profile", page: "visited your profile", icon: "eye" },
@@ -12,6 +13,7 @@ export const NOTIFICATION_COPY: Record<
 };
 
 export function notificationTarget(item: Notification): string {
+  if (item.kind === "plan") return `/chat/${item.actor_id}?plans=1`;
   if (item.kind === "message" || item.kind === "match") return `/chat/${item.actor_id}`;
   return `/profile/${item.actor_id}`;
 }

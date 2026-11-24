@@ -9,6 +9,7 @@ from ...common.limits import DEFAULT_PAGE_SIZE, MAX_PAGE_OFFSET, MAX_PAGE_SIZE
 from ...common.validation import query_int
 from ...notifications.events import notify
 from ...profiles.visibility import public_profile
+from ...plans.lifecycle import cancel_connection_plans
 from ..access import pair
 from ..types import LikeResult
 
@@ -95,6 +96,7 @@ def unlike(user_id: int) -> tuple[str, int]:
             .fetchone()
         )
         if deleted:
+            cancel_connection_plans(me, other)
             db().execute(
                 "INSERT INTO mutes VALUES (%s, %s) ON CONFLICT DO NOTHING", (me, other)
             )

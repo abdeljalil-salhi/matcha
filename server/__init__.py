@@ -35,6 +35,7 @@ def create_app(overrides: Mapping[str, object] | None = None) -> Flask:
     from .chat.routes import routes as chat
     from .docs.routes import routes as docs
     from .notifications.routes import routes as notifications
+    from .plans.routes import routes as plans
     from .user_map.routes import routes as user_map
     from .profiles.routes.discovery import routes as discovery
     from .location.routes import routes as location
@@ -74,6 +75,7 @@ def create_app(overrides: Mapping[str, object] | None = None) -> Flask:
         conversations,
         chat,
         notifications,
+        plans,
         user_map,
         discovery,
         location,
