@@ -13,9 +13,11 @@ import { PlanForm } from "./PlanForm";
 
 const PLAN_POLL_MS = 2000;
 
-export function DatePlanner({ userId, name, onAccessLost, open, onOpenChange, onChanged }: {
+export function DatePlanner({ userId, name, onAccessLost, open, onOpenChange, onChanged, requestedEdit, onRequestHandled }: {
   userId: number; name: string; onAccessLost: () => void;
   open: boolean; onOpenChange: (open: boolean) => void; onChanged?: () => void;
+  requestedEdit?: { plan: DatePlan; action: "reschedule" | "cancel" } | null;
+  onRequestHandled?: () => void;
 }) {
   const { user } = useAuth();
   const { notify } = useToast();
@@ -35,6 +37,15 @@ export function DatePlanner({ userId, name, onAccessLost, open, onOpenChange, on
   const mutationBusy = useRef(false);
   mutationBusy.current = busy;
   const refreshing = useRef(false);
+
+  useEffect(() => {
+    if (!open || !requestedEdit) return;
+    setScope("conversation");
+    setError(null);
+    setForm(requestedEdit.action === "reschedule" ? { plan: requestedEdit.plan } : null);
+    setCancelling(requestedEdit.action === "cancel" ? requestedEdit.plan : null);
+    onRequestHandled?.();
+  }, [open, requestedEdit, onRequestHandled]);
 
   const fetchPage = useCallback((offset = 0, signal?: AbortSignal) =>
     scope === "conversation" ? planApi.list(userId, offset, signal) : planApi.upcoming(offset, signal), [scope, userId]);

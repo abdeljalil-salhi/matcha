@@ -1,4 +1,7 @@
+import { PlanCardLayout } from "./PlanCardLayout";
+import { Link } from "react-router-dom";
 import type { Message } from "../../api";
+import type { DatePlan } from "../../api/types/plans";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 
@@ -7,20 +10,39 @@ const ACTION_LABELS = {
   decline: "Date declined", cancel: "Date cancelled", connection_ended: "Date cancelled",
 };
 
-export function PlanMessage({ message, onOpen }: { message: Message; onOpen: () => void }) {
+export function PlanMessage({ message, latestPlan, viewerId = 0, busy = false, onOpen, onRespond, onReschedule, onCancel }: {
+  message: Message;
+  latestPlan?: DatePlan;
+  viewerId?: number;
+  busy?: boolean;
+  onOpen: () => void;
+  onRespond?: (plan: DatePlan, action: "accept" | "decline") => void;
+  onReschedule?: (plan: DatePlan) => void;
+  onCancel?: (plan: DatePlan) => void;
+}) {
   const plan = message.plan_snapshot;
   if (!plan) return <p>{message.body}</p>;
-  const time = new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium", timeStyle: "short", timeZone: plan.timezone,
-  }).format(new Date(plan.starts_at));
-  return <article className="plan-message">
-    <div className="plan-message__label"><Icon name="calendar" size={20} />
-      {message.plan_action ? ACTION_LABELS[message.plan_action] : "Date plan"}</div>
-    <h3>{plan.title}</h3>
-    <p className="plan-message__schedule"><time dateTime={plan.starts_at}>{time} ({plan.timezone})</time></p>
-    <p>{plan.venue}</p>
-    {plan.notes ? <p className="plan-message__notes">{plan.notes}</p> : null}
-    {plan.cancellation_reason ? <p>{plan.cancellation_reason}</p> : null}
-    <Button size="sm" variant="secondary" onClick={onOpen}>Open date planner</Button>
-  </article>;
+  const current = latestPlan?.version === plan.version;
+  const active = current && new Date(plan.starts_at).getTime() > Date.now()
+    && [plan.creator_id, plan.partner_id].includes(viewerId)
+    && (plan.state === "proposed" || plan.state === "accepted");
+  const invited = plan.proposed_by !== viewerId;
+  const confirmed = plan.state === "accepted";
+  const pending = plan.state === "proposed";
+  return <PlanCardLayout plan={plan} label={message.plan_action ? ACTION_LABELS[message.plan_action] : "Date plan"} actions={<>
+      {active && pending && invited && onRespond ? <Button size="sm" disabled={busy}
+        icon={<Icon name="check" size={16} />} onClick={() => onRespond(plan, "accept")}>Accept</Button> : null}
+      {active && pending && onReschedule ? <Button size="sm" variant="secondary" disabled={busy}
+        icon={<Icon name="calendar" size={16} />} onClick={() => onReschedule(plan)}>Suggest another time</Button> : null}
+      {active && pending && invited && onRespond ? <Button size="sm" variant="ghost" disabled={busy}
+        onClick={() => onRespond(plan, "decline")}>Decline</Button> : null}
+      {active && pending && !invited && onCancel ? <Button size="sm" variant="ghost" disabled={busy}
+        onClick={() => onCancel(plan)}>Cancel invitation</Button> : null}
+      <Button size="sm" variant="secondary" onClick={onOpen}
+        icon={confirmed ? <Icon name="calendar" size={16} /> : undefined}>
+        {active && pending ? "View details" : "Open date planner"}</Button>
+      {confirmed && current ? <Link className="btn btn--secondary btn--sm" to="/calendar"><Icon name="calendar" size={16} /><span>View calendar</span></Link> : null}
+    </>}>
+    {latestPlan && !current ? <p className="plan-message__history">Previous update · open the planner for the latest details.</p> : null}
+  </PlanCardLayout>;
 }

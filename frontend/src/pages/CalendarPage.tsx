@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { planApi } from "../api/plans";
 import type { DatePlan } from "../api/types/plans";
-import { PLAN_LABELS } from "../components/plans/PlanCard";
+import { PlanCardLayout } from "../components/plans/PlanCardLayout";
 import { Button } from "../components/ui/Button";
 import { Icon } from "../components/ui/Icon";
 import { EmptyState, ErrorBanner, Spinner } from "../components/ui/Misc";
@@ -126,14 +126,8 @@ export function CalendarPage() {
           title={selected ? "A little room in your day." : "Your calendar has room."}
           description={selected ? "No upcoming plans on this day. Select another date to see your plans." : "No upcoming plans this month. Make a plan from one of your conversations."}
           action={<Link to="/chat" className="btn btn--secondary btn--sm">Go to conversations</Link>} /> : null}
-        {visible.map((plan) => <article key={plan.id} className="calendar-plan">
-          <span className={`date-plan-status date-plan-status--${plan.state}`}>{PLAN_LABELS[plan.state]}</span>
-          <h3>{plan.title}</h3>
-          <p className="calendar-plan__partner">With {plan.partner_first_name} {plan.partner_last_name}</p>
-          <p><Icon name="calendar" size={17} /><time dateTime={plan.starts_at}>{new Date(plan.starts_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</time></p>
-          <p><Icon name="pin" size={17} /><span>{plan.venue}</span></p>
-          <Link className="link-button" to={`/chat/${plan.other_id}?plans=1`}>Open date planner <Icon name="arrowRight" size={16} /></Link>
-        </article>)}
+        {visible.map((plan) => <PlanCardLayout key={plan.id} plan={plan} showContext timezone={timezone}
+          actions={<Link className="btn btn--secondary btn--sm" to={`/chat/${plan.other_id}?plans=1`}><Icon name="calendar" size={16} /><span>Open date planner</span></Link>} />)}
       </section>
     </div>
   </div>;

@@ -511,17 +511,6 @@ body {
 .date-planner__toolbar > div button { min-height: 36px; padding: 6px 12px; border: 0; background: transparent; border-radius: 999px; font-size: .8rem; font-weight: 600; cursor: pointer; }
 .date-planner__toolbar button[aria-pressed='true'] { background: var(--matcha-light); color: var(--matcha-dark); }
 .date-planner__empty { padding: 32px 12px; text-align: center; color: var(--muted); }
-.date-plan-card { display: grid; gap: 12px; min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(#fffdf9, #faf9f2); }
-.date-plan-card header { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
-.date-plan-card h3 { font-size: 1.3rem; font-weight: 700; overflow-wrap: anywhere; }
-.date-plan-status { padding: 5px 10px; border-radius: 999px; background: #f2ead4; color: #765416; font-size: .72rem; font-weight: 600; }
-.date-plan-status--accepted { background: #e2eddc; color: var(--matcha-dark); }
-.date-plan-status--cancelled, .date-plan-status--declined { background: #eeeae4; color: var(--muted); }
-.date-plan-card__partner { color: var(--matcha-dark); font-size: .85rem; }
-.date-plan-card__detail { display: flex; align-items: flex-start; gap: 10px; color: var(--ink-soft); font-size: .85rem; overflow-wrap: anywhere; }
-.date-plan-card__detail svg { flex: none; margin-top: 2px; color: var(--matcha-dark); }
-.date-plan-card__notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
-.date-plan-card__actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
 .date-plan-form { display: grid; gap: 16px; }
 .date-plan-form h3 { font-size: 1.3rem; font-weight: 700; }
 .date-plan-form label { display: grid; gap: 6px; font-size: .85rem; font-weight: 600; }
@@ -535,37 +524,58 @@ body {
   .date-plan-form__time { grid-template-columns: minmax(0, 1fr); }
   .date-planner__toolbar { align-items: stretch; }
   .date-planner__toolbar > div { flex: 1; justify-content: center; }
-  .date-plan-card { padding: 16px; }
   .chat-thread__controls { gap: 4px; }
 }
 
-/* Plan revisions remain distinct from conversational message groups. */
-.bubble.bubble--plan {
-  background: #f7f8f0;
-  border: 1px solid #dce3d3;
-  color: #243d2c;
-  max-width: min(100%, 26rem);
-}
-.plan-message { display: grid; gap: .65rem; padding: .25rem; overflow-wrap: anywhere; }
-.plan-message__label { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 700; }
-.plan-message h3 { margin: 0; font-size: 1.25rem; }
-.plan-message p { margin: 0; font-size: .9rem; }
-.plan-message__notes { white-space: pre-wrap; }
-.plan-message .btn { justify-self: start; margin-top: .25rem; }
-
-.message-group .bubble--plan .plan-message__schedule {
-  margin: 0;
-  color: var(--muted);
-  font-size: .625rem;
-  line-height: 1.5;
-}
-.bubble--plan .plan-message__schedule time {
-  display: inline;
-  margin: 0;
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  text-align: start;
+/* Date messages use the same card layout in both directions. */
+.message-group--plan { margin-top: 8px; }
+.message-group--plan .message-group__content { width: min(100%, 565px); max-width: calc(100% - 50px); }
+.message-group--mine.message-group--plan .message-group__content { max-width: 100%; }
+.message-group .bubble.bubble--plan { width: 100%; max-width: 100%; padding: 0; border: 0; background: transparent; color: var(--ink); box-shadow: none; }
+.plan-message { position: relative; isolation: isolate; display: grid; gap: 8px; width: 100%; padding: 16px 22px 14px; overflow: hidden; overflow-wrap: anywhere; border: 1px solid #e4e1d8; border-radius: 18px; background: #fdfbf7; box-shadow: 0 2px 5px #30281a08; }
+.plan-message::after { content: ''; position: absolute; inset: 0 0 0 auto; z-index: -1; width: 32%; pointer-events: none; }
+.plan-message--proposed { background: linear-gradient(110deg, #fdfbf7 45%, #f6eddd); }
+.plan-message__art { position: absolute; inset: 0 0 0 auto; z-index: -1; width: 34%; height: 100%; object-fit: cover; object-position: right 76%; mask-image: linear-gradient(to right, transparent, #000 65%); opacity: .95; pointer-events: none; }
+.plan-message--declined { background: linear-gradient(110deg, #fff9f7 35%, #f8e2df); border-color: #eac9c5; }
+.plan-message--declined .plan-message__label, .plan-message--declined .plan-message__details svg { color: #9a4541; }
+.plan-message--declined .plan-message__seal { background: linear-gradient(140deg, #f5d4ce, #e6aaa2); color: #99433c; }
+.plan-message--accepted { background: linear-gradient(110deg, #fafbf5 35%, #eef2df); border-color: #d9dfca; }
+.plan-message--accepted::after, .plan-message--declined::after, .plan-message--cancelled::after { width: 26%; background: url('/images/home-leaves-left.png') left center / cover no-repeat; mask-image: linear-gradient(to right, transparent, #000); opacity: .5; }
+.plan-message__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-right: 12%; }
+.plan-message__label { display: inline-flex; align-items: center; gap: 9px; color: var(--matcha-dark); font-size: .75rem; font-weight: 700; }
+.plan-message__label svg { flex: none; }
+.plan-message__status { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #eeeae4; color: var(--muted); font-size: .7rem; font-weight: 600; line-height: 1; }
+.plan-message__status--proposed { background: #f8ead0; color: #855311; }
+.plan-message__status--accepted { background: #dfebcf; color: #31592e; }
+.plan-message__status--declined { background: #f1cfca; color: #913f3a; }
+.plan-message--cancelled { background: linear-gradient(110deg, #fffdf5 35%, #f5e9c4); border-color: #e5d6a8; }
+.plan-message--cancelled .plan-message__label, .plan-message--cancelled .plan-message__details svg { color: #8a6a27; }
+.plan-message__status--cancelled { background: #f1e2b5; color: #7d5e1d; }
+.plan-message--cancelled .plan-message__seal { background: linear-gradient(140deg, #f5eac7, #dfc774); color: #806020; }
+.plan-message h3 { position: relative; max-width: 83%; margin: 0 0 2px; font-size: 1.45rem; line-height: 1.2; }
+.plan-message__details { display: grid; gap: 6px; width: 84%; }
+.plan-message__details p, .message-group .bubble--plan .plan-message__details p { display: flex; align-items: flex-start; gap: 10px; margin: 0; color: var(--ink-soft); font-size: .75rem; line-height: 1.45; }
+.plan-message__details svg { flex: none; margin-top: 1px; color: var(--matcha-dark); }
+.bubble--plan .plan-message__schedule time { display: inline; margin: 0; color: inherit; font-size: inherit; line-height: inherit; text-align: start; }
+.plan-message__timezone { font-size: inherit; }
+.plan-message__notes > span { white-space: pre-wrap; }
+.plan-message__seal { position: absolute; top: 42%; right: 8%; z-index: -1; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: var(--matcha-dark); background: linear-gradient(140deg, #dce9c7, #b8d28a); }
+.plan-message__history, .message-group .bubble--plan .plan-message__history { margin: 0; color: var(--muted); font-size: .65rem; }
+.plan-message__actions { position: relative; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-top: 5px; }
+.plan-message__actions .btn { min-height: 32px; padding: 6px 12px; gap: 7px; font-size: .73rem; border-radius: 10px; white-space: normal; }
+.plan-message__actions .btn svg { flex: none; }
+.plan-message__actions .btn--ghost { background: #fdfbf7c9; }
+@media (max-width: 600px) {
+  .message-group--plan .message-group__content { max-width: calc(100% - 44px); }
+  .plan-message { padding: 14px; border-radius: 15px; }
+  .plan-message__header { padding-right: 0; }
+  .plan-message__label { font-size: .7rem; }
+  .plan-message h3 { font-size: 1.25rem; }
+  .plan-message__details { width: 100%; }
+  .plan-message__art { opacity: .3; width: 42%; }
+  .plan-message__seal { right: 5%; opacity: .35; }
+  .plan-message__actions { gap: 6px; }
+  .plan-message__actions .btn { padding: 6px 9px; }
 }
 
 .calendar-page { padding-top: 36px; padding-bottom: 48px; }
@@ -587,12 +597,6 @@ body {
 .calendar-agenda { min-width: 0; display: grid; gap: 14px; }
 .calendar-agenda > header { padding: 0 0 6px; }
 .calendar-agenda .empty-state { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 32px 20px; }
-.calendar-plan { min-width: 0; padding: 20px; display: grid; justify-items: start; gap: 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); overflow-wrap: anywhere; }
-.calendar-plan h3 { margin: 0; font-size: 1.25rem; }
-.calendar-plan p { margin: 0; font-size: .8rem; color: var(--ink-soft); display: flex; align-items: flex-start; gap: 8px; }
-.calendar-plan p svg { flex: none; margin-top: 2px; }
-.calendar-plan .calendar-plan__partner { color: var(--matcha-dark); }
-.calendar-plan > a { display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; }
 @media (max-width: 900px) {
   .plans-calendar-layout { grid-template-columns: minmax(0, 1fr); }
 }
@@ -604,3 +608,12 @@ body {
   .plans-calendar__count-label { display: none; }
   .plans-calendar__timezone { padding: 12px; }
 }
+
+
+.plan-message__context { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; max-width: 84%; margin: 0 0 3px; color: var(--matcha-dark); font-size: .75rem; }
+.plan-message__context > span + span { color: var(--muted); }
+.calendar-agenda .plan-message { padding: 16px; }
+.calendar-agenda .plan-message__header { padding-right: 0; }
+.calendar-agenda .plan-message__details { width: 100%; }
+.calendar-agenda .plan-message__art { opacity: .45; }
+.calendar-agenda .plan-message__seal { opacity: .4; right: 5%; }

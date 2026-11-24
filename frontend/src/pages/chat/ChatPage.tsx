@@ -79,6 +79,7 @@ export function ChatPage() {
       <header className="page-heading page-heading--compact">
         <p className="eyebrow">Messages</p>
         <h1>Your conversations</h1>
+        <p className="lead">Keep the conversation flowing, from first hello to real plans.</p>
       </header>
 
       {error ? <ErrorBanner message={error} onRetry={() => void loadConversations()} /> : null}

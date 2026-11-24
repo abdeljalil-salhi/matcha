@@ -1,3 +1,4 @@
+import { PLAN_ACTIVITIES } from "../src/data/planActivities";
 import { PlanMessage } from "../src/components/plans/PlanMessage";
 import { message } from "./fixtures";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -153,6 +154,67 @@ test.each([['propose', 'Date invitation'], ['reschedule', 'New date proposal'],
   },
 );
 
+
+function messageCard(entry: DatePlan, latest = entry, viewerId = 1) {
+  const respond = vi.fn();
+  const reschedule = vi.fn();
+  const cancel = vi.fn();
+  render(<MemoryRouter><PlanMessage message={{ ...message, plan_id: entry.id, plan_action: "propose", plan_snapshot: entry }}
+    latestPlan={latest} viewerId={viewerId} onOpen={vi.fn()} onRespond={respond} onReschedule={reschedule} onCancel={cancel} /></MemoryRouter>);
+  return { respond, reschedule, cancel };
+}
+
+test("only the current proposal's recipient can accept or decline directly from chat", () => {
+  const { respond, reschedule } = messageCard(plan);
+  fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+  expect(respond).toHaveBeenCalledWith(plan, "accept");
+  fireEvent.click(screen.getByRole("button", { name: "Decline" }));
+  expect(respond).toHaveBeenCalledWith(plan, "decline");
+  fireEvent.click(screen.getByRole("button", { name: "Suggest another time" }));
+  expect(reschedule).toHaveBeenCalledWith(plan);
+  expect(screen.queryByRole("button", { name: "Cancel invitation" })).toBeNull();
+});
+
+test("the proposer sees cancellation and rescheduling instead of accepting their own invitation", () => {
+  const { cancel } = messageCard(plan, plan, 2);
+  expect(screen.queryByRole("button", { name: "Accept" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Decline" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel invitation" }));
+  expect(cancel).toHaveBeenCalledWith(plan);
+});
+
+test("superseded proposal messages retain their details without response controls", () => {
+  messageCard(plan, { ...plan, version: 2, state: "accepted" });
+  expect(screen.queryByRole("button", { name: "Accept" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Suggest another time" })).toBeNull();
+  expect(screen.getByText(/Previous update/)).toBeTruthy();
+  expect(screen.getByText(plan.venue)).toBeTruthy();
+});
+
+test("confirmed cards link to the calendar and never offer proposal responses", () => {
+  messageCard({ ...plan, state: "accepted", version: 2 });
+  expect(screen.getByText("Confirmed")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Accept" })).toBeNull();
+  expect(screen.getByRole("link", { name: "View calendar" }).getAttribute("href")).toBe("/calendar");
+});
+
+test("expired proposals have no response controls", () => {
+  messageCard({ ...plan, starts_at: "2020-01-01T00:00:00Z" });
+  expect(screen.queryByRole("button", { name: "Accept" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Suggest another time" })).toBeNull();
+});
+
+
+test.each(PLAN_ACTIVITIES)("$label proposals use their activity artwork", ({ value, image }) => {
+  messageCard({ ...plan, activity: value });
+  const artwork = document.querySelector<HTMLImageElement>(".plan-message__art");
+  expect(artwork?.getAttribute("src")).toBe(image);
+});
+
+test("legacy proposals use the generic Other artwork", () => {
+  messageCard(plan);
+  expect(document.querySelector<HTMLImageElement>(".plan-message__art")?.getAttribute("src")).toBe("/images/date-activity-other.jpg");
+});
 
 test("activity selection is sent to the API and retained when editing", async () => {
   vi.spyOn(planApi, "update").mockResolvedValue({ ...plan, activity: "outdoors", version: 2 });
