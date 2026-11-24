@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 export type IconName =
+  | "calendar"
   | "info"
   | "layers"
   | "book"
@@ -60,6 +61,7 @@ export type IconName =
   | "shieldPlain";
 
 const PATHS: Record<IconName, ReactNode> = {
+  calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2" /></>,
   layers: <><path d="m12 3 10 5-10 5L2 8l10-5ZM2 12l10 5 10-5M2 16l10 5 10-5" /></>,
   book: <><path d="M12 5c-3-2-6-2-10-1v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1ZM12 5v15" /></>,
   gamepad: <><path d="M7 7h10a4 4 0 0 1 4 3l1 7a2 2 0 0 1-3 2l-4-3H9l-4 3a2 2 0 0 1-3-2l1-7a4 4 0 0 1 4-3Z" /><path d="M7 10v4M5 12h4M16 11h.01M19 13h.01" /></>,

@@ -37,7 +37,7 @@ export function NotificationsPage() {
                 type="button"
                 className={`notification-feed__item${item.read_at ? "" : " is-unread"}`}
                 onClick={() => {
-                  if (item.kind !== "message") void markOne(item.id);
+                  if (item.kind !== "message" && (item.kind !== "plan" || item.message_id === null)) void markOne(item.id);
                   navigate(notificationTarget(item));
                 }}
               >

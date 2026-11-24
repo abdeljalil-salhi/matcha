@@ -14,9 +14,9 @@ function Counts() {
   return <output>{unread.messages} messages, {unread.total} notifications</output>;
 }
 
-test("opening a chat clears its badge and global message count without consuming other notifications", async () => {
+test.each(["message", "plan"] as const)("opening a chat clears %s badges without consuming other notifications", async (kind) => {
   const notifications: Notification[] = [2].map((id) => ({
-    id, actor_id: 2, actor_username: "bob", unread_count: 2, kind: "message", message_id: id,
+    id, actor_id: 2, actor_username: "bob", unread_count: 2, kind, message_id: id,
     read_at: null, created_at: message.created_at,
   }));
   notifications.push({ ...notifications[0]!, id: 3, unread_count: 1, actor_id: 3, actor_username: "charlie", message_id: 3 });
@@ -25,7 +25,7 @@ test("opening a chat clears its badge and global message count without consuming
     notifications: notifications.map((item) => ({ ...item })),
     unread: {
       total: notifications.filter((item) => !item.read_at).length,
-      messages: notifications.filter((item) => item.kind === "message" && !item.read_at).reduce((sum, item) => sum + item.unread_count, 0),
+      messages: notifications.filter((item) => (item.kind === "message" || item.kind === "plan") && !item.read_at).reduce((sum, item) => sum + item.unread_count, 0),
     },
   }));
   const markRead = vi.spyOn(api.notifications, "markRead").mockImplementation(async (id) => {

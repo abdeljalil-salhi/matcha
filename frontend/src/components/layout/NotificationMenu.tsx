@@ -44,7 +44,7 @@ export function NotificationMenu() {
   };
 
   const goTo = async (item: Notification) => {
-    if (item.kind !== "message") await markOne(item.id);
+    if (item.kind !== "message" && (item.kind !== "plan" || item.message_id === null)) await markOne(item.id);
     setOpen(false);
     navigate(notificationTarget(item));
   };

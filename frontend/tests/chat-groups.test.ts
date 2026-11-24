@@ -18,3 +18,11 @@ test("midnight starts a new group within the time window", () => {
   const after = { ...message, id: 2, created_at: new Date(2026, 10, 24, 0, 0).toISOString() };
   expect(groupMessages([before, after])).toEqual([[before], [after]]);
 });
+
+
+test("date revisions remain separate from adjacent messages by the same sender", () => {
+  const messages = [entry(1, 2, 0), { ...entry(2, 2, 0), plan_id: 4 },
+    { ...entry(3, 2, 0), plan_id: 4 }, entry(4, 2, 0), entry(5, 2, 1)];
+  expect(groupMessages(messages).map((group) => group.map((item) => item.id)))
+    .toEqual([[1], [2], [3], [4, 5]]);
+});

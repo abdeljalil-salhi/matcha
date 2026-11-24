@@ -2,7 +2,7 @@ from typing import Literal, TypedDict
 
 from ...common.types import JsonObject
 
-type NotificationKind = Literal["like", "visit", "message", "match", "unlike"]
+type NotificationKind = Literal["like", "visit", "message", "match", "unlike", "plan"]
 
 
 class UnreadCounts(TypedDict):

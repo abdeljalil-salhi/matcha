@@ -58,7 +58,7 @@ export function ChatPage() {
   }, [loadConversations]);
 
   const unreadFor = (id: number) =>
-    notifications.filter((item) => item.kind === "message" && item.actor_id === id && !item.read_at)
+    notifications.filter((item) => (item.kind === "message" || item.kind === "plan") && item.actor_id === id && !item.read_at)
       .reduce((count, item) => count + item.unread_count, 0);
 
   const conversation = conversations.find((entry) => entry.id === userId);
@@ -79,6 +79,7 @@ export function ChatPage() {
       <header className="page-heading page-heading--compact">
         <p className="eyebrow">Messages</p>
         <h1>Your conversations</h1>
+        <p className="lead">Keep the conversation flowing, from first hello to real plans.</p>
       </header>
 
       {error ? <ErrorBanner message={error} onRetry={() => void loadConversations()} /> : null}

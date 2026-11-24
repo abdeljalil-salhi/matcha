@@ -22,7 +22,8 @@ CLIENT_MESSAGE_ID_LENGTH = 36
 MESSAGES_PER_MINUTE = 60
 GIF_SEARCHES_PER_MINUTE = 30
 MESSAGE_COLUMNS = """id, sender_id, recipient_id, client_id::text, kind, body,
-    media_url, media_alt, created_at"""
+    media_url, media_alt, created_at, plan_id, plan_version, plan_action,
+    plan_snapshot"""
 
 routes = Blueprint("chat", __name__)
 

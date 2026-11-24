@@ -190,7 +190,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           setNotifications(latestNotifications.current);
           setUnread((counts) => ({
             total: Math.max(0, counts.total - (remaining === 0 ? 1 : 0)),
-            messages: Math.max(0, counts.messages - (item.kind === "message" ? consumed : 0)),
+            messages: Math.max(0, counts.messages - ((item.kind === "message" || item.kind === "plan") ? consumed : 0)),
           }));
         }
       } catch {

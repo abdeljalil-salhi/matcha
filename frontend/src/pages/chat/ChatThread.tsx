@@ -1,7 +1,11 @@
+import { planApi } from "../../api/plans";
+import type { DatePlan } from "../../api/types/plans";
+import { PlanMessage } from "../../components/plans/PlanMessage";
+import { DatePlanner } from "../../components/plans/DatePlanner";
 import { ConversationMenu } from "./ConversationMenu";
 import { CallButtons } from "../../components/calls/CallButtons";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, ApiError, type ChatGif, type Conversation, type Message, type MessageReceipts } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useNotifications } from "../../context/NotificationsContext";
@@ -47,7 +51,19 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [search, setSearch] = useSearchParams();
+  const plansOpen = search.get("plans") === "1";
+  const setPlansOpen = useCallback((open: boolean) => {
+    const next = new URLSearchParams(search);
+    if (open) next.set("plans", "1");
+    else next.delete("plans");
+    setSearch(next, { replace: true });
+  }, [search, setSearch]);
   const [gifOpen, setGifOpen] = useState(false);
+  const [planBusy, setPlanBusy] = useState(false);
+  const planMutation = useRef(false);
+  const [requestedEdit, setRequestedEdit] = useState<{ plan: DatePlan; action: "reschedule" | "cancel" } | null>(null);
+  const consumePlanEdit = useCallback(() => setRequestedEdit(null), []);
   const oldestId = useRef<number | null>(null);
   const lastId = useRef<number | null>(null);
   const inFlight = useRef(false);
@@ -222,7 +238,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
   };
 
   const relatedUnread = notifications.filter(
-    (entry) => entry.kind === "message" && entry.actor_id === userId && !entry.read_at,
+    (entry) => (entry.kind === "message" || entry.kind === "plan") && entry.actor_id === userId && !entry.read_at,
   );
 
   const unreadMessages = relatedUnread.reduce((count, item) => count + item.unread_count, 0);
@@ -272,6 +288,36 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
     );
   }
 
+  const latestPlans = new Map<number, DatePlan>();
+  for (const message of messages) {
+    const plan = message.plan_snapshot;
+    if (plan && (!latestPlans.has(plan.id) || latestPlans.get(plan.id)!.version < plan.version)) latestPlans.set(plan.id, plan);
+  }
+  const editPlan = (plan: DatePlan, action: "reschedule" | "cancel") => {
+    setRequestedEdit({ plan, action });
+    setPlansOpen(true);
+  };
+  const respondToPlan = async (plan: DatePlan, action: "accept" | "decline") => {
+    if (planMutation.current) return;
+    planMutation.current = true;
+    setPlanBusy(true);
+    setError(null);
+    try {
+      await planApi.update(plan, action);
+      await poll();
+      notify(action === "accept" ? "Your date is confirmed." : "Invitation declined.", "success");
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 403) onAccessLost();
+      else if (cause instanceof ApiError && cause.status === 409) {
+        await poll();
+        setError("This proposal changed. Review the latest update before responding.");
+      } else setError(cause instanceof Error ? cause.message : "Unable to respond to this proposal.");
+    } finally {
+      planMutation.current = false;
+      setPlanBusy(false);
+    }
+  };
+
   let previousDay = "";
 
   return (
@@ -288,6 +334,7 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           </span>
         </Link>
         <div className="chat-thread__controls">
+          <button type="button" className="icon-button" aria-label="Date plans" title="Plan a date" onClick={() => setPlansOpen(true)}><Icon name="calendar" size={19} /></button>
           <CallButtons userId={userId} />
           <ConversationMenu userId={userId} name={fullName(conversation)} onBlocked={onConversationUpdate} />
         </div>
@@ -297,6 +344,8 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           </button>
         ) : null}
       </header>
+
+      <DatePlanner userId={userId} name={fullName(conversation)} onAccessLost={onAccessLost} open={plansOpen} onOpenChange={setPlansOpen} onChanged={() => void poll()} requestedEdit={requestedEdit} onRequestHandled={consumePlanEdit} />
 
       {error ? <ErrorBanner message={error} onRetry={() => void loadInitial()} /> : null}
 
@@ -328,12 +377,14 @@ export function ChatThread({ conversation, userId, onAccessLost, onConversationU
           return (
             <div key={first.id} className="chat-message-group">
               {showDay ? <div className="chat-day"><span>{day}</span></div> : null}
-              <div className={`message-group${mine ? " message-group--mine" : ""}`}>
+              <div className={`message-group${mine ? " message-group--mine" : ""}${first.plan_id ? " message-group--plan" : ""}`}>
                 {!mine ? <Avatar photoId={conversation.photo_id} name={conversation} size="sm" /> : null}
                 <div className="message-group__content">
                   {group.map((message) => (
-                    <div key={message.id} className={`bubble${mine ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}`}>
-                      {message.kind === "gif" && message.media_url ? (
+                    <div key={message.id} className={`bubble${mine ? " bubble--mine" : ""}${message.kind === "gif" ? " bubble--media" : ""}${message.plan_id ? " bubble--plan" : ""}`}>
+                      {message.plan_id ? <PlanMessage message={message} latestPlan={latestPlans.get(message.plan_id)} viewerId={user?.id ?? 0}
+                        busy={planBusy} onOpen={() => setPlansOpen(true)} onRespond={(plan, action) => void respondToPlan(plan, action)}
+                        onReschedule={(plan) => editPlan(plan, "reschedule")} onCancel={(plan) => editPlan(plan, "cancel")} /> : message.kind === "gif" && message.media_url ? (
                         <figure className="bubble__media">
                           <img src={message.media_url} alt={message.media_alt || "GIF"} loading="lazy" onLoad={() => scrollToBottom()} />
                           {message.body ? <figcaption>{message.body}</figcaption> : null}

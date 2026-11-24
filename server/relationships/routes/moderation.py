@@ -8,6 +8,7 @@ from ...common.http import rate_limit
 from ...common.limits import DEFAULT_PAGE_SIZE, MAX_PAGE_OFFSET, MAX_PAGE_SIZE
 from ...common.validation import query_int
 from ...profiles.visibility import public_profile
+from ...plans.lifecycle import cancel_connection_plans
 from ..access import pair
 from ..types import BlockList
 
@@ -38,6 +39,7 @@ def block(user_id: int) -> tuple[str, int]:
                 (%(other)s, %(me)s))""",
             {"me": me, "other": other},
         )
+        cancel_connection_plans(me, other)
         db().execute(
             """DELETE FROM notifications WHERE (recipient_id, actor_id)
                IN ((%(me)s, %(other)s), (%(other)s, %(me)s))""",

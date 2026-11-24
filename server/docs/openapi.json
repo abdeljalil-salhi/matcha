@@ -42,6 +42,10 @@
     {
       "name": "Calls",
       "description": "Connected one-to-one WebRTC calls and ephemeral signaling."
+    },
+    {
+      "name": "Date plans",
+      "description": "Real-life arrangements between matched members."
     }
   ],
   "paths": {
@@ -3838,6 +3842,441 @@
           }
         }
       }
+    },
+    "/chat/{user_id}/plans": {
+      "get": {
+        "tags": [
+          "Date plans"
+        ],
+        "summary": "List conversation plans",
+        "description": "Requires a current mutual connection. Includes current and past plans. Active future arrangements appear first, ordered by meeting time and ID.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "404": {
+            "$ref": "#/components/responses/HTTP404"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Date plans"
+        ],
+        "summary": "Propose a date",
+        "description": "Requires a current mutual connection. client_id makes retries safe. Times must be in the future. Sends one plan notification when created. Each successful new revision atomically writes an immutable date-plan message to the conversation and links its plan notification to that message. Retried creation does not duplicate messages. Messages support normal delivery and read receipts.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatePlan"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Retry of the same original proposal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatePlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/HTTP400"
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "404": {
+            "$ref": "#/components/responses/HTTP404"
+          },
+          "409": {
+            "$ref": "#/components/responses/HTTP409"
+          },
+          "415": {
+            "$ref": "#/components/responses/HTTP415"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "local_time": {
+                    "type": "string",
+                    "example": "2027-06-15T18:30",
+                    "description": "Local wall time without an offset. Skipped or repeated daylight-saving times are rejected."
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "example": "Europe/Paris",
+                    "description": "IANA timezone for the meeting."
+                  },
+                  "venue": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "default": ""
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "activity": {
+                    "type": "string",
+                    "enum": [
+                      "coffee",
+                      "dining",
+                      "outdoors",
+                      "culture",
+                      "other"
+                    ],
+                    "default": "other",
+                    "description": "Activity type for the invitation artwork. Defaults to other for older clients and plans."
+                  }
+                },
+                "required": [
+                  "title",
+                  "local_time",
+                  "timezone",
+                  "venue",
+                  "client_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/plans": {
+      "get": {
+        "tags": [
+          "Date plans"
+        ],
+        "summary": "List upcoming date plans",
+        "description": "Returns the signed-in member\u2019s future proposed and accepted plans with current mutual connections.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10000,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        }
+      }
+    },
+    "/plans/{plan_id}": {
+      "patch": {
+        "tags": [
+          "Date plans"
+        ],
+        "summary": "Respond to or change a date plan",
+        "description": "Participants only, while still mutually connected. The current version is required. Only the invited participant may accept or decline a proposal. Either participant may cancel or reschedule an active future plan. Rescheduling requires the other participant to accept again. Stale versions return 409. Each update records history and notifies the other member. Blocking or removing a like cancels active future plans. Each successful new revision atomically writes an immutable date-plan message to the conversation and links its plan notification to that message. Retried creation does not duplicate messages. Messages support normal delivery and read receipts.",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatePlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/HTTP400"
+          },
+          "401": {
+            "$ref": "#/components/responses/HTTP401"
+          },
+          "403": {
+            "$ref": "#/components/responses/HTTP403"
+          },
+          "404": {
+            "$ref": "#/components/responses/HTTP404"
+          },
+          "409": {
+            "$ref": "#/components/responses/HTTP409"
+          },
+          "415": {
+            "$ref": "#/components/responses/HTTP415"
+          },
+          "422": {
+            "$ref": "#/components/responses/HTTP422"
+          },
+          "429": {
+            "$ref": "#/components/responses/HTTP429"
+          },
+          "500": {
+            "$ref": "#/components/responses/HTTP500"
+          },
+          "503": {
+            "$ref": "#/components/responses/HTTP503"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "enum": [
+                          "accept",
+                          "decline",
+                          "cancel"
+                        ]
+                      },
+                      "version": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 2147483646
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "version"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      },
+                      "local_time": {
+                        "type": "string",
+                        "example": "2027-06-15T18:30",
+                        "description": "Local wall time without an offset. Skipped or repeated daylight-saving times are rejected."
+                      },
+                      "timezone": {
+                        "type": "string",
+                        "maxLength": 80,
+                        "example": "Europe/Paris",
+                        "description": "IANA timezone for the meeting."
+                      },
+                      "venue": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      "notes": {
+                        "type": "string",
+                        "maxLength": 1000,
+                        "default": ""
+                      },
+                      "action": {
+                        "const": "reschedule"
+                      },
+                      "version": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 2147483646
+                      },
+                      "activity": {
+                        "type": "string",
+                        "enum": [
+                          "coffee",
+                          "dining",
+                          "outdoors",
+                          "culture",
+                          "other"
+                        ],
+                        "default": "other",
+                        "description": "Activity type for the invitation artwork. Defaults to other for older clients and plans."
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "version",
+                      "title",
+                      "local_time",
+                      "timezone",
+                      "venue"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4644,6 +5083,46 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "plan_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "plan_version": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "plan_action": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "propose",
+              "reschedule",
+              "accept",
+              "decline",
+              "cancel",
+              "connection_ended",
+              null
+            ]
+          },
+          "plan_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DatePlan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Details at the time of this message; open the planner for the current state."
           }
         },
         "required": [
@@ -4655,8 +5134,13 @@
           "media_url",
           "media_alt",
           "client_id",
-          "created_at"
-        ]
+          "created_at",
+          "plan_id",
+          "plan_version",
+          "plan_action",
+          "plan_snapshot"
+        ],
+        "description": "Chat text, GIF, or a server-created immutable date-plan revision. Plan messages use kind text and include structured plan metadata; ordinary messages have null plan metadata."
       },
       "Notification": {
         "type": "object",
@@ -4685,7 +5169,8 @@
               "visit",
               "message",
               "match",
-              "unlike"
+              "unlike",
+              "plan"
             ]
           },
           "message_id": {
@@ -4698,7 +5183,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Associated chat message for message notifications and date-plan notifications; null for other notification types and legacy plan notifications without a corresponding revision."
           },
           "created_at": {
             "type": "string",
@@ -5279,6 +5765,153 @@
         "required": [
           "delivered_through",
           "read_through"
+        ]
+      },
+      "DatePlan": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "Europe/Paris",
+            "description": "IANA timezone for the meeting."
+          },
+          "venue": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 1000,
+            "default": ""
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "creator_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "partner_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "proposed_by": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "updated_by": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC instant resolved from local_time and timezone."
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "accepted",
+              "declined",
+              "cancelled"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cancellation_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "other_id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "partner_first_name": {
+            "type": "string"
+          },
+          "partner_last_name": {
+            "type": "string"
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "coffee",
+              "dining",
+              "outdoors",
+              "culture",
+              "other"
+            ],
+            "default": "other",
+            "description": "Activity type for the invitation artwork. Defaults to other for older clients and plans."
+          }
+        },
+        "required": [
+          "title",
+          "timezone",
+          "venue",
+          "notes",
+          "id",
+          "creator_id",
+          "partner_id",
+          "proposed_by",
+          "updated_by",
+          "client_id",
+          "starts_at",
+          "state",
+          "version",
+          "cancellation_reason",
+          "created_at",
+          "updated_at",
+          "activity"
+        ]
+      },
+      "PlanPage": {
+        "type": "object",
+        "properties": {
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DatePlan"
+            }
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "plans",
+          "has_more"
         ]
       }
     },
