@@ -26,6 +26,41 @@ export const EMPTY_FILTERS: FilterValues = {
   direction: "",
 };
 
+const SORT_KEYS = new Set<SortKey>([
+  "recommended",
+  "location",
+  "age",
+  "fame",
+  "common_tags",
+  "newest",
+]);
+
+/** Normalize persisted discovery filters, falling back to defaults for invalid values. */
+export function sanitizeFilterValues(value: unknown): FilterValues {
+  if (!value || typeof value !== "object") return EMPTY_FILTERS;
+  const raw = value as Partial<Record<keyof FilterValues, unknown>>;
+  const str = (key: keyof FilterValues) =>
+    typeof raw[key] === "string" ? (raw[key] as string) : "";
+  const sort = SORT_KEYS.has(raw.sort as SortKey) ? (raw.sort as SortKey) : "recommended";
+  const direction =
+    raw.direction === "asc" || raw.direction === "desc" ? raw.direction : "";
+  const tags = Array.isArray(raw.tags)
+    ? raw.tags.filter((tag): tag is string => typeof tag === "string")
+    : [];
+  return {
+    location: str("location"),
+    min_age: str("min_age"),
+    max_age: str("max_age"),
+    min_fame: str("min_fame"),
+    max_fame: str("max_fame"),
+    max_distance_km: str("max_distance_km"),
+    min_common_tags: str("min_common_tags"),
+    tags,
+    sort,
+    direction: sort === "recommended" ? "" : direction,
+  };
+}
+
 function numberOrUndefined(value: string): number | undefined {
   if (value.trim() === "") return undefined;
   const parsed = Number(value);

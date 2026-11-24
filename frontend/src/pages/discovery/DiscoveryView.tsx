@@ -4,23 +4,45 @@ import { api, ApiError, type SortKey, type DiscoveryProfile } from "../../api";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { FilterPanel, SORTS } from "../../components/discovery/FilterPanel";
-import { EMPTY_FILTERS, toApiFilters, type FilterValues } from "../../components/discovery/filters";
+import { EMPTY_FILTERS, sanitizeFilterValues, toApiFilters, type FilterValues } from "../../components/discovery/filters";
 import { ProfileCard } from "../../components/discovery/ProfileCard";
 import { Button } from "../../components/ui/Button";
 import { Icon } from "../../components/ui/Icon";
 import { EmptyState, ErrorBanner, Spinner } from "../../components/ui/Misc";
 
 const PAGE_SIZE = 25;
+const DISCOVERY_STORAGE_PREFIX = "matcha.discovery.filters";
 
 type Mode = "suggestions" | "search";
+
+function storageKey(mode: Mode, userId?: number): string {
+  return `${DISCOVERY_STORAGE_PREFIX}.${mode}.${userId ?? "guest"}`;
+}
+
+function readStoredFilters(mode: Mode, userId?: number): FilterValues {
+  try {
+    const raw = window.localStorage.getItem(storageKey(mode, userId));
+    return raw ? sanitizeFilterValues(JSON.parse(raw)) : EMPTY_FILTERS;
+  } catch {
+    return EMPTY_FILTERS;
+  }
+}
+
+function writeStoredFilters(mode: Mode, userId: number | undefined, filters: FilterValues): void {
+  try {
+    window.localStorage.setItem(storageKey(mode, userId), JSON.stringify(filters));
+  } catch {
+    // Ignore storage quota/privacy mode failures; filtering still works in-memory.
+  }
+}
 
 export function DiscoveryView({ mode }: { mode: Mode }) {
   const { user } = useAuth();
   const { notify } = useToast();
-  const [quickView, setQuickView] = useState("recommended");
+  const [quickView, setQuickView] = useState<SortKey>(() => readStoredFilters(mode, user?.id).sort);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [values, setValues] = useState<FilterValues>(EMPTY_FILTERS);
-  const [applied, setApplied] = useState<FilterValues>(EMPTY_FILTERS);
+  const [values, setValues] = useState<FilterValues>(() => readStoredFilters(mode, user?.id));
+  const [applied, setApplied] = useState<FilterValues>(() => readStoredFilters(mode, user?.id));
   const [profiles, setProfiles] = useState<DiscoveryProfile[]>([]);
   const [likedIds, setLikedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,6 +61,18 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    const stored = readStoredFilters(mode, user?.id);
+    setQuickView(stored.sort);
+    setValues(stored);
+    setApplied(stored);
+  }, [mode, user?.id]);
+
+  useEffect(() => {
+    writeStoredFilters(mode, user?.id, applied);
+  }, [applied, appliedKey, mode, user?.id]);
 
   const fetchPage = useCallback(
     async (
@@ -127,7 +161,7 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
     }
   };
 
-  const applyQuick = (patch: Partial<FilterValues>, view?: string) => {
+  const applyQuick = (patch: Partial<FilterValues>, view?: SortKey) => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     const next = { ...values, ...patch };
     if (view) setQuickView(view);
@@ -184,7 +218,7 @@ export function DiscoveryView({ mode }: { mode: Mode }) {
               <label className="discovery-toolbar__pill"><Icon name="pin" size={15} /><span className="sr-only">Maximum distance</span><select aria-label="Quick maximum distance" value={values.max_distance_km} onChange={(event) => applyQuick({ max_distance_km: event.target.value })}><option value="">Anywhere</option>{[25, 50, 100, 250, 500, 1000].map((km) => <option key={km} value={km}>Within {km} km</option>)}{values.max_distance_km && ![25, 50, 100, 250, 500, 1000].includes(Number(values.max_distance_km)) ? <option value={values.max_distance_km}>Within {values.max_distance_km} km</option> : null}</select></label>
               <label className="discovery-toolbar__pill"><Icon name="layers" size={15} /><select aria-label="Quick shared interests" value={values.min_common_tags} onChange={(event) => applyQuick({ min_common_tags: event.target.value })}><option value="">Shared interests</option><option value="0">Any shared interests</option>{Array.from({ length: 15 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}+ in common</option>)}</select></label>
               <label className="discovery-toolbar__pill"><Icon name="star" size={15} /><select aria-label="Quick minimum fame" value={values.min_fame} onChange={(event) => applyQuick({ min_fame: event.target.value, max_fame: "" })}><option value="">Fame</option>{[0, 20, 40, 60, 80].map((fame) => <option key={fame} value={fame}>{fame}+ fame</option>)}{values.min_fame && ![0, 20, 40, 60, 80].includes(Number(values.min_fame)) ? <option value={values.min_fame}>{values.min_fame}+ fame</option> : null}</select></label>
-              <label className="discovery-toolbar__pill discovery-toolbar__sort"><Icon name="sort" size={15} /><span>Sort:</span><select aria-label="Sort profiles" value={values.sort} onChange={(event) => applyQuick({ sort: event.target.value as SortKey, direction: "" }, event.target.value)}>{SORTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+              <label className="discovery-toolbar__pill discovery-toolbar__sort"><Icon name="sort" size={15} /><span>Sort:</span><select aria-label="Sort profiles" value={values.sort} onChange={(event) => { const sort = event.target.value as SortKey; applyQuick({ sort, direction: "" }, sort); }}>{SORTS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
             </div>
             <span className="text-muted text-small" role="status" aria-live="polite" aria-atomic="true">
               {loading && profiles.length === 0 ? "Looking…" : `${profiles.length} shown`}
