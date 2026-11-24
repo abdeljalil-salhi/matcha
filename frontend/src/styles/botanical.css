@@ -617,3 +617,15 @@ body {
 .calendar-agenda .plan-message__details { width: 100%; }
 .calendar-agenda .plan-message__art { opacity: .45; }
 .calendar-agenda .plan-message__seal { opacity: .4; right: 5%; }
+
+.date-planner-modal--editing.modal { width: min(1100px, 100%); max-width: 1100px; }
+.date-plan-form__layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 24px; }
+.date-plan-form__fields { display: grid; gap: 16px; min-width: 0; }
+.date-plan-form__preview { position: sticky; top: 0; min-width: 0; display: grid; gap: 12px; }
+.date-plan-form__preview h4 { margin: 0; color: var(--muted); font-family: inherit; font-size: .75rem; font-weight: 600; }
+.date-plan-form__preview .plan-message h3 { font-size: 1.45rem; }
+.date-plan-form__preview .plan-message__header { padding-right: 0; }
+@media (max-width: 850px) {
+  .date-plan-form__layout { grid-template-columns: minmax(0, 1fr); }
+  .date-plan-form__preview { position: static; }
+}

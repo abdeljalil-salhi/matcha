@@ -1,3 +1,4 @@
+import { PlanCardLayout } from "./PlanCardLayout";
 import { PLAN_ACTIVITIES } from "../../data/planActivities";
 import { useState, type FormEvent } from "react";
 import type { DatePlan, PlanDetails, PlanActivity } from "../../api/types/plans";
@@ -10,6 +11,21 @@ function localTime(plan: DatePlan): string {
   }).formatToParts(new Date(plan.starts_at));
   const value = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
   return `${value("year")}-${value("month")}-${value("day")}T${value("hour")}:${value("minute")}`;
+}
+
+function previewSchedule(details: PlanDetails): string {
+  if (!details.local_time) return "Choose a date and time";
+  const date = new Date(`${details.local_time}Z`);
+  if (!Number.isFinite(date.getTime())) return "Choose a date and time";
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: details.timezone }).format(date);
+  } catch { return "Choose a valid timezone"; }
+  // Format the wall time entered by the user, without converting it to device time.
+  const display = new Intl.DateTimeFormat(undefined, {
+    weekday: "short", year: "numeric", month: "short", day: "numeric",
+    hour: "numeric", minute: "2-digit", timeZone: "UTC",
+  }).format(date);
+  return `${display} (${details.timezone})`;
 }
 
 export function PlanForm({ plan, busy, stale = false, onSubmit, onCancel }: {
@@ -32,23 +48,35 @@ export function PlanForm({ plan, busy, stale = false, onSubmit, onCancel }: {
   return <form className="date-plan-form" onSubmit={submit}>
     <h3>{plan ? "Suggest new details" : "Plan something together"}</h3>
     {plan ? <p className="text-small text-muted">The other person will need to accept these changes.</p> : null}
-    <label>Activity type<select className="input" value={details.activity}
-      onChange={(event) => setDetails({ ...details, activity: event.target.value as PlanActivity })}>
-      {PLAN_ACTIVITIES.map((activity) => <option key={activity.value} value={activity.value}>{activity.label}</option>)}
-    </select></label>
-    <label>Title<input className="input" required maxLength={100} value={details.title} placeholder="Coffee and a walk"
-      onChange={(event) => setDetails({ ...details, title: event.target.value })} /></label>
-    <div className="date-plan-form__time">
-      <label>Date and time<input className="input" type="datetime-local" required value={details.local_time}
-        onChange={(event) => setDetails({ ...details, local_time: event.target.value })} /></label>
-      <label>Timezone<input className="input" required maxLength={80} value={details.timezone} placeholder="Europe/Paris"
-        onChange={(event) => setDetails({ ...details, timezone: event.target.value })} /></label>
+    <div className="date-plan-form__layout">
+      <div className="date-plan-form__fields">
+        <label>Activity type<select className="input" value={details.activity}
+          onChange={(event) => setDetails({ ...details, activity: event.target.value as PlanActivity })}>
+          {PLAN_ACTIVITIES.map((activity) => <option key={activity.value} value={activity.value}>{activity.label}</option>)}
+        </select></label>
+        <label>Title<input className="input" required maxLength={100} value={details.title} placeholder="Coffee and a walk"
+          onChange={(event) => setDetails({ ...details, title: event.target.value })} /></label>
+        <div className="date-plan-form__time">
+          <label>Date and time<input className="input" type="datetime-local" required value={details.local_time}
+            onChange={(event) => setDetails({ ...details, local_time: event.target.value })} /></label>
+          <label>Timezone<input className="input" required maxLength={80} value={details.timezone} placeholder="Europe/Paris"
+            onChange={(event) => setDetails({ ...details, timezone: event.target.value })} /></label>
+        </div>
+        <p className="text-small text-muted">Enter the time in the meeting’s timezone. Clock-change times are checked when you send.</p>
+        <label>Meeting place<input className="input" required maxLength={200} value={details.venue} placeholder="Café name or meeting point"
+          onChange={(event) => setDetails({ ...details, venue: event.target.value })} /></label>
+        <label>Notes <span className="text-muted">(optional)</span><textarea className="input textarea" maxLength={1000} rows={3} value={details.notes}
+          onChange={(event) => setDetails({ ...details, notes: event.target.value })} /></label>
+      </div>
+      <section className="date-plan-form__preview" aria-label="Invitation preview">
+        <h4>Invitation preview</h4>
+        <PlanCardLayout plan={{
+          activity: details.activity, state: "proposed", title: details.title || "Your invitation title",
+          starts_at: "", timezone: details.timezone, venue: details.venue || "Your meeting place",
+          notes: details.notes, cancellation_reason: null,
+        }} label={plan ? "New date proposal" : "Date invitation"} schedule={<span>{previewSchedule(details)}</span>} />
+      </section>
     </div>
-    <p className="text-small text-muted">Enter the time in the meeting’s timezone. Clock-change times are checked when you send.</p>
-    <label>Meeting place<input className="input" required maxLength={200} value={details.venue} placeholder="Café name or meeting point"
-      onChange={(event) => setDetails({ ...details, venue: event.target.value })} /></label>
-    <label>Notes <span className="text-muted">(optional)</span><textarea className="input textarea" maxLength={1000} rows={3} value={details.notes}
-      onChange={(event) => setDetails({ ...details, notes: event.target.value })} /></label>
     <div className="date-plan-form__actions">
       <Button variant="secondary" disabled={busy} onClick={onCancel}>Back to plans</Button>
       <Button type="submit" loading={busy} disabled={stale}>{plan ? "Send new proposal" : "Send invitation"}</Button>

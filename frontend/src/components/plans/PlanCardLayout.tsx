@@ -11,21 +11,22 @@ const HEADINGS = {
 };
 
 /** Shared presentation for chat history, current plans, and the calendar agenda. */
-export function PlanCardLayout({ plan, label, showContext = false, timezone = plan.timezone, children, actions }: {
+export function PlanCardLayout({ plan, label, showContext = false, timezone = plan.timezone, children, actions, schedule }: {
   plan: Pick<DatePlan, "activity" | "state" | "title" | "starts_at" | "timezone" | "venue" | "notes" | "cancellation_reason" | "partner_first_name" | "partner_last_name">;
   label?: string;
   showContext?: boolean;
   timezone?: string;
   children?: ReactNode;
   actions?: ReactNode;
+  schedule?: ReactNode;
 }) {
   const activity = planActivity(plan.activity);
   const confirmed = plan.state === "accepted";
   const pending = plan.state === "proposed";
-  const time = new Intl.DateTimeFormat(undefined, {
+  const time = schedule === undefined ? new Intl.DateTimeFormat(undefined, {
     weekday: "short", year: "numeric", month: "short", day: "numeric",
     hour: "numeric", minute: "2-digit", timeZone: timezone,
-  }).format(new Date(plan.starts_at));
+  }).format(new Date(plan.starts_at)) : "";
   return <article className={`plan-message plan-message--${plan.state}`} data-activity={activity.value}>
     {pending ? <img className="plan-message__art" src={activity.image} alt="" aria-hidden="true" loading="lazy" /> : null}
     <header className="plan-message__header">
@@ -41,7 +42,7 @@ export function PlanCardLayout({ plan, label, showContext = false, timezone = pl
     </p> : null}
     <div className="plan-message__details">
       <p className="plan-message__schedule"><Icon name="calendar" size={17} />
-        <time dateTime={plan.starts_at}>{time} <span className="plan-message__timezone">({timezone})</span></time></p>
+        {schedule === undefined ? <time dateTime={plan.starts_at}>{time} <span className="plan-message__timezone">({timezone})</span></time> : schedule}</p>
       <p><Icon name="pin" size={17} /><span>{plan.venue}</span></p>
       {plan.notes ? <p className="plan-message__notes"><Icon name="menu" size={17} /><span>{plan.notes}</span></p> : null}
       {plan.cancellation_reason ? <p><Icon name="info" size={17} /><span>{plan.cancellation_reason}</span></p> : null}

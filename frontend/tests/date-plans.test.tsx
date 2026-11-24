@@ -1,7 +1,8 @@
+import { PlanForm } from "../src/components/plans/PlanForm";
 import { PLAN_ACTIVITIES } from "../src/data/planActivities";
 import { PlanMessage } from "../src/components/plans/PlanMessage";
 import { message } from "./fixtures";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useState } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, test, vi } from "vitest";
@@ -224,4 +225,39 @@ test("activity selection is sent to the API and retained when editing", async ()
   fireEvent.change(screen.getByLabelText("Activity type"), { target: { value: "outdoors" } });
   fireEvent.click(screen.getByRole("button", { name: "Send new proposal" }));
   await waitFor(() => expect(planApi.update).toHaveBeenCalledWith(expect.anything(), "reschedule", expect.objectContaining({ activity: "outdoors" })));
+});
+
+
+test("invitation preview updates every detail locally while composing", () => {
+  const submit = vi.fn();
+  render(<PlanForm plan={null} busy={false} onSubmit={submit} onCancel={vi.fn()} />);
+  const preview = screen.getByRole("region", { name: "Invitation preview" });
+  const card = within(preview);
+  expect(card.getByRole("heading", { name: "Your invitation title" })).toBeTruthy();
+  expect(card.getByText("Choose a date and time")).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Title"), { target: { value: "A gallery afternoon" } });
+  fireEvent.change(screen.getByLabelText("Meeting place"), { target: { value: "The city gallery" } });
+  fireEvent.change(screen.getByLabelText(/Notes/), { target: { value: "Meet at the main entrance" } });
+  fireEvent.change(screen.getByLabelText("Activity type"), { target: { value: "culture" } });
+  fireEvent.change(screen.getByLabelText("Date and time"), { target: { value: "2050-06-15T18:30" } });
+  fireEvent.change(screen.getByLabelText("Timezone"), { target: { value: "Pacific/Auckland" } });
+  expect(card.getByRole("heading", { name: "A gallery afternoon" })).toBeTruthy();
+  expect(card.getByText("The city gallery")).toBeTruthy();
+  expect(card.getByText("Meet at the main entrance")).toBeTruthy();
+  expect(preview.querySelector("img")?.getAttribute("src")).toBe("/images/date-activity-culture.jpg");
+  expect(card.getByText(/6:30 PM.*Pacific\/Auckland/)).toBeTruthy();
+  expect(submit).not.toHaveBeenCalled();
+  expect(screen.queryByText("This background will appear on your invitation.")).toBeNull();
+});
+
+test("rescheduling previews a new proposal and tolerates unfinished timezone input", () => {
+  render(<PlanForm plan={{ ...plan, state: "accepted" }} busy={false} onSubmit={vi.fn()} onCancel={vi.fn()} />);
+  const card = within(screen.getByRole("region", { name: "Invitation preview" }));
+  expect(card.getByText("New date proposal")).toBeTruthy();
+  expect(card.getByText("Pending")).toBeTruthy();
+  expect(card.queryByText("Confirmed")).toBeNull();
+  fireEvent.change(screen.getByLabelText("Timezone"), { target: { value: "Europe/" } });
+  expect(card.getByText("Choose a valid timezone")).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Timezone"), { target: { value: "Europe/Paris" } });
+  expect(card.getByText(/Europe\/Paris/)).toBeTruthy();
 });

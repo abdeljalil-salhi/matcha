@@ -195,7 +195,7 @@ export function DatePlanner({ userId, name, onAccessLost, open, onOpenChange, on
         <Icon name="chevronRight" size={15} />
       </button>
     </div>
-    <Modal open={open} onClose={close} title={scope === "upcoming" ? "Upcoming plans" : `Plans with ${name}`} size="lg" className="date-planner-modal">
+    <Modal open={open} onClose={close} title={scope === "upcoming" ? "Upcoming plans" : `Plans with ${name}`} size="lg" className={`date-planner-modal${form ? " date-planner-modal--editing" : ""}`}>
       <div className="date-planner">
         {error || loadError ? <div className="error-banner" role="alert">{error ?? loadError}<Button size="sm" variant="ghost" onClick={() => { setError(null); void refresh(); }}>Refresh</Button></div> : null}
         {stale ? <div className="notice notice--info" role="alert">
