@@ -1,5 +1,14 @@
 # Matcha
 
+[![Backend checks](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/backend.yml?branch=main&style=flat-square&label=backend)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/backend.yml)
+[![Frontend checks](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/frontend.yml?branch=main&style=flat-square&label=frontend)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/frontend.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/abdeljalil-salhi/matcha/codeql.yml?branch=main&style=flat-square&label=codeql)](https://github.com/abdeljalil-salhi/matcha/actions/workflows/codeql.yml)
+
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?style=flat-square)](server/)
+[![React 18](https://img.shields.io/badge/react-18-149ECA?style=flat-square)](frontend/)
+[![TypeScript 5.8](https://img.shields.io/badge/typescript-5.8-3178C6?style=flat-square)](frontend/)
+[![PostgreSQL 17](https://img.shields.io/badge/postgresql-17-4169E1?style=flat-square)](sql/)
+
 **A quieter way to meet people nearby.**
 
 Matcha is a full-stack dating app built for the 42 web curriculum. Discover
